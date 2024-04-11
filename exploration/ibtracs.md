@@ -31,7 +31,7 @@ from src.datasources import ibtracs, chirps, impact
 ```
 
 ```python
-ibtracs.process_hti_distances()
+# ibtracs.process_hti_distances()
 ```
 
 ```python
@@ -49,10 +49,18 @@ affected = (
 ```
 
 ```python
+affected
+```
+
+```python
 hurricanes = tracks.groupby("sid")[["name", "time"]].first().reset_index()
 hurricanes["year"] = hurricanes["time"].dt.year
 hurricanes = hurricanes.drop(columns=["time"])
 hurricanes
+```
+
+```python
+hurricanes["year"].unique()
 ```
 
 ```python
@@ -114,7 +122,7 @@ for year in range(2000, 2024):
 ```
 
 ```python
-d_thresh = 250
+d_thresh = 230
 
 tracks_f = tracks[tracks["distance (m)"] < d_thresh * 1000]
 
@@ -134,6 +142,9 @@ for sid, group in tracks_f.groupby("sid"):
             "max_q80_rain": rain_f["q80"].max(),
             "mean_q80_rain": rain_f["q80"].max(),
             "sum_q80_rain": rain_f["q80"].sum(),
+            "max_q90_rain": rain_f["q90"].max(),
+            "mean_q90_rain": rain_f["q90"].max(),
+            "sum_q90_rain": rain_f["q90"].sum(),
         }
     )
 
@@ -142,6 +153,63 @@ stats = stats.merge(hurricanes, on="sid")
 stats = stats.merge(affected, on="sid", how="left")
 stats["rank"] = stats["affected_population"].rank()
 stats
+```
+
+```python
+def sid_color(sid):
+    color = "blue"
+    if sid in ibtracs.CERF_SIDS:
+        color = "red"
+    # elif sid in ibtracs.IMPACT_SIDS:
+    #     color = "orange"
+    return color
+
+
+stats["marker_size"] = stats["affected_population"] / 6e2
+stats["marker_size"] = stats["marker_size"].fillna(1)
+stats["color"] = stats["sid"].apply(sid_color)
+
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+
+ax.scatter(
+    stats["max_wind"],
+    stats["max_q90_rain"],
+    s=stats["marker_size"],
+    c=stats["color"],
+    alpha=0.5,
+    edgecolors="none",
+)
+
+for j, txt in enumerate(
+    stats["name"].str.capitalize() + "\n" + stats["year"].astype(str)
+):
+    ax.annotate(
+        txt.capitalize(),
+        (stats["max_wind"][j] + 0.5, stats["max_q90_rain"][j]),
+        ha="left",
+        va="center",
+        fontsize=7,
+    )
+
+ax.axvline(x=50, color="lightgray", linestyle="dashed")
+ax.axhline(y=50, color="lightgray", linestyle="dashed")
+ax.fill_between(
+    np.arange(50, 200, 1), 50, 200, color="gold", alpha=0.2, zorder=-1
+)
+
+ax.set_xlim(right=155, left=0)
+ax.set_ylim(top=120, bottom=0)
+
+ax.set_xlabel("Vitesse de vent maximum (noeuds)")
+ax.set_ylabel(
+    "Précipitations journalières sur 10% de la superficie maximum (mm)"
+)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.set_title(
+    f"Comparaison de précipitations, vent, et impact\n"
+    f"Seuil de distance = {d_thresh} km"
+)
 ```
 
 ```python
@@ -180,18 +248,122 @@ for j, txt in enumerate(
         fontsize=7,
     )
 
+ax.axvline(x=50, color="lightgray", linestyle="dashed")
+ax.axhline(y=30, color="lightgray", linestyle="dashed")
+ax.fill_between(
+    np.arange(50, 200, 1), 30, 200, color="gold", alpha=0.2, zorder=-1
+)
+
+ax.set_xlim(right=155, left=0)
+ax.set_ylim(top=70, bottom=0)
+
 ax.set_xlabel("Vitesse de vent maximum (noeuds)")
-ax.set_ylabel("Précipitations journalières maximum (mm)")
+ax.set_ylabel(
+    "Précipitations journalières maximum, moyenne sur toute la superficie (mm)"
+)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.set_title("Comparaison de précipitations, vent, et impact")
+ax.set_title(
+    f"Comparaison de précipitations, vent, et impact\n"
+    f"Seuil de distance = {d_thresh} km"
+)
 ```
 
 ```python
-years = stats["year"].unique()
+dicts = []
+for d_thresh in range(0, 501, 10):
+    tracks_f = tracks[tracks["distance (m)"] <= d_thresh * 1000]
+    for sid, group in tracks_f.groupby("sid"):
+        dicts.append(
+            {
+                "sid": sid,
+                "max_wind": group["usa_wind"].max(),
+                "d": d_thresh,
+            }
+        )
+
+wind_stats = pd.DataFrame(dicts)
+wind_stats = wind_stats.merge(hurricanes, on="sid")
+wind_stats = wind_stats.merge(affected, on="sid", how="left")
+wind_stats["rank"] = wind_stats["affected_population"].rank()
+wind_stats["nameyear"] = (
+    wind_stats["name"].str.capitalize() + " " + wind_stats["year"].astype(str)
+)
+wind_stats
+```
+
+```python
+wind_stats.dtypes
+```
+
+```python
+x_cutoff = 64
+y_cutoff = 20
+
+
+def sid_color(sid):
+    color = "blue"
+    if sid in ibtracs.CERF_SIDS:
+        color = "red"
+    # elif sid in ibtracs.IMPACT_SIDS:
+    #     color = "orange"
+    return color
+
+
+wind_stats["marker_size"] = wind_stats["affected_population"] / 5e4 + 0.3
+wind_stats["marker_size"] = wind_stats["marker_size"].fillna(0.3)
+wind_stats["color"] = wind_stats["sid"].apply(sid_color)
+
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+
+for nameyear, group in wind_stats.groupby("nameyear"):
+    ax.plot(
+        group["max_wind"],
+        group["d"],
+        linewidth=group["marker_size"].iloc[0],
+        c=group["color"].iloc[0],
+        alpha=0.5,
+        # edgecolors="none",
+    )
+    ax.annotate(
+        nameyear + "  ",
+        (group["max_wind"].min(), group["d"].min()),
+        ha="center",
+        va="bottom",
+        fontsize=7,
+        rotation=270,
+    )
+
+ax.axvline(x=x_cutoff, color="lightgray", linestyle="dashed")
+ax.axhline(y=y_cutoff, color="lightgray", linestyle="dashed")
+ax.fill_between(
+    np.arange(x_cutoff, 200, 1),
+    0,
+    y_cutoff,
+    color="gold",
+    alpha=0.2,
+    zorder=-1,
+)
+
+ax.set_xlim(right=155, left=0)
+ax.set_ylim(top=100, bottom=0)
+
+ax.set_xlabel("Vitesse de vent maximum (noeuds)")
+ax.set_ylabel("Distance à Haïti (km)")
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.set_title("Comparaison de distance, vent, et impact")
+```
+
+```python
+
+```
+
+```python
+years = range(2000, 2024)
 
 stats["rank"] = stats["affected_population"].rank(ascending=False)
-stats["target"] = stats["rank"] < 10
+stats["target"] = stats["rank"] < 11
 
 P = len(stats[stats["target"]])
 N = len(stats[~stats["target"]])
@@ -233,6 +405,18 @@ rp["rp_s"] = len(years) / rp["n_storms"]
 ```
 
 ```python
+dff
+```
+
+```python
+stats.sort_values("affected_population", ascending=False)
+```
+
+```python
+len(years)
+```
+
+```python
 stats
 ```
 
@@ -240,16 +424,6 @@ stats
 corr_cols = ["max_wind", "max_mean_rain", "affected_population", "rank"]
 corr = stats[corr_cols].corr()
 corr
-```
-
-```python
-stats[stats["target"]][corr_cols].corr()
-```
-
-```python
-fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
-
-stats.plot(x="max_mean_rain", y="rank", ax=ax, style=".")
 ```
 
 ```python
@@ -288,14 +462,6 @@ def add_confusion_matrix_metrics(df):
 
 
 rp = add_confusion_matrix_metrics(rp)
-```
-
-```python
-rp
-```
-
-```python
-stats
 ```
 
 ```python
