@@ -34,7 +34,11 @@ from src.datasources import ibtracs, chirps, impact, gtcm
 ```
 
 ```python
-TARGET_ACT = 8
+24 / 5
+```
+
+```python
+TARGET_ACT = 5
 MAX_DISTANCE = 500
 CAT_1 = 64
 CAT_2 = 83
@@ -113,7 +117,16 @@ hurricanes = hurricanes.sort_values("rank")
 display(hurricanes[:20])
 TARGET_YEARS = hurricanes["year"].unique()[:TARGET_ACT]
 print(TARGET_YEARS)
-MAX_RANK = 10
+
+# 3 year RP
+# MAX_RANK = 10
+
+# 4 year RP
+# MAX_RANK = 8
+
+# 5 year RP
+MAX_RANK = 7
+
 hurricanes["target"] = hurricanes["rank"] <= MAX_RANK
 TARGET_SIDS = hurricanes[hurricanes["target"]]["sid"]
 
@@ -127,7 +140,7 @@ TARGET_SIDS_ADJ = hurricanes[hurricanes["target"]]["sid"]
 ```
 
 ```python
-TARGET_SIDS_ADJ
+TARGET_SIDS
 ```
 
 ```python
@@ -182,11 +195,9 @@ stats
 ```
 
 ```python
-stats[stats["sid"] == IVAN]
-```
-
-```python
-p_metrics = [x for x in stats.columns if "rain" in x and "max" in x]
+p_metrics = [
+    x for x in stats.columns if "rain" in x and "max" in x and "q" not in x
+]
 print(p_metrics)
 
 dicts = []
@@ -364,6 +375,7 @@ ax.yaxis.set_major_formatter(formatter)
 ```
 
 ```python
+# 3 year RP
 plot_cols = [
     "d230_s50_AND_max_q90_rain50",
     "d230_s50_AND_max_mean_rain30",
@@ -402,42 +414,95 @@ ax.invert_xaxis()
 ```
 
 ```python
+# 4 year RP
+plot_cols = [
+    "d230_s70_AND_max_mean_rain30",
+    # "d230_s50_AND_max_mean_rain30",
+    # "d240_s40_AND_max_q50_rain30",
+    # "d230_s80_NORAIN",
+    # "model_trigger",
+]
+df_im = df_plot[["nameyear"] + plot_cols].set_index("nameyear").T
+numeric_map = df_im.map(lambda x: 1 if x else 0)
+cmap = ListedColormap(["lightgrey", "red"])
 
+fig, ax = plt.subplots(figsize=(10, 5), dpi=300)
+ax.imshow(numeric_map, cmap=cmap, interpolation="nearest", aspect=1)
+
+ax.set_xticks([])
+ax.set_yticks([])
+ax.axis("off")
+
+linewidth = 5
+for (i, j), val in np.ndenumerate(numeric_map):
+    color = "red" if val == 1 else "lightgrey"
+    rect = plt.Rectangle(
+        [j - linewidth, i - linewidth],
+        1,
+        1,
+        edgecolor="white",
+        facecolor=color,
+        lw=linewidth,
+    )
+    ax.add_patch(rect)
+
+# Set the axis limits to fit the size of the matrix
+ax.set_xlim(-linewidth, numeric_map.shape[1] - linewidth)
+ax.set_ylim(numeric_map.shape[0] - linewidth, -linewidth)
+ax.invert_xaxis()
 ```
 
 ```python
-df_plot = triggers[
-    (triggers["rank_adj"] <= max_plot_rank) | triggers["sid"].isin(plot_sids)
-].copy()
-df_plot = df_plot.sort_values("affected_population_adj", ascending=False)
-df_plot["nameyear"] = (
-    df_plot["name"].str.capitalize() + " " + df_plot["year"].astype(str)
-)
+# 5 year RP
+plot_cols = [
+    "d230_s80_AND_max_mean_rain30",
+    # "d230_s50_AND_max_mean_rain30",
+    # "d240_s40_AND_max_q50_rain30",
+    # "d230_s80_NORAIN",
+    # "model_trigger",
+]
+df_im = df_plot[["nameyear"] + plot_cols].set_index("nameyear").T
+numeric_map = df_im.map(lambda x: 1 if x else 0)
+cmap = ListedColormap(["lightgrey", "red"])
 
 fig, ax = plt.subplots(figsize=(10, 5), dpi=300)
-df_plot.plot.bar(
-    x="nameyear", y="affected_population_adj", ax=ax, legend=False
-)
+ax.imshow(numeric_map, cmap=cmap, interpolation="nearest", aspect=1)
+
+ax.set_xticks([])
+ax.set_yticks([])
+ax.axis("off")
+
+linewidth = 5
+for (i, j), val in np.ndenumerate(numeric_map):
+    color = "red" if val == 1 else "lightgrey"
+    rect = plt.Rectangle(
+        [j - linewidth, i - linewidth],
+        1,
+        1,
+        edgecolor="white",
+        facecolor=color,
+        lw=linewidth,
+    )
+    ax.add_patch(rect)
+
+# Set the axis limits to fit the size of the matrix
+ax.set_xlim(-linewidth, numeric_map.shape[1] - linewidth)
+ax.set_ylim(numeric_map.shape[0] - linewidth, -linewidth)
 ax.invert_xaxis()
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.set_xlabel("")
-ax.set_ylabel("Nombre de personnes affectées")
-ax.set_ylim(top=500000)
-formatter = FuncFormatter(lambda x, pos: f"{int(x):,}".replace(",", " "))
-ax.yaxis.set_major_formatter(formatter)
 ```
 
 ```python
 plot_cols = [
-    "d220_s50_AND_max_mean_rain30",
-    "d220_s80_NORAIN",
-    "d220_s50_AND_max_q90_rain50",
-    "d220_s50_AND_max_q70_rain40",
-    "d220_s50_AND_max_q60_rain30",
-    "d230_s50_AND_max_mean_rain30",
-    "d230_s50_AND_max_q90_rain50",
-    "d240_s40_AND_max_q50_rain30",
+    "d230_s80_AND_max_mean_rain30",
+    # "d230_s70_AND_max_mean_rain30",
+    # "d220_s50_AND_max_mean_rain30",
+    # "d220_s80_NORAIN",
+    # "d220_s50_AND_max_q90_rain50",
+    # "d220_s50_AND_max_q70_rain40",
+    # "d220_s50_AND_max_q60_rain30",
+    # "d230_s50_AND_max_mean_rain30",
+    # "d230_s50_AND_max_q90_rain50",
+    # "d240_s40_AND_max_q50_rain30",
 ]
 df_im = df_plot[["nameyear"] + plot_cols].set_index("nameyear").T
 numeric_map = df_im.map(lambda x: 1 if x else 0)

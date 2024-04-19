@@ -26,5 +26,19 @@ def download_codab():
         )
 
 
-def load_codab():
-    return gpd.read_file(CODAB_RAW_DIR / "hti.shp.zip")
+def load_codab(admin_level: int = 0):
+    gdf = gpd.read_file(CODAB_RAW_DIR / "hti.shp.zip")
+    if admin_level == 2:
+        cols = [x for x in gdf.columns if "ADM3" not in x]
+        gdf = gdf.dissolve("ADM2_PCODE").reset_index()[cols]
+    elif admin_level == 1:
+        cols = [x for x in gdf.columns if "ADM3" not in x and "ADM2" not in x]
+        gdf = gdf.dissolve("ADM1_PCODE").reset_index()[cols]
+    elif admin_level == 0:
+        cols = [
+            x
+            for x in gdf.columns
+            if "ADM3" not in x and "ADM2" not in x and "ADM1" not in x
+        ]
+        gdf = gdf.dissolve("ADM0_PCODE").reset_index()[cols]
+    return gdf
