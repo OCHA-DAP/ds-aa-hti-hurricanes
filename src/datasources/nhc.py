@@ -1,4 +1,5 @@
 import gzip
+from datetime import datetime
 from ftplib import FTP
 from io import BytesIO
 
@@ -57,3 +58,61 @@ def download_archive_forecasts(clobber: bool = False):
             blob.upload_blob_data(out_blob, out_data)
 
         ftp.cwd("..")
+
+
+def process_archive_forecasts():
+    blob_names = blob.list_container_blobs(
+        name_starts_with="raw/noaa/nhc/historical_forecasts/"
+    )
+    blob_names = [x for x in blob_names if x.endswith(".csv")]
+
+    def proc_latlon(latlon):
+        c = latlon[-1]
+        if c in ["N", "E"]:
+            return float(latlon[:-1]) / 10
+        elif c in ["S", "W"]:
+            return -float(latlon[:-1]) / 10
+
+    dfs = []
+    for blob_name in tqdm(blob_names):
+        df_in = pd.read_csv(BytesIO(blob.load_blob_data(blob_name)))
+        atcf_id = blob_name.removesuffix(".csv")[-8:]
+
+        cols = ["YYYYMMDDHH", "TAU", "LatN/S", "LonE/W", "MSLP", "VMAX"]
+        dff = df_in[df_in["TECH"] == " OFCL"][cols]
+        if dff.empty:
+            continue
+
+        dff["issue_time"] = dff["YYYYMMDDHH"].apply(
+            lambda x: datetime.strptime(str(x), "%Y%m%d%H")
+        )
+        dff["valid_time"] = dff.apply(
+            lambda row: row["issue_time"] + pd.Timedelta(hours=row["TAU"]),
+            axis=1,
+        )
+
+        dff["lat"] = dff["LatN/S"].apply(proc_latlon)
+        dff["lon"] = dff["LonE/W"].apply(proc_latlon)
+        dff = dff.rename(
+            columns={
+                "TAU": "leadtime",
+                "MSLP": "pressure",
+                "VMAX": "windspeed",
+            }
+        )
+        cols = [
+            "issue_time",
+            "valid_time",
+            "lat",
+            "lon",
+            "windspeed",
+            "pressure",
+        ]
+        dff = dff[cols]
+        dff = dff.loc[~dff.duplicated()]
+        dff["atcf_id"] = atcf_id
+        dfs.append(dff)
+
+    df = pd.concat(dfs, ignore_index=True)
+    save_blob = "processed/noaa/nhc/historical_forecasts/al_2000_2022.csv"
+    blob.upload_blob_data(save_blob, df.to_csv(index=False))
