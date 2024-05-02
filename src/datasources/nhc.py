@@ -3,13 +3,19 @@ from datetime import datetime
 from ftplib import FTP
 from io import BytesIO
 
+import geopandas as gpd
 import pandas as pd
 from tqdm import tqdm
 
+from src.datasources import codab
 from src.utils import blob
 
 
-def download_archive_forecasts(clobber: bool = False):
+def download_historical_forecasts(
+    clobber: bool = False,
+    include_archive: bool = True,
+    include_recent: bool = True,
+):
     # cols from
     # https://www.nrlmry.navy.mil/atcf_web/docs/database/new/abdeck.txt
     # tech list from https://ftp.nhc.noaa.gov/atcf/docs/nhc_techlist.dat
@@ -28,14 +34,42 @@ def download_archive_forecasts(clobber: bool = False):
     ftp_server = "ftp.nhc.noaa.gov"
     ftp = FTP(ftp_server)
     ftp.login("", "")
+    recent_directory = "/atcf/aid_public"
     archive_directory = "/atcf/archive"
-    ftp.cwd(archive_directory)
 
     existing_files = blob.list_container_blobs(name_starts_with="raw/noaa/nhc")
-    for year in tqdm(range(2000, 2023)):
-        if ftp.pwd() != archive_directory:
+    if include_archive:
+        ftp.cwd(archive_directory)
+        for year in tqdm(range(2000, 2023)):
+            if ftp.pwd() != archive_directory:
+                ftp.cwd("..")
+            ftp.cwd(str(year))
+            filenames = [
+                x
+                for x in ftp.nlst()
+                if x.endswith(".dat.gz") and x.startswith("aal")
+            ]
+            for filename in filenames:
+                out_blob = (
+                    f"raw/noaa/nhc/historical_forecasts/{year}/"
+                    f"{filename.removesuffix('.dat.gz')}.csv"
+                )
+                if out_blob in existing_files and not clobber:
+                    continue
+                with BytesIO() as buffer:
+                    ftp.retrbinary("RETR " + filename, buffer.write)
+                    buffer.seek(0)
+                    with gzip.open(buffer, "rt") as file:
+                        df = pd.read_csv(file, header=None, names=nhc_cols)
+                out_data = df.to_csv(index=False)
+
+                blob.upload_blob_data(out_blob, out_data)
+
             ftp.cwd("..")
-        ftp.cwd(str(year))
+        ftp.cwd("..")
+
+    if include_recent:
+        ftp.cwd(recent_directory)
         filenames = [
             x
             for x in ftp.nlst()
@@ -43,7 +77,7 @@ def download_archive_forecasts(clobber: bool = False):
         ]
         for filename in filenames:
             out_blob = (
-                f"raw/noaa/nhc/historical_forecasts/{year}/"
+                f"raw/noaa/nhc/historical_forecasts/recent/"
                 f"{filename.removesuffix('.dat.gz')}.csv"
             )
             if out_blob in existing_files and not clobber:
@@ -60,7 +94,7 @@ def download_archive_forecasts(clobber: bool = False):
         ftp.cwd("..")
 
 
-def process_archive_forecasts():
+def process_historical_forecasts():
     blob_names = blob.list_container_blobs(
         name_starts_with="raw/noaa/nhc/historical_forecasts/"
     )
@@ -114,5 +148,50 @@ def process_archive_forecasts():
         dfs.append(dff)
 
     df = pd.concat(dfs, ignore_index=True)
-    save_blob = "processed/noaa/nhc/historical_forecasts/al_2000_2022.csv"
+    save_blob = "processed/noaa/nhc/historical_forecasts/al_2000_2023.csv"
     blob.upload_blob_data(save_blob, df.to_csv(index=False))
+
+
+def load_processed_historical_forecasts():
+    return pd.read_csv(
+        BytesIO(
+            blob.load_blob_data(
+                "processed/noaa/nhc/historical_forecasts/al_2000_2022.csv"
+            )
+        ),
+        parse_dates=["issue_time", "valid_time"],
+    )
+
+
+def calculate_hti_distance():
+    df = load_processed_historical_forecasts()
+    adm0 = codab.load_codab(admin_level=0)
+    adm0 = adm0.to_crs(3857)
+
+    gdf = gpd.GeoDataFrame(
+        df,
+        geometry=gpd.points_from_xy(df.lon, df.lat),
+        crs="EPSG:4326",
+    )
+    gdf = gdf.to_crs(3857)
+
+    gdf["hti_distance"] = gdf.geometry.distance(adm0.iloc[0].geometry)
+    gdf["hti_distance_km"] = gdf["hti_distance"] / 1000
+
+    save_blob = (
+        "processed/noaa/nhc/historical_forecasts/"
+        "hti_distances_2000_2022.parquet"
+    )
+    data = gdf.drop(columns=["hti_distance", "geometry"]).to_parquet()
+    blob.upload_blob_data(save_blob, data)
+
+
+def load_hti_distances():
+    return pd.read_parquet(
+        BytesIO(
+            blob.load_blob_data(
+                "processed/noaa/nhc/historical_forecasts/"
+                "hti_distances_2000_2022.parquet"
+            )
+        )
+    )

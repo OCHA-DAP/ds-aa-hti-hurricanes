@@ -3,6 +3,8 @@ from io import BytesIO
 
 import pandas as pd
 import rioxarray as rxr
+import xarray as xr
+from azure.core.exceptions import ResourceNotFoundError
 from tqdm import tqdm
 
 from src.datasources import codab
@@ -103,3 +105,54 @@ def load_chirps_gefs_raster(
     da = rxr.open_rasterio(blob_data)
     da = da.squeeze(drop=True)
     return da
+
+
+def process_chirps_gefs():
+    adm0 = codab.load_codab(admin_level=0)
+    start_date = "2000-01-01"
+    end_date = "2023-12-31"
+
+    issue_date_range = pd.date_range(start=start_date, end=end_date, freq="D")
+
+    verbose = False
+
+    dfs = []
+    for issue_date in tqdm(issue_date_range):
+        das_i = []
+        for leadtime in range(16):
+            valid_date = issue_date + pd.Timedelta(days=leadtime)
+            try:
+                da_in = load_chirps_gefs_raster(issue_date, valid_date)
+                da_in["valid_date"] = valid_date
+                das_i.append(da_in)
+            except ResourceNotFoundError as e:
+                if verbose:
+                    print(f"{e} for {issue_date} {valid_date}")
+
+        if das_i:
+            da_i = xr.concat(das_i, dim="valid_date")
+            da_i_clip = da_i.rio.clip(adm0.geometry, all_touched=True)
+            df_in = (
+                da_i_clip.mean(dim=["x", "y"])
+                .to_dataframe(name="mean")["mean"]
+                .reset_index()
+            )
+            df_in["issue_date"] = issue_date
+            dfs.append(df_in)
+        else:
+            if verbose:
+                print(f"no files for issue_date {issue_date}")
+
+    df = pd.concat(dfs, ignore_index=True)
+    data = df.to_parquet()
+    blob_proc_dir = "processed/chirps/gefs/hti/"
+    blob_name = "hti_chirps_gefs_mean_daily_2000_2023.parquet"
+    blob.upload_blob_data(blob_proc_dir + blob_name, data)
+
+
+def load_chirps_gefs_mean_daily():
+    data = blob.load_blob_data(
+        "processed/chirps/gefs/hti/"
+        "hti_chirps_gefs_mean_daily_2000_2023.parquet"
+    )
+    return pd.read_parquet(BytesIO(data))

@@ -38,7 +38,14 @@ from src.datasources import ibtracs, chirps, impact, gtcm
 ```
 
 ```python
-TARGET_ACT = 5
+24 / 8
+```
+
+```python
+# 3yr RP
+TARGET_ACT = 8
+# 5yr RP
+# TARGET_ACT = 5
 MAX_DISTANCE = 500
 CAT_1 = 64
 CAT_2 = 83
@@ -119,13 +126,13 @@ TARGET_YEARS = hurricanes["year"].unique()[:TARGET_ACT]
 print(TARGET_YEARS)
 
 # 3 year RP
-# MAX_RANK = 10
+MAX_RANK = 10
 
 # 4 year RP
 # MAX_RANK = 8
 
 # 5 year RP
-MAX_RANK = 7
+# MAX_RANK = 7
 
 hurricanes["target"] = hurricanes["rank"] <= MAX_RANK
 TARGET_SIDS = hurricanes[hurricanes["target"]]["sid"]
@@ -145,10 +152,31 @@ TARGET_SIDS
 
 ```python
 rain = chirps.load_raster_stats()
+rain["roll3_sum"] = (
+    rain["mean"]
+    .rolling(window=3, center=True, min_periods=1)
+    .sum()
+    .reset_index(level=0, drop=True)
+)
+rain["roll2_sum_bw"] = (
+    rain["mean"]
+    .rolling(window=2, center=True, min_periods=1)
+    .sum()
+    .reset_index(level=0, drop=True)
+)
+rain["roll2_sum_fw"] = rain["roll2_sum_bw"].shift(-1).fillna(0)
+```
+
+```python
+rain
 ```
 
 ```python
 MAX_RAIN = rain.drop(columns="T").max().max()
+```
+
+```python
+MAX_RAIN
 ```
 
 ```python
@@ -170,23 +198,34 @@ for d_thresh in d_threshs:
             group["time"].max().date() + pd.Timedelta(days=1)
         )
         rain_f = rain[(rain["T"] >= start_day) & (rain["T"] <= end_day)]
+        end_day_early = pd.Timestamp(group["time"].max().date())
+        rain_f_early = rain[
+            (rain["T"] >= start_day) & (rain["T"] <= end_day_early)
+        ]
+        start_day_late = pd.Timestamp(group["time"].min().date())
+        rain_f_short = rain[
+            (rain["T"] >= start_day_late) & (rain["T"] <= end_day_early)
+        ]
         dict_out = {
             "sid": sid,
             "max_wind": group["usa_wind"].max(),
-            "mean_wind": group["usa_wind"].mean(),
+            # "mean_wind": group["usa_wind"].mean(),
             "max_mean_rain": rain_f["mean"].max(),
-            "mean_mean_rain": rain_f["mean"].mean(),
+            # "mean_mean_rain": rain_f["mean"].mean(),
             "sum_mean_rain": rain_f["mean"].sum(),
+            "max_roll3_sum_rain": rain_f_short["roll3_sum"].max(),
+            "max_roll2_sum_rain": rain_f_early["roll2_sum_fw"].max(),
+            # "max_roll2_bw_sum_rain": rain_f["roll2_sum_bw"].max(),
             "d_thresh": d_thresh,
         }
-        for x in range(10, 91, 10):
-            dict_out.update(
-                {
-                    f"max_q{x}_rain": rain_f[f"q{x}"].max(),
-                    f"mean_q{x}_rain": rain_f[f"q{x}"].max(),
-                    f"sum_q{x}_rain": rain_f[f"q{x}"].sum(),
-                }
-            )
+        # for x in range(10, 91, 10):
+        #     dict_out.update(
+        #         {
+        #             f"max_q{x}_rain": rain_f[f"q{x}"].max(),
+        #             f"mean_q{x}_rain": rain_f[f"q{x}"].max(),
+        #             f"sum_q{x}_rain": rain_f[f"q{x}"].sum(),
+        #         }
+        #     )
         dicts.append(dict_out)
 
 stats = pd.DataFrame(dicts)
@@ -195,9 +234,10 @@ stats
 ```
 
 ```python
-p_metrics = [
-    x for x in stats.columns if "rain" in x and "max" in x and "q" not in x
-]
+# p_metrics = [
+#     x for x in stats.columns if "rain" in x and "max" in x and "q" not in x
+# ]
+p_metrics = [x for x in stats.columns if "rain" in x]
 print(p_metrics)
 
 dicts = []
@@ -265,12 +305,6 @@ triggers = pd.concat([hurricanes] + cols, axis=1)
 ```
 
 ```python
-stats["d_thresh"].nunique() * len(s_threshs) * (
-    len(p_threshs) * len(p_metrics) * 2 + 1
-)
-```
-
-```python
 triggers["nameyear"] = (
     triggers["name"].str.capitalize() + " " + triggers["year"].astype(str)
 )
@@ -278,26 +312,24 @@ hits = hits.sort_values("affected_captured", ascending=False)
 ```
 
 ```python
-for col in ["affected_captured", "affected_captured_adj"]:
-    display(hits[hits[col] == hits[col].max()])
+trigger_str = "d230_s50_AND_max_roll2_sum_rain40"
+cols = [
+    "sid",
+    "name",
+    "year",
+    "affected_population",
+    "rank",
+    "target",
+]
 
-display(hits[hits["trig_str"].str.contains("NORAIN")])
+filename = f"{trigger_str}_triggers.csv"
+triggers[triggers[trigger_str]][cols].to_csv(
+    ibtracs.IBTRACS_HTI_PROC_DIR / filename, index=False
+)
 ```
 
 ```python
-hits
-```
-
-```python
-jeanne_row = triggers.set_index("sid").loc[JEANNE]
-print(jeanne_row)
-
-jeanne_trigs = []
-for trig_str in hits["trig_str"]:
-    if jeanne_row[trig_str]:
-        jeanne_trigs.append(trig_str)
-
-print(jeanne_trigs)
+hits.iloc[:20]
 ```
 
 ```python
@@ -377,10 +409,12 @@ ax.yaxis.set_major_formatter(formatter)
 ```python
 # 3 year RP
 plot_cols = [
-    "d230_s50_AND_max_q90_rain50",
-    "d230_s50_AND_max_mean_rain30",
-    "d240_s40_AND_max_q50_rain30",
-    "d230_s80_NORAIN",
+    "d220_s50_AND_max_roll2_sum_rain40"
+    # "d230_s70_AND_max_roll3_sum_rain50"
+    # "d230_s50_AND_max_q90_rain50",
+    # "d230_s50_AND_max_mean_rain30",
+    # "d240_s40_AND_max_q50_rain30",
+    # "d230_s80_NORAIN",
     # "model_trigger",
 ]
 df_im = df_plot[["nameyear"] + plot_cols].set_index("nameyear").T

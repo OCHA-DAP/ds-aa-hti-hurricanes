@@ -42,7 +42,15 @@ from src.datasources import nhc
 ```
 
 ```python
-# nhc.download_archive_forecasts()
+# nhc.download_historical_forecasts()
+```
+
+```python
+nhc.process_historical_forecasts()
+```
+
+```python
+nhc.calculate_hti_distance()
 ```
 
 ```python

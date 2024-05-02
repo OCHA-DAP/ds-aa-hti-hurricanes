@@ -4,6 +4,7 @@ from typing import Literal
 
 import geopandas as gpd
 import pandas as pd
+import xarray as xr
 from shapely import Point
 
 from src.constants import HTI_ASAP0_ID
@@ -68,3 +69,25 @@ def load_hti_distances():
     return pd.read_csv(
         IBTRACS_HTI_PROC_DIR / "hti_distances.csv", parse_dates=["time"]
     )
+
+
+def load_raw_ibtracs():
+    filename = "IBTrACS.ALL.v04r00.nc"
+    return xr.open_dataset(IBTRACS_RAW_DIR / filename)
+
+
+def process_ibtracs_sid_atcf_names():
+    ds = load_raw_ibtracs()
+    ds_f = ds[["sid", "usa_atcf_id", "name"]]
+    df = ds_f.to_dataframe()
+    df_match = df.reset_index()[["sid", "usa_atcf_id", "name"]]
+    dff = df_match[df_match["usa_atcf_id"] != b""]
+    for x in dff.columns:
+        dff.loc[:, x] = dff[x].astype(str)
+    dff = dff[~dff.duplicated()]
+    filename = "sid_atcf_name.csv"
+    dff.to_csv(IBTRACS_PROC_DIR / filename, index=False)
+
+
+def load_ibtracs_sid_atcf_names():
+    return pd.read_csv(IBTRACS_PROC_DIR / "sid_atcf_name.csv")
