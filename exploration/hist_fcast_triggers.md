@@ -24,10 +24,37 @@ jupyter:
 ```python
 import geopandas as gpd
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from tqdm.notebook import tqdm
 
 from src.datasources import nhc, codab, chirps_gefs, chirps, ibtracs
 from src.utils import blob
+from src.constants import *
+```
+
+```python
+monitors = nhc.load_hist_fcast_monitors()
+monitors = monitors[monitors["issue_time"].dt.year != 2020]
+```
+
+```python
+for (atcf_id, atcf_id), group in monitors.groupby(["issue_time", "atcf_id"]):
+    stds = group.std(numeric_only=True)
+    if stds["roll2_rain_dist"] > 0:
+        print("rain")
+        display(group)
+    if stds["wind_dist"] > 0:
+        print("wind")
+        display(group)
+```
+
+```python
+D_THRESH = 230
+P_THRESH = 40
+S_THRESH = 50
 ```
 
 ```python
@@ -51,6 +78,8 @@ trigger_str = "d230_s50_AND_max_roll2_sum_rain40"
 filename = f"{trigger_str}_triggers.csv"
 obsv_triggers = pd.read_csv(ibtracs.IBTRACS_HTI_PROC_DIR / filename)
 obsv_triggers = obsv_triggers.merge(sid_atcf[["sid", "atcf_id"]])
+obsv_triggers = obsv_triggers[obsv_triggers["year"] != 2020]
+obsv_triggers
 ```
 
 ```python
@@ -64,139 +93,117 @@ obsv_triggers["closest_time"] = obsv_triggers["sid"].apply(closest_date)
 ```
 
 ```python
-obsv_triggers
+def determine_triggers(lt_threshs):
+    dicts = []
+    for atcf_id, group in monitors.groupby("atcf_id"):
+        for lt_name, threshs in lt_threshs.items():
+            dff = group[group["lt_name"] == lt_name]
+            dff_p = dff[dff["roll2_rain_dist"] >= threshs.get("p")]
+            dff_s = dff[dff["wind_dist"] >= threshs.get("s")]
+
+            if not dff_p.empty and not dff_s.empty:
+                pass
+
+            dff_both = dff[
+                (dff["roll2_rain_dist"] >= threshs.get("p"))
+                & (dff["wind_dist"] >= threshs.get("s"))
+            ]
+            if not dff_both.empty:
+                trig_date = dff_both["issue_time"].min()
+                dicts.append(
+                    {
+                        "atcf_id": atcf_id,
+                        "trig_date": trig_date,
+                        "lt_name": lt_name,
+                        "trig_type": "simul",
+                    }
+                )
+
+    triggers = pd.DataFrame(dicts)
+    triggers = (
+        triggers.pivot(
+            index=["atcf_id", "trig_type"],
+            columns="lt_name",
+            values="trig_date",
+        )
+        .reset_index()
+        .rename_axis(None, axis=1)
+    )
+    triggers = triggers.merge(
+        obsv_triggers[obsv_triggers["atcf_id"] != LAURA_ATCF_ID][
+            ["atcf_id", "closest_time", "target", "affected_population"]
+        ],
+        how="outer",
+    )
+    triggers = triggers.merge(sid_atcf, how="left")
+
+    for lt_name in lt_threshs:
+        triggers[f"{lt_name}_lt"] = (
+            triggers["closest_time"] - triggers[lt_name]
+        )
+        triggers[f"FN_{lt_name}"] = (
+            triggers[lt_name].isna() & triggers["target"]
+        )
+        triggers[f"FP_{lt_name}"] = (
+            ~triggers[lt_name].isna() & ~triggers["target"]
+        )
+    return triggers
 ```
 
 ```python
-D_THRESH = 230
-P_THRESH = 40
-S_THRESH = 50
-```
+ps = np.arange(40, 60)
+ss = np.arange(50, 70)
 
-```python
-rain = chirps_gefs.load_chirps_gefs_mean_daily()
-```
-
-```python
-rain["roll2_sum_bw"] = (
-    rain.groupby("issue_date")["mean"]
-    .rolling(window=2, center=True, min_periods=1)
-    .sum()
-    .reset_index(level=0, drop=True)
-)
-```
-
-```python
-rain
-```
-
-```python
-rain["lt"] = rain["valid_date"] - rain["issue_date"]
-```
-
-```python
-rain.groupby("lt")["mean"].mean().plot()
-```
-
-```python
-obsv_rain = chirps.load_raster_stats()
-obsv_rain["roll2_sum_bw"] = (
-    obsv_rain["mean"]
-    .rolling(window=2, center=True, min_periods=1)
-    .sum()
-    .reset_index(level=0, drop=True)
-)
-```
-
-```python
-all_tracks = nhc.load_hti_distances()
-```
-
-```python
-close_tracks = all_tracks[all_tracks["hti_distance_km"] < D_THRESH]
-```
-
-```python
-close_atcf_ids = close_tracks["atcf_id"].unique()
-```
-
-```python
-tracks = all_tracks[all_tracks["atcf_id"].isin(close_atcf_ids)]
-```
-
-```python
-lts = {"readiness": pd.Timedelta(days=5), "action": pd.Timedelta(days=3)}
-
+N_YEARS = 23
 dicts = []
-for atcf_id, storm_group in tqdm(tracks.groupby("atcf_id")):
-    obsv_tracks_f = obsv_tracks[obsv_tracks["atcf_id"] == atcf_id]
-    for issue_time, issue_group in storm_group.groupby("issue_time"):
-        rain_i = rain[
-            rain["issue_date"].astype(str) == issue_time.strftime("%Y-%m-%d")
-        ]
-        dff = issue_group[issue_group["hti_distance_km"] < D_THRESH]
-        for lt_name, lt in lts.items():
-            dff_lt = dff[dff["valid_time"] <= issue_time + lt]
-            start_date = pd.Timestamp(dff_lt["valid_time"].min().date())
-            end_date = pd.Timestamp(
-                dff_lt["valid_time"].max().date() + pd.Timedelta(days=1)
-            )
-            lt_rain = rain_i[
-                (rain_i["valid_date"] >= start_date)
-                & (rain_i["valid_date"] <= end_date)
-            ]["roll2_sum_bw"].max()
-            lt_wind = dff_lt["windspeed"].max()
+for lt_name in ["readiness", "action"]:
+    for p in tqdm(ps):
+        for s in ss:
+            lt_threshs = {
+                lt_name: {"p": p, "s": s},
+            }
+            df_in = determine_triggers(lt_threshs)
+            df_in["year"] = df_in["atcf_id"].str[-4:].astype(int)
             dicts.append(
                 {
-                    "atcf_id": atcf_id,
-                    "issue_time": issue_time,
+                    "p": p,
+                    "s": s,
                     "lt_name": lt_name,
-                    "roll2_rain": lt_rain,
-                    "wind": lt_wind,
+                    "rp": N_YEARS / df_in[lt_name].dt.year.nunique(),
+                    "fn": df_in[f"FN_{lt_name}"].sum(),
+                    "fp": df_in[f"FP_{lt_name}"].sum(),
+                    "lt": df_in[df_in["target"]][f"{lt_name}_lt"].mean(),
                 }
             )
 
-monitors = pd.DataFrame(dicts)
-print(len(monitors))
-monitors = monitors.merge(sid_atcf)
-monitors
+metrics = pd.DataFrame(dicts)
+metrics["lt_hours"] = metrics["lt"].dt.total_seconds() / 3600
+```
+
+```python
+metrics
 ```
 
 ```python
 lt_threshs = {
-    "readiness": {"p": 1 * P_THRESH, "s": S_THRESH},
-    "action": {"p": 1 * P_THRESH, "s": S_THRESH},
+    "readiness": {"p": 42, "s": S_THRESH},
+    "action": {"p": 54, "s": S_THRESH},
 }
+triggers = determine_triggers(lt_threshs)
+triggers.sort_values("affected_population", ascending=False)
+```
 
-dicts = []
-for atcf_id, group in monitors.groupby("atcf_id"):
-    for lt_name, threshs in lt_threshs.items():
-        dff = group[group["lt_name"] == lt_name]
-        dff_t = dff[
-            (dff["roll2_rain"] >= threshs.get("p"))
-            & (dff["wind"] >= threshs.get("s"))
-        ]
-        if not dff_t.empty:
-            trig_date = dff_t["issue_time"].min()
-            dicts.append(
-                {
-                    "atcf_id": atcf_id,
-                    "trig_date": trig_date,
-                    "lt_name": lt_name,
-                }
-            )
+```python
+triggers[triggers["target"]].plot(
+    x="affected_population",
+    y=["readiness_lt", "action_lt"],
+    marker=".",
+    linewidth=0,
+)
+```
 
-triggers = pd.DataFrame(dicts)
-triggers = (
-    triggers.pivot(index="atcf_id", columns="lt_name", values="trig_date")
-    .reset_index()
-    .rename_axis(None, axis=1)
-)
-triggers = triggers.merge(
-    obsv_triggers[["atcf_id", "closest_time", "name"]], how="left"
-)
-for lt_name in lt_threshs:
-    triggers[f"{lt_name}_lt"] = triggers["closest_time"] - triggers[lt_name]
+```python
+triggers[triggers["target"]]["readiness_lt"].mean()
 ```
 
 ```python
@@ -204,12 +211,239 @@ triggers["readiness_lt"].mean()
 ```
 
 ```python
-triggers["action_lt"].mean()
+triggers[triggers["target"]]["action_lt"].mean()
+```
+
+```python
+len(df_plot["wind_dist"].dropna())
+```
+
+```python
+trig_time, trig_lt = triggers.set_index("atcf_id").loc[atcf_id][
+    [lt_name, f"{lt_name}_lt"]
+]
+```
+
+```python
+f"{trig_lt.total_seconds() / 3600:.0f}"
+```
+
+```python
+def plot_forecasts(atcf_id):
+    d_lim = 600
+    lts = {
+        "action": {
+            "color": "darkorange",
+            "dash": "solid",
+            "label": "Action",
+            "threshs": {"p": 54, "s": S_THRESH},
+        },
+        "readiness": {
+            "color": "dodgerblue",
+            "dash": "dot",
+            "label": "Mobilisation",
+            "threshs": {"p": 42, "s": S_THRESH},
+        },
+    }
+
+    df_storm = monitors.set_index("atcf_id").loc[atcf_id].reset_index()
+    df_storm = df_storm[df_storm["dist_min"] < d_lim]
+    name = df_storm.iloc[0]["name"]
+
+    closest_time = obsv_triggers.set_index("atcf_id").loc[atcf_id][
+        "closest_time"
+    ]
+    min_time = df_storm["issue_time"].min()
+    s_max = df_storm["wind_dist"].max()
+    r_max = df_storm["roll2_rain_dist"].max()
+
+    readiness_time = triggers.set_index("atcf_id").loc[atcf_id]["readiness"]
+    action_time = triggers.set_index("atcf_id").loc[atcf_id]["action"]
+
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+    shapes = []
+    annotations = []
+    prev_trig_time = pd.NaT
+    for lt_name, params in lts.items():
+        trig_time, trig_lt = triggers.set_index("atcf_id").loc[atcf_id][
+            [lt_name, f"{lt_name}_lt"]
+        ]
+        if prev_trig_time - trig_time < pd.Timedelta(days=1):
+            offset = -0.2
+            standoff = 80
+        else:
+            offset = -0.1
+            standoff = 50
+        if not pd.isnull(trig_time):
+            shapes.append(
+                {
+                    "type": "line",
+                    "xref": "x3",
+                    "yref": "paper",
+                    "x0": trig_time,
+                    "x1": trig_time,
+                    "y0": offset,
+                    "y1": 1,
+                    "line": {
+                        "color": params.get("color"),
+                        "width": 2,
+                        "dash": "solid",
+                    },
+                }
+            )
+            annotations.append(
+                {
+                    "x": trig_time,
+                    "y": offset,
+                    "xref": "x3",
+                    "yref": "paper",
+                    "text": (
+                        f'{params.get("label")} :<br>'
+                        f'{trig_time.strftime("%-d %b, %-H:%M")}<br>'
+                        f"(préavis {trig_lt.total_seconds() / 3600:.0f} heures)"
+                    ),
+                    "showarrow": False,
+                    "xanchor": "center",
+                    "yanchor": "top",
+                    "font": {"size": 10, "color": params.get("color")},
+                }
+            )
+
+        df_plot = df_storm[df_storm["lt_name"] == lt_name]
+        for j, var in enumerate(["wind_dist", "roll2_rain_dist", "dist_min"]):
+            mode = "markers" if len(df_plot[var].dropna()) == 1 else "lines"
+            fig.add_trace(
+                go.Scatter(
+                    x=df_plot["issue_time"],
+                    y=df_plot[var],
+                    mode=mode,
+                    name=f"y{j+1}",
+                    line_color=params.get("color"),
+                    line_dash=params.get("dash"),
+                    line_width=3,
+                ),
+                row=j + 1,
+                col=1,
+            )
+        prev_trig_time = trig_time
+
+    # zero lines
+    shapes.extend(
+        [
+            {
+                "type": "line",
+                "xref": "paper",
+                "yref": f"y{x}",
+                "x0": 0,
+                "x1": 1,
+                "y0": 0,
+                "y1": 0,
+                "line": {"color": "black", "width": 1},
+            }
+            for x in [1, 2]
+        ]
+    )
+
+    # thresholds
+    shapes.extend(
+        [
+            {
+                "type": "line",
+                "xref": "paper",
+                "yref": f"y{x}",
+                "x0": 0,
+                "x1": 1,
+                "y0": t,
+                "y1": t,
+                "line": {"color": "black", "width": 2, "dash": "dash"},
+            }
+            for t, x in zip([50, 40, 230], [1, 2, 3])
+        ]
+    )
+
+    # closest pass
+    shapes.append(
+        {
+            "type": "line",
+            "xref": "x3",
+            "yref": "paper",
+            "x0": closest_time,
+            "x1": closest_time,
+            "y0": -0.1,
+            "y1": 1,
+            "line": {"color": "black", "width": 2, "dash": "solid"},
+        }
+    )
+    annotations.append(
+        {
+            "x": closest_time,
+            "y": -0.1,
+            "xref": "x3",
+            "yref": "paper",
+            "text": f'Passage plus proche :<br>{closest_time.strftime("%-d %b, %H:%M")}',
+            "showarrow": False,
+            "xanchor": "center",
+            "yanchor": "top",
+            "font": {"size": 10, "color": "black"},
+        }
+    )
+
+    yaxis_font_size = 14
+    fig.update_traces(xaxis="x3")
+    fig.update_layout(
+        hovermode="x unified",
+        title=f"Prévisions de ouragan {name}<br><sup>"
+        "Graphiques indiquent valeurs prévues; "
+        "lignes en tirets indiquent seuils</sup>",
+        yaxis=dict(
+            title=dict(
+                text="Vitesse<br>de vent<br>(noeuds)",
+                font_size=yaxis_font_size,
+            ),
+            range=[0, s_max + 10],
+        ),
+        yaxis2=dict(
+            title=dict(
+                text="Précipitations<br>sur 2 jours<br>(mm)",
+                font_size=yaxis_font_size,
+            ),
+            range=[0, r_max + 10],
+        ),
+        yaxis3=dict(
+            title=dict(
+                text="Distance<br>minimum<br>(km)", font_size=yaxis_font_size
+            ),
+            range=[0, d_lim],
+        ),
+        xaxis3=dict(
+            title=dict(
+                text="Heure de publication de prévision", standoff=standoff
+            ),
+            range=[min_time, closest_time + pd.Timedelta(days=0.5)],
+        ),
+        shapes=shapes,
+        annotations=annotations,
+        template="simple_white",
+        height=630,
+        width=800,
+        showlegend=False,
+        margin={"b": 100},
+    )
+    return fig
+```
+
+```python
+for atcf_id in [MATTHEW_ATCF_ID, HANNA_ATCF_ID]:
+    plot_forecasts(atcf_id).show()
+```
+
+```python
+
 ```
 
 ```python
 # Ike
-monitors.set_index("atcf_id").loc["al092008"].dropna()
+monitors.set_index("atcf_id").loc["al092008"]
 ```
 
 ```python
@@ -220,4 +454,27 @@ monitors.set_index("atcf_id").loc["al112017"].dropna()
 ```python
 # Sandy
 monitors.set_index("atcf_id").loc["al182012"].dropna()
+```
+
+```python
+ax = (
+    obsv_tracks.set_index("atcf_id")
+    .loc["al182012"]
+    .plot(x="time", y="distance (m)")
+)
+ax.axhline(y=230 * 1e3, color="lightgray", linestyle="dashed")
+```
+
+```python
+# Laura
+monitors.set_index("atcf_id").loc["al132020"].iloc[:60]
+```
+
+```python
+ax = (
+    obsv_tracks.set_index("atcf_id")
+    .loc["al132020"]
+    .plot(x="time", y="distance (m)")
+)
+ax.axhline(y=230 * 1e3, color="lightgray", linestyle="dashed")
 ```

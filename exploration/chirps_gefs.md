@@ -46,13 +46,20 @@ df = chirps_gefs.load_chirps_gefs_mean_daily()
 ```
 
 ```python
-df.loc[df["mean"].idxmax()]
+df
 ```
 
 ```python
-df[df["valid_date"] == "2016-10-04"].plot(x="issue_date", y="mean")
+dates = pd.date_range("2000-01-01", "2024-01-01")
 ```
 
 ```python
+missing_dates = []
+for date in dates:
+    if date not in df["issue_date"].unique():
+        missing_dates.append(date)
+```
 
+```python
+missing_dates
 ```

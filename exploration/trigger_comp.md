@@ -147,6 +147,10 @@ TARGET_SIDS_ADJ = hurricanes[hurricanes["target"]]["sid"]
 ```
 
 ```python
+hurricanes.sort_values("year")["year"].unique()
+```
+
+```python
 TARGET_SIDS
 ```
 
@@ -323,7 +327,9 @@ cols = [
 ]
 
 filename = f"{trigger_str}_triggers.csv"
-triggers[triggers[trigger_str]][cols].to_csv(
+triggers[cols + [trigger_str]].dropna(
+    subset="affected_population"
+).sort_values("affected_population", ascending=False).to_csv(
     ibtracs.IBTRACS_HTI_PROC_DIR / filename, index=False
 )
 ```

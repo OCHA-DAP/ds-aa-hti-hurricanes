@@ -72,56 +72,6 @@ rain["roll2_sum_fw"] = rain["roll2_sum_bw"].shift(-1).fillna(0)
 ```
 
 ```python
-d_thresh = 250
-tracks_f = tracks[tracks["distance (m)"] < d_thresh * 1000]
-
-max_rain = rain[["mean"]].max().max()
-
-for year in range(2000, 2024):
-    fig, ax = plt.subplots(figsize=(15, 5), dpi=300)
-    rain[rain["T"].dt.year == year].set_index("T")["mean"].plot(
-        ax=ax, linewidth=0.5, color="k", linestyle="-"
-    )
-    # rain[rain["T"].dt.year == year].set_index("T")["q80"].plot(
-    #     ax=ax, linewidth=0.5, color="k", linestyle="--", legend=True
-    # )
-
-    for sid, group in tracks_f[tracks_f["time"].dt.year == year].groupby(
-        "sid"
-    ):
-        if sid in ibtracs.CERF_SIDS:
-            color = "red"
-        elif sid in ibtracs.IMPACT_SIDS:
-            color = "orange"
-        else:
-            color = "grey"
-        start_day = group["time"].min() - pd.Timedelta(days=1)
-        end_day = group["time"].max() + pd.Timedelta(days=1)
-        ax.axvspan(
-            start_day,
-            end_day,
-            facecolor=color,
-            alpha=0.1,
-            edgecolor="none",
-        )
-        ax.text(
-            start_day,
-            max_rain,
-            group.iloc[0]["name"].capitalize(),
-            rotation=90,
-            va="top",
-            ha="right",
-            color=color,
-        )
-
-    ax.set_ylim(bottom=0, top=max_rain)
-    ax.set_ylabel("Précipitations quotidiennes\nmoyennes en Haïti(mm)")
-    ax.set_xlabel("Date")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-```
-
-```python
 d_thresh = 230
 
 tracks_f = tracks[tracks["distance (m)"] < d_thresh * 1000]
@@ -327,7 +277,8 @@ ax.set_ylim(top=100, bottom=0)
 
 ax.set_xlabel("Vitesse de vent maximum (noeuds)")
 ax.set_ylabel(
-    "Précipitations journalières maximum, moyenne sur toute la superficie (mm)"
+    "Précipitations pendant deux jours consécutifs maximum, "
+    "moyenne sur toute la superficie (mm)"
 )
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
@@ -421,6 +372,56 @@ ax.set_ylabel("Distance à Haïti (km)")
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.set_title("Comparaison de distance, vent, et impact")
+```
+
+```python
+d_thresh = 250
+tracks_f = tracks[tracks["distance (m)"] < d_thresh * 1000]
+
+max_rain = rain[["mean"]].max().max()
+
+for year in range(2000, 2024):
+    fig, ax = plt.subplots(figsize=(15, 5), dpi=300)
+    rain[rain["T"].dt.year == year].set_index("T")["mean"].plot(
+        ax=ax, linewidth=0.5, color="k", linestyle="-"
+    )
+    # rain[rain["T"].dt.year == year].set_index("T")["q80"].plot(
+    #     ax=ax, linewidth=0.5, color="k", linestyle="--", legend=True
+    # )
+
+    for sid, group in tracks_f[tracks_f["time"].dt.year == year].groupby(
+        "sid"
+    ):
+        if sid in ibtracs.CERF_SIDS:
+            color = "red"
+        elif sid in ibtracs.IMPACT_SIDS:
+            color = "orange"
+        else:
+            color = "grey"
+        start_day = group["time"].min() - pd.Timedelta(days=1)
+        end_day = group["time"].max() + pd.Timedelta(days=1)
+        ax.axvspan(
+            start_day,
+            end_day,
+            facecolor=color,
+            alpha=0.1,
+            edgecolor="none",
+        )
+        ax.text(
+            start_day,
+            max_rain,
+            group.iloc[0]["name"].capitalize(),
+            rotation=90,
+            va="top",
+            ha="right",
+            color=color,
+        )
+
+    ax.set_ylim(bottom=0, top=max_rain)
+    ax.set_ylabel("Précipitations quotidiennes\nmoyennes en Haïti(mm)")
+    ax.set_xlabel("Date")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 ```
 
 ```python

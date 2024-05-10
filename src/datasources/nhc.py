@@ -7,8 +7,86 @@ import geopandas as gpd
 import pandas as pd
 from tqdm import tqdm
 
-from src.datasources import codab
+from src.constants import D_THRESH
+from src.datasources import chirps_gefs, codab, ibtracs
 from src.utils import blob
+
+
+def calculate_hist_fcast_monitors():
+    sid_atcf = ibtracs.load_ibtracs_sid_atcf_names()
+    sid_atcf.loc[:, "name"] = sid_atcf["name"].str.capitalize()
+    sid_atcf.loc[:, "usa_atcf_id"] = sid_atcf["usa_atcf_id"].str.lower()
+    sid_atcf = sid_atcf.rename(columns={"usa_atcf_id": "atcf_id"})
+
+    rain = chirps_gefs.load_chirps_gefs_mean_daily()
+    rain["roll2_sum_bw"] = (
+        rain.groupby("issue_date")["mean"]
+        .rolling(window=2, center=True, min_periods=1)
+        .sum()
+        .reset_index(level=0, drop=True)
+    )
+    date_cols = ["issue_date", "valid_date"]
+    for date_col in date_cols:
+        rain[date_col] = rain[date_col].dt.date
+
+    all_tracks = load_hti_distances()
+    close_tracks = all_tracks[all_tracks["hti_distance_km"] < D_THRESH]
+    close_atcf_ids = close_tracks["atcf_id"].unique()
+    tracks = all_tracks[all_tracks["atcf_id"].isin(close_atcf_ids)].copy()
+    tracks["lt"] = tracks["valid_time"] - tracks["issue_time"]
+
+    lts = {
+        "readiness": pd.Timedelta(days=5),
+        "action": pd.Timedelta(days=3),
+        "obsv": pd.Timedelta(days=0),
+    }
+
+    dicts = []
+    for atcf_id, storm_group in tqdm(tracks.groupby("atcf_id")):
+        for issue_time, issue_group in storm_group.groupby("issue_time"):
+            rain_i = rain[rain["issue_date"] == issue_time.date()]
+            for lt_name, lt in lts.items():
+                dff_lt = issue_group[
+                    issue_group["valid_time"] <= issue_time + lt
+                ]
+                dff_dist = dff_lt[dff_lt["hti_distance_km"] <= D_THRESH]
+                start_date = dff_dist["valid_time"].min().date()
+                end_date = dff_dist["valid_time"].max().date() + pd.Timedelta(
+                    days=1
+                )
+                dicts.append(
+                    {
+                        "atcf_id": atcf_id,
+                        "issue_time": issue_time,
+                        "lt_name": lt_name,
+                        "roll2_rain_dist": rain_i[
+                            (rain_i["valid_date"] >= start_date)
+                            & (rain_i["valid_date"] <= end_date)
+                        ]["roll2_sum_bw"].max(),
+                        "wind_dist": dff_dist["windspeed"].max(),
+                        "dist_min": dff_lt["hti_distance_km"].min(),
+                        "roll2_rain": rain_i[
+                            rain_i["valid_date"] <= (issue_time + lt).date()
+                        ]["roll2_sum_bw"].max(),
+                        "wind": dff_lt["windspeed"].max(),
+                    }
+                )
+
+    monitors = pd.DataFrame(dicts)
+    monitors = monitors.merge(sid_atcf)
+    save_blob = "ds-aa-hti-hurricanes/procesed/monitors.parquet"
+    blob.upload_blob_data(save_blob, monitors.to_parquet(), prod_dev="dev")
+
+
+def load_hist_fcast_monitors():
+    return pd.read_parquet(
+        BytesIO(
+            blob.load_blob_data(
+                "ds-aa-hti-hurricanes/procesed/monitors.parquet",
+                prod_dev="dev",
+            )
+        )
+    )
 
 
 def download_historical_forecasts(
@@ -156,7 +234,7 @@ def load_processed_historical_forecasts():
     return pd.read_csv(
         BytesIO(
             blob.load_blob_data(
-                "processed/noaa/nhc/historical_forecasts/al_2000_2022.csv"
+                "processed/noaa/nhc/historical_forecasts/al_2000_2023.csv"
             )
         ),
         parse_dates=["issue_time", "valid_time"],
@@ -180,7 +258,7 @@ def calculate_hti_distance():
 
     save_blob = (
         "processed/noaa/nhc/historical_forecasts/"
-        "hti_distances_2000_2022.parquet"
+        "hti_distances_2000_2023.parquet"
     )
     data = gdf.drop(columns=["hti_distance", "geometry"]).to_parquet()
     blob.upload_blob_data(save_blob, data)
@@ -191,7 +269,7 @@ def load_hti_distances():
         BytesIO(
             blob.load_blob_data(
                 "processed/noaa/nhc/historical_forecasts/"
-                "hti_distances_2000_2022.parquet"
+                "hti_distances_2000_2023.parquet"
             )
         )
     )
