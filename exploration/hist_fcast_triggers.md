@@ -24,6 +24,7 @@ jupyter:
 ```python
 import geopandas as gpd
 import pandas as pd
+import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
@@ -38,6 +39,10 @@ from src.constants import *
 ```python
 monitors = nhc.load_hist_fcast_monitors()
 monitors = monitors[monitors["issue_time"].dt.year != 2020]
+```
+
+```python
+monitors
 ```
 
 ```python
@@ -120,6 +125,7 @@ def determine_triggers(lt_threshs):
                 )
 
     triggers = pd.DataFrame(dicts)
+
     triggers = (
         triggers.pivot(
             index=["atcf_id", "trig_type"],
@@ -136,6 +142,7 @@ def determine_triggers(lt_threshs):
         how="outer",
     )
     triggers = triggers.merge(sid_atcf, how="left")
+    triggers["target"] = triggers["target"].astype(bool)
 
     for lt_name in lt_threshs:
         triggers[f"{lt_name}_lt"] = (
@@ -151,8 +158,8 @@ def determine_triggers(lt_threshs):
 ```
 
 ```python
-ps = np.arange(40, 60)
-ss = np.arange(50, 70)
+ps = np.arange(30, 60)
+ss = np.arange(34, 70)
 
 N_YEARS = 23
 dicts = []
@@ -173,6 +180,9 @@ for lt_name in ["readiness", "action"]:
                     "fn": df_in[f"FN_{lt_name}"].sum(),
                     "fp": df_in[f"FP_{lt_name}"].sum(),
                     "lt": df_in[df_in["target"]][f"{lt_name}_lt"].mean(),
+                    "affected_population": df_in[~df_in[lt_name].isnull()][
+                        "affected_population"
+                    ].sum(),
                 }
             )
 
@@ -181,51 +191,38 @@ metrics["lt_hours"] = metrics["lt"].dt.total_seconds() / 3600
 ```
 
 ```python
-metrics
+for lt_name, (rp_min, rp_max) in [
+    ("readiness", (1.5, 2.8)),
+    ("action", (2.8, 3.5)),
+]:
+    for var in ["fn", "fp", "lt_hours", "rp", "affected_population"]:
+        pivot_df = metrics[
+            (metrics["lt_name"] == lt_name)
+            & (metrics["rp"] >= rp_min)
+            & (metrics["rp"] <= rp_max)
+        ].pivot(index="s", columns="p", values=var)
+
+        # Create the heatmap
+        plt.figure(figsize=(10, 8))
+        ax = sns.heatmap(
+            pivot_df, annot=True, cmap="coolwarm"
+        )  # 'annot=True' displays the values
+        ax.invert_yaxis()  # Invert the y-axis
+        plt.title(f"{lt_name} {var}")
+        plt.show()
 ```
 
 ```python
 lt_threshs = {
-    "readiness": {"p": 42, "s": S_THRESH},
-    "action": {"p": 54, "s": S_THRESH},
+    "readiness": {"p": 35, "s": 34},
+    "action": {"p": 42, "s": 64},
 }
 triggers = determine_triggers(lt_threshs)
-triggers.sort_values("affected_population", ascending=False)
+triggers = triggers.sort_values("affected_population", ascending=False)
 ```
 
 ```python
-triggers[triggers["target"]].plot(
-    x="affected_population",
-    y=["readiness_lt", "action_lt"],
-    marker=".",
-    linewidth=0,
-)
-```
-
-```python
-triggers[triggers["target"]]["readiness_lt"].mean()
-```
-
-```python
-triggers["readiness_lt"].mean()
-```
-
-```python
-triggers[triggers["target"]]["action_lt"].mean()
-```
-
-```python
-len(df_plot["wind_dist"].dropna())
-```
-
-```python
-trig_time, trig_lt = triggers.set_index("atcf_id").loc[atcf_id][
-    [lt_name, f"{lt_name}_lt"]
-]
-```
-
-```python
-f"{trig_lt.total_seconds() / 3600:.0f}"
+triggers
 ```
 
 ```python
@@ -236,13 +233,21 @@ def plot_forecasts(atcf_id):
             "color": "darkorange",
             "dash": "solid",
             "label": "Action",
-            "threshs": {"p": 54, "s": S_THRESH},
+            "threshs": {
+                "roll2_rain_dist": 42,
+                "wind_dist": 64,
+                "dist_min": D_THRESH,
+            },
         },
         "readiness": {
             "color": "dodgerblue",
             "dash": "dot",
             "label": "Mobilisation",
-            "threshs": {"p": 42, "s": S_THRESH},
+            "threshs": {
+                "roll2_rain_dist": 35,
+                "wind_dist": 34,
+                "dist_min": D_THRESH,
+            },
         },
     }
 
@@ -286,7 +291,7 @@ def plot_forecasts(atcf_id):
                     "y1": 1,
                     "line": {
                         "color": params.get("color"),
-                        "width": 2,
+                        "width": 1,
                         "dash": "solid",
                     },
                 }
@@ -312,6 +317,7 @@ def plot_forecasts(atcf_id):
         df_plot = df_storm[df_storm["lt_name"] == lt_name]
         for j, var in enumerate(["wind_dist", "roll2_rain_dist", "dist_min"]):
             mode = "markers" if len(df_plot[var].dropna()) == 1 else "lines"
+
             fig.add_trace(
                 go.Scatter(
                     x=df_plot["issue_time"],
@@ -324,6 +330,22 @@ def plot_forecasts(atcf_id):
                 ),
                 row=j + 1,
                 col=1,
+            )
+            shapes.append(
+                {
+                    "type": "line",
+                    "xref": "paper",
+                    "yref": f"y{j+1}",
+                    "x0": 0,
+                    "x1": 1,
+                    "y0": params["threshs"][var],
+                    "y1": params["threshs"][var],
+                    "line": {
+                        "color": params["color"],
+                        "width": 1,
+                        "dash": "dash",
+                    },
+                }
             )
         prev_trig_time = trig_time
 
@@ -338,26 +360,9 @@ def plot_forecasts(atcf_id):
                 "x1": 1,
                 "y0": 0,
                 "y1": 0,
-                "line": {"color": "black", "width": 1},
+                "line": {"color": "black", "width": 2},
             }
             for x in [1, 2]
-        ]
-    )
-
-    # thresholds
-    shapes.extend(
-        [
-            {
-                "type": "line",
-                "xref": "paper",
-                "yref": f"y{x}",
-                "x0": 0,
-                "x1": 1,
-                "y0": t,
-                "y1": t,
-                "line": {"color": "black", "width": 2, "dash": "dash"},
-            }
-            for t, x in zip([50, 40, 230], [1, 2, 3])
         ]
     )
 
@@ -433,12 +438,8 @@ def plot_forecasts(atcf_id):
 ```
 
 ```python
-for atcf_id in [MATTHEW_ATCF_ID, HANNA_ATCF_ID]:
+for atcf_id in triggers[triggers["target"]]["atcf_id"]:
     plot_forecasts(atcf_id).show()
-```
-
-```python
-
 ```
 
 ```python
