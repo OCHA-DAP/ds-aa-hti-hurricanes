@@ -186,5 +186,19 @@ plot_forecast_map(HANNA_ATCF_ID).show(
 ```
 
 ```python
+plot_forecast_map(JEANNE_ATCF_ID).show(
+    renderer="browser", config={"displayModeBar": False}
+)
+```
 
+```python
+plot_forecast_map(IKE_ATCF_ID).show(
+    renderer="browser", config={"displayModeBar": False}
+)
+```
+
+```python
+plot_forecast_map(SANDY_ATCF_ID).show(
+    renderer="browser", config={"displayModeBar": False}
+)
 ```

@@ -74,7 +74,7 @@ def calculate_hist_fcast_monitors():
 
     monitors = pd.DataFrame(dicts)
     monitors = monitors.merge(sid_atcf)
-    save_blob = "ds-aa-hti-hurricanes/procesed/monitors.parquet"
+    save_blob = "ds-aa-hti-hurricanes/processed/monitors.parquet"
     blob.upload_blob_data(save_blob, monitors.to_parquet(), prod_dev="dev")
 
 
@@ -82,7 +82,7 @@ def load_hist_fcast_monitors():
     return pd.read_parquet(
         BytesIO(
             blob.load_blob_data(
-                "ds-aa-hti-hurricanes/procesed/monitors.parquet",
+                "ds-aa-hti-hurricanes/processed/monitors.parquet",
                 prod_dev="dev",
             )
         )

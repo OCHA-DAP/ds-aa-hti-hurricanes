@@ -31,7 +31,31 @@ from src.datasources import codab
 ```
 
 ```python
-D_THRESH = 230
+codab.download_codab_to_blob()
+```
+
+```python
+adm0 = codab.load_codab_from_blob(admin_level=0)
+```
+
+```python
+adm0
+```
+
+```python
+codab.process_buffer()
+```
+
+```python
+buffer = codab.load_buffer()
+```
+
+```python
+buffer
+```
+
+```python
+adm
 ```
 
 ```python
@@ -40,14 +64,6 @@ adm = codab.load_codab(admin_level=0)
 
 ```python
 adm.plot()
-```
-
-```python
-buffer = adm.to_crs(3857).buffer(distance=D_THRESH * 1000).to_crs(4326)
-```
-
-```python
-buffer.index
 ```
 
 ```python

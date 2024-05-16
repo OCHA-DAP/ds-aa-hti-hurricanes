@@ -439,7 +439,10 @@ def plot_forecasts(atcf_id):
 
 ```python
 for atcf_id in triggers[triggers["target"]]["atcf_id"]:
-    plot_forecasts(atcf_id).show()
+    try:
+        plot_forecasts(atcf_id).show()
+    except:
+        print(atcf_id)
 ```
 
 ```python
