@@ -46,6 +46,23 @@ monitors
 ```
 
 ```python
+monitors["atcf_id"].nunique()
+```
+
+```python
+storms = monitors.groupby("atcf_id")["name"].first().reset_index()
+storms["year"] = storms["atcf_id"].str[-4:].astype(int)
+storms = storms.sort_values(["year", "name"], ascending=False)
+storms["nameyear"] = storms["name"] + " " + storms["year"].astype(str)
+storms = storms.set_index("atcf_id")
+storms
+```
+
+```python
+[print(x, y) for x, y in storms["nameyear"].items()]
+```
+
+```python
 for (atcf_id, atcf_id), group in monitors.groupby(["issue_time", "atcf_id"]):
     stds = group.std(numeric_only=True)
     if stds["roll2_rain_dist"] > 0:
@@ -67,6 +84,10 @@ sid_atcf = ibtracs.load_ibtracs_sid_atcf_names()
 sid_atcf.loc[:, "name"] = sid_atcf["name"].str.capitalize()
 sid_atcf.loc[:, "usa_atcf_id"] = sid_atcf["usa_atcf_id"].str.lower()
 sid_atcf = sid_atcf.rename(columns={"usa_atcf_id": "atcf_id"})
+```
+
+```python
+sid_atcf
 ```
 
 ```python
@@ -218,7 +239,14 @@ lt_threshs = {
     "action": {"p": 42, "s": 64},
 }
 triggers = determine_triggers(lt_threshs)
+trig_str = (
+    f'triggers_r_p{lt_threshs["readiness"]["p"]}_s{lt_threshs["readiness"]["s"]}_'
+    f'a_p{lt_threshs["action"]["p"]}_s{lt_threshs["action"]["s"]}'
+)
+print(trig_str)
+blob_name = f"{blob.PROJECT_PREFIX}/processed/{trig_str}.csv"
 triggers = triggers.sort_values("affected_population", ascending=False)
+blob.upload_blob_data(blob_name, triggers.to_csv(), prod_dev="dev")
 ```
 
 ```python

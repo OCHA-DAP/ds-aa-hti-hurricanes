@@ -21,6 +21,8 @@ DEV_BLOB_BASE_URL = "https://imb0chd0dev.blob.core.windows.net/"
 DEV_BLOB_PROJ_BASE_URL = DEV_BLOB_BASE_URL + "projects"
 DEV_BLOB_PROJ_URL = DEV_BLOB_PROJ_BASE_URL + "?" + DEV_BLOB_SAS
 
+PROJECT_PREFIX = "ds-aa-hti-hurricanes"
+
 
 prod_container_client = ContainerClient.from_container_url(PROD_BLOB_AA_URL)
 dev_container_client = ContainerClient.from_container_url(DEV_BLOB_PROJ_URL)
