@@ -59,21 +59,6 @@ storms
 ```
 
 ```python
-[print(x, y) for x, y in storms["nameyear"].items()]
-```
-
-```python
-for (atcf_id, atcf_id), group in monitors.groupby(["issue_time", "atcf_id"]):
-    stds = group.std(numeric_only=True)
-    if stds["roll2_rain_dist"] > 0:
-        print("rain")
-        display(group)
-    if stds["wind_dist"] > 0:
-        print("wind")
-        display(group)
-```
-
-```python
 D_THRESH = 230
 P_THRESH = 40
 S_THRESH = 50
@@ -250,7 +235,29 @@ blob.upload_blob_data(blob_name, triggers.to_csv(), prod_dev="dev")
 ```
 
 ```python
+blob.upload_parquet_to_blob(blob_name, triggers, prod_dev="dev")
+```
+
+```python
+lt_threshs = {
+    "readiness": {"p": 35, "s": 34},
+    "action": {"p": 42, "s": 64},
+}
+trig_str = (
+    f'triggers_r_p{lt_threshs["readiness"]["p"]}_s{lt_threshs["readiness"]["s"]}_'
+    f'a_p{lt_threshs["action"]["p"]}_s{lt_threshs["action"]["s"]}'
+)
+print(trig_str)
+blob_name = f"{blob.PROJECT_PREFIX}/processed/{trig_str}.csv"
+```
+
+```python
+triggers = blob.load_parquet_from_blob(blob_name, prod_dev="dev")
 triggers
+```
+
+```python
+triggers.dtypes
 ```
 
 ```python
@@ -281,11 +288,13 @@ def plot_forecasts(atcf_id):
 
     df_storm = monitors.set_index("atcf_id").loc[atcf_id].reset_index()
     df_storm = df_storm[df_storm["dist_min"] < d_lim]
+
+    df_storm["issue_time_str"] = df_storm["issue_time"].dt.strftime(
+        "%Hh, %d %b"
+    )
     name = df_storm.iloc[0]["name"]
 
-    closest_time = obsv_triggers.set_index("atcf_id").loc[atcf_id][
-        "closest_time"
-    ]
+    closest_time = triggers.set_index("atcf_id").loc[atcf_id]["closest_time"]
     min_time = df_storm["issue_time"].min()
     s_max = df_storm["wind_dist"].max()
     r_max = df_storm["roll2_rain_dist"].max()
@@ -345,13 +354,12 @@ def plot_forecasts(atcf_id):
         df_plot = df_storm[df_storm["lt_name"] == lt_name]
         for j, var in enumerate(["wind_dist", "roll2_rain_dist", "dist_min"]):
             mode = "markers" if len(df_plot[var].dropna()) == 1 else "lines"
-
             fig.add_trace(
                 go.Scatter(
                     x=df_plot["issue_time"],
                     y=df_plot[var],
                     mode=mode,
-                    name=f"y{j+1}",
+                    name=params["label"],
                     line_color=params.get("color"),
                     line_dash=params.get("dash"),
                     line_width=3,
@@ -466,7 +474,7 @@ def plot_forecasts(atcf_id):
 ```
 
 ```python
-for atcf_id in triggers[triggers["target"]]["atcf_id"]:
+for atcf_id in triggers[triggers["target"]].iloc[:1]["atcf_id"]:
     try:
         plot_forecasts(atcf_id).show()
     except:
