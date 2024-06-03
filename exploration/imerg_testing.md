@@ -22,48 +22,62 @@ jupyter:
 ```
 
 ```python
-import requests
-from requests.auth import HTTPBasicAuth
-
-# URL of the file to download
-url = "https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDL.06/2024/05/3B-DAY-L.MS.MRG.3IMERG.20240527-S000000-E235959.V06.nc4"
-subset = "?lat[0:10],lon[0:10]"
-
-# Your credentials
-username = "your_username"
-password = "your_password"
-
-# Send the request with Basic Authentication
-result = requests.get(url + subset)
-```
-
-```python
-FILENAME = "temp/imerg_test"
-try:
-    result.raise_for_status()
-    f = open(FILENAME, "wb")
-    f.write(result.content)
-    f.close()
-    print("contents of URL written to " + FILENAME)
-except:
-    print("requests.get() returned an error code " + str(result.status_code))
-```
-
-```python
-try:
-    result.raise_for_status()
-except:
-    print("DFAS")
-```
-
-```python
+import os
+import pandas as pd
+import zarr
+import fsspec
 import xarray as xr
+import time
+import matplotlib.pyplot as plt
+from tqdm.notebook import tqdm
 
-ds = xr.load_dataset(FILENAME)
+from src.datasources import imerg, codab
+from src.utils import blob
 ```
 
 ```python
-ds.isel(time=0)["precipitationCal"].plot()
+time.time()
+```
+
+```python
+adm0 = codab.load_codab_from_blob(admin_level=0)
+```
+
+```python
+# imerg.create_auth_files()
+```
+
+```python
+ds = imerg.load_imerg_zarr()
+
+for date in tqdm(pd.date_range("2000-06-01", "2020-01-19")):
+    start = time.time()
+    print(date)
+    if date in ds.time:
+        continue
+    imerg.download_imerg(date)
+    da_in = imerg.process_imerg()
+    imerg.append_imerg_zarr(da_in)
+    print(time.time() - start)
+```
+
+```python
+fs = blob.get_fs()
+da_in = imerg.process_imerg()
+da_in.to_zarr(fs.get_mapper(imerg.IMERG_ZARR_ROOT), mode="w")
+```
+
+```python
+imerg.download_imerg(d)
+da_in = imerg.process_imerg()
+```
+
+```python
+da = imerg.load_imerg_zarr()["precipitationCal"]
+```
+
+```python
+ds = imerg.load_imerg_zarr()
 ```
 
 ```python
@@ -71,67 +85,33 @@ ds
 ```
 
 ```python
-import xarray as xr
+da = da.isel(time=slice(1, 2))
 ```
 
 ```python
-from subprocess import Popen
-from getpass import getpass
-import platform
-import os
-import shutil
-
-urs = "urs.earthdata.nasa.gov"  # Earthdata URL to call for authentication
-prompts = [
-    "Enter NASA Earthdata Login Username \n"
-        "(or create an account at urs.earthdata.nasa.gov): ",
-    "Enter NASA Earthdata Login Password: ",
-]
-
-homeDir = os.path.expanduser("~") + os.sep
-
-with open(homeDir + ".netrc", "w") as file:
-    file.write(
-        "machine {} login {} password {}".format(
-            urs, getpass(prompt=prompts[0]), getpass(prompt=prompts[1])
-        )
-    )
-    file.close()
-with open(homeDir + ".urs_cookies", "w") as file:
-    file.write("")
-    file.close()
-with open(homeDir + ".dodsrc", "w") as file:
-    file.write("HTTP.COOKIEJAR={}.urs_cookies\n".format(homeDir))
-    file.write("HTTP.NETRC={}.netrc".format(homeDir))
-    file.close()
-
-print("Saved .netrc, .urs_cookies, and .dodsrc to:", homeDir)
-
-# Set appropriate permissions for Linux/macOS
-if platform.system() != "Windows":
-    Popen("chmod og-rw ~/.netrc", shell=True)
-else:
-    # Copy dodsrc to working directory in Windows
-    shutil.copy2(homeDir + ".dodsrc", os.getcwd())
-    print("Copied .dodsrc to:", os.getcwd())
+da.to_zarr(fs.get_mapper(imerg.IMERG_ZARR_ROOT), mode="w")
 ```
 
 ```python
-URL = "https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDL.06/2024/05/3B-DAY-L.MS.MRG.3IMERG.20240527-S000000-E235959.V06.nc4"
-SAMPLE_URL = (
-    "https://data.gesdisc.earthdata.nasa.gov/data/MERRA2/path/to/granule.nc4"
-)
+da.sortby("time")
 ```
 
 ```python
-import xarray as xr
-ds = xr.open_dataset(SAMPLE_URL)
+minx, miny, maxx, maxy = adm0.total_bounds
 ```
 
 ```python
-import netCDF4 as nc4
+da_box = da.sel(lon=slice(minx, maxx), lat=slice(miny, maxy))
+```
 
-nc = nc4.Dataset('https://data.gesdisc.earthdata.nasa.gov/data/MERRA2/path/to/granule.nc4')
+```python
+da_box
+```
+
+```python
+fig, ax = plt.subplots()
+adm0.boundary.plot(ax=ax)
+da_box.isel(time=0).plot(ax=ax)
 ```
 
 ```python
@@ -139,50 +119,20 @@ nc = nc4.Dataset('https://data.gesdisc.earthdata.nasa.gov/data/MERRA2/path/to/gr
 ```
 
 ```python
-import requests
-
-# Set the URL string to point to a specific data URL. Some generic examples are:
-#   https://data.gesdisc.earthdata.nasa.gov/data/MERRA2/path/to/granule.nc4
-
-# URL = 'your_URL_string_goes_here'
-
-# Set the FILENAME string to the data file name,
-# the LABEL keyword value, or any customized name.
-FILENAME = 'temp/imerg_test'
-
-import requests
-result = requests.get(SAMPLE_URL)
-try:
-    result.raise_for_status()
-    f = open(FILENAME,'wb')
-    f.write(result.content)
-    f.close()
-    print('contents of URL written to '+FILENAME)
-except:
-    print('requests.get() returned an error code '+str(result.status_code))
+da_box = da_box.rio.write_crs(4326)
+da_box = da_box.rio.set_spatial_dims(x_dim="lon", y_dim="lat")
 ```
 
 ```python
-from pydap.client import open_url
-from pydap.cas.urs import setup_session
-from getpass import getpass
-
-dataset_url = 'https://servername/opendap/path/file[.format[?subset]]'
-
-username = 'tristandowning1'
-password = getpass()
-
-try:
-    session = setup_session(username, password, check_url=dataset_url)
-    dataset = open_url(dataset_url, session=session)
-except AttributeError as e:
-    print('Error:', e)
-    print('Please verify that the dataset URL points to an OPeNDAP server, '
-          'the OPeNDAP server is accessible, or '
-          'that your username and password are correct.')
+da_clip = da_box.rio.clip(adm0.geometry)
 ```
 
 ```python
-import ssl
-print(ssl.OPENSSL_VERSION)
+fig, ax = plt.subplots()
+adm0.boundary.plot(ax=ax)
+da_clip.isel(time=0).plot(ax=ax)
+```
+
+```python
+
 ```

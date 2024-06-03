@@ -43,6 +43,14 @@ adm0
 ```
 
 ```python
+adm0.total_bounds
+```
+
+```python
+
+```
+
+```python
 codab.process_buffer()
 ```
 

@@ -5,6 +5,7 @@ import tempfile
 import zipfile
 from typing import Literal
 
+import fsspec
 import geopandas as gpd
 import pandas as pd
 from azure.storage.blob import ContainerClient
@@ -18,15 +19,28 @@ PROD_BLOB_AA_BASE_URL = PROD_BLOB_BASE_URL + "aa-data"
 PROD_BLOB_AA_URL = PROD_BLOB_AA_BASE_URL + "?" + PROD_BLOB_SAS
 
 DEV_BLOB_SAS = os.getenv("DEV_BLOB_SAS")
-DEV_BLOB_BASE_URL = "https://imb0chd0dev.blob.core.windows.net/"
+DEV_BLOB_NAME = "imb0chd0dev"
+DEV_BLOB_BASE_URL = f"https://{DEV_BLOB_NAME}.blob.core.windows.net/"
 DEV_BLOB_PROJ_BASE_URL = DEV_BLOB_BASE_URL + "projects"
 DEV_BLOB_PROJ_URL = DEV_BLOB_PROJ_BASE_URL + "?" + DEV_BLOB_SAS
+
+GLOBAL_CONTAINER_NAME = "global"
+DEV_BLOB_GLB_URL = (
+    DEV_BLOB_BASE_URL + GLOBAL_CONTAINER_NAME + "?" + DEV_BLOB_SAS
+)
 
 PROJECT_PREFIX = "ds-aa-hti-hurricanes"
 
 
 prod_container_client = ContainerClient.from_container_url(PROD_BLOB_AA_URL)
 dev_container_client = ContainerClient.from_container_url(DEV_BLOB_PROJ_URL)
+dev_glb_container_client = ContainerClient.from_container_url(DEV_BLOB_GLB_URL)
+
+
+def get_fs():
+    return fsspec.filesystem(
+        "az", account_name=DEV_BLOB_NAME, sas_token=DEV_BLOB_SAS
+    )
 
 
 def upload_parquet_to_blob(
