@@ -23,6 +23,10 @@ jupyter:
 
 ```python
 import os
+
+import dask
+from dask.distributed import Client
+import dask.array as da
 import pandas as pd
 import zarr
 import fsspec
@@ -36,10 +40,6 @@ from src.utils import blob
 ```
 
 ```python
-time.time()
-```
-
-```python
 adm0 = codab.load_codab_from_blob(admin_level=0)
 ```
 
@@ -50,7 +50,7 @@ adm0 = codab.load_codab_from_blob(admin_level=0)
 ```python
 ds = imerg.load_imerg_zarr()
 
-for date in tqdm(pd.date_range("2000-06-01", "2020-01-19")):
+for date in tqdm(pd.date_range("2003-03-11", "2020-01-19")):
     start = time.time()
     print(date)
     if date in ds.time:
@@ -62,22 +62,75 @@ for date in tqdm(pd.date_range("2000-06-01", "2020-01-19")):
 ```
 
 ```python
-fs = blob.get_fs()
-da_in = imerg.process_imerg()
-da_in.to_zarr(fs.get_mapper(imerg.IMERG_ZARR_ROOT), mode="w")
+client = Client()
 ```
 
 ```python
-imerg.download_imerg(d)
-da_in = imerg.process_imerg()
+print(client)
 ```
 
 ```python
-da = imerg.load_imerg_zarr()["precipitationCal"]
-```
-
-```python
+start = time.time()
 ds = imerg.load_imerg_zarr()
+print(time.time() - start)
+```
+
+```python
+ds.to_zarr("temp/imerg.zarr")
+```
+
+```python
+store = blob.get_fs().get_mapper(imerg.IMERG_ZARR_ROOT)
+```
+
+```python
+start = time.time()
+ds_nc = xr.open_zarr(store)
+print(time.time() - start)
+```
+
+```python
+root = zarr.open(store, mode="r")
+```
+
+```python
+root["precipitationCal"]
+```
+
+```python
+root["time"][:]
+```
+
+```python
+root.tree()
+```
+
+```python
+type(root)
+```
+
+```python
+ds["precipitationCal"].isel(time=100).mean().compute()
+```
+
+```python
+ds.time
+```
+
+```python
+start = time.time()
+ds.isel(time=100).mean().compute()
+print(time.time() - start)
+```
+
+```python
+chunk_sizes = {"lat": 20, "lon": 20, "time": 100}
+
+rechunked_ds = ds.chunk(chunk_sizes)
+```
+
+```python
+rechunked_ds.chunks
 ```
 
 ```python
@@ -85,37 +138,43 @@ ds
 ```
 
 ```python
-da = da.isel(time=slice(1, 2))
-```
-
-```python
-da.to_zarr(fs.get_mapper(imerg.IMERG_ZARR_ROOT), mode="w")
-```
-
-```python
-da.sortby("time")
-```
-
-```python
 minx, miny, maxx, maxy = adm0.total_bounds
 ```
 
 ```python
-da_box = da.sel(lon=slice(minx, maxx), lat=slice(miny, maxy))
+ds_box_re = rechunked_ds.sel(lon=slice(minx, maxx), lat=slice(miny, maxy))
 ```
 
 ```python
-da_box
+ds_box = ds.sel(lon=slice(minx, maxx), lat=slice(miny, maxy))
 ```
 
 ```python
-fig, ax = plt.subplots()
-adm0.boundary.plot(ax=ax)
-da_box.isel(time=0).plot(ax=ax)
+minx, miny, maxx, maxy
 ```
 
 ```python
+ds_box["precipitationCal"].mean(dim="time").compute()
+```
 
+```python
+ds_box_re["precipitationCal"].mean(dim="time").compute()
+```
+
+```python
+start = time.time()
+ds_box["precipitationCal"].isel(time=-10).plot()
+print(time.time() - start)
+```
+
+```python
+start = time.time()
+ds_box.mean().compute()
+print(time.time() - start)
+```
+
+```python
+ds_box["precipitationCal"].isel(time=10).values
 ```
 
 ```python
