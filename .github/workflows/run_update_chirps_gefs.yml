@@ -4,6 +4,9 @@ on:
   schedule:
     # Runs every 6 hours
     - cron: '0 */6 * * *'
+  push:
+    branches:
+      - chirps-download
   workflow_dispatch:
 
 jobs:
