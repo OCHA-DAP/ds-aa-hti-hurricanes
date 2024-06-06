@@ -1,3 +1,4 @@
+import datetime
 import tempfile
 from io import BytesIO
 
@@ -17,6 +18,34 @@ CHIRPS_GEFS_URL = (
     "data.{valid_year}.{valid_month:02d}{valid_day:02d}.tif"
 )
 CHIRPS_GEFS_BLOB_DIR = "raw/chirps/gefs/hti"
+
+
+def download_recent_chirps_gefs():
+    adm0 = codab.load_codab(admin_level=0)
+    total_bounds = adm0.total_bounds
+
+    issue_date_range = pd.date_range(
+        start="2024-01-01",
+        end=datetime.date.today() + pd.DateOffset(days=1),
+        freq="D",
+    )
+
+    existing_files = blob.list_container_blobs(
+        name_starts_with=f"{blob.PROJECT_PREFIX}/"
+        f"{CHIRPS_GEFS_BLOB_DIR}/"
+        f"chirps-gefs-hti_issued-2024"
+    )
+
+    for issue_date in tqdm(issue_date_range):
+        for leadtime in range(16):
+            valid_date = issue_date + pd.Timedelta(days=leadtime)
+            download_chirps_gefs(
+                issue_date,
+                valid_date,
+                total_bounds,
+                existing_files,
+                clobber=False,
+            )
 
 
 def download_all_chirps_gefs():
@@ -50,6 +79,7 @@ def download_chirps_gefs(
     total_bounds,
     existing_files,
     clobber: bool = False,
+    verbose: bool = False,
 ):
     url = CHIRPS_GEFS_URL.format(
         iss_year=issue_date.year,
@@ -63,14 +93,15 @@ def download_chirps_gefs(
         f"chirps-gefs-hti_issued-"
         f"{issue_date.date()}_valid-{valid_date.date()}.tif"
     )
-    if (
-        f"{CHIRPS_GEFS_BLOB_DIR}/{output_filename}" in existing_files
-        and not clobber
-    ):
-        # print(
-        #     f"File for issue date {issue_date} "
-        #     f"and valid date {valid_date} already exists"
-        # )
+    output_path = (
+        f"{blob.PROJECT_PREFIX}/{CHIRPS_GEFS_BLOB_DIR}/{output_filename}"
+    )
+    if output_path in existing_files and not clobber:
+        if verbose:
+            print(
+                f"File for issue date {issue_date} "
+                f"and valid date {valid_date} already exists"
+            )
         return
     try:
         with rxr.open_rasterio(url) as da:
@@ -80,16 +111,14 @@ def download_chirps_gefs(
             ) as tmpfile:
                 temp_filename = tmpfile.name
                 da_aoi.rio.to_raster(temp_filename, driver="COG")
-
                 with open(temp_filename, "rb") as f:
-                    blob.upload_blob_data(
-                        f"{CHIRPS_GEFS_BLOB_DIR}/{output_filename}", f
-                    )
+                    blob.upload_blob_data(output_path, f)
     except Exception as e:
-        print(
-            f"Failed to process the file for issue date "
-            f"{issue_date} and valid date {valid_date}: {str(e)}"
-        )
+        if verbose:
+            print(
+                f"Failed to process the file for issue date "
+                f"{issue_date} and valid date {valid_date}: {str(e)}"
+            )
     return
 
 
@@ -100,21 +129,21 @@ def load_chirps_gefs_raster(
         f"chirps-gefs-hti_"
         f"issued-{issue_date.date()}_valid-{valid_date.date()}.tif"
     )
-    data = blob.load_blob_data(f"{CHIRPS_GEFS_BLOB_DIR}/{filename}")
+    data = blob.load_blob_data(
+        f"{blob.PROJECT_PREFIX}/{CHIRPS_GEFS_BLOB_DIR}/{filename}"
+    )
     blob_data = BytesIO(data)
     da = rxr.open_rasterio(blob_data)
     da = da.squeeze(drop=True)
     return da
 
 
-def process_chirps_gefs():
+def process_chirps_gefs(verbose: bool = False):
     adm0 = codab.load_codab(admin_level=0)
     start_date = "2000-01-01"
     end_date = "2023-12-31"
 
     issue_date_range = pd.date_range(start=start_date, end=end_date, freq="D")
-
-    verbose = False
 
     dfs = []
     for issue_date in tqdm(issue_date_range):
@@ -150,9 +179,68 @@ def process_chirps_gefs():
     blob.upload_blob_data(blob_proc_dir + blob_name, data)
 
 
+def process_recent_chirps_gefs(verbose: bool = False):
+    try:
+        existing_df = load_recent_chirps_gefs_mean_daily()
+    except ResourceNotFoundError:
+        existing_df = pd.DataFrame(
+            columns=["issue_date", "valid_date", "mean"]
+        )
+    adm0 = codab.load_codab(admin_level=0)
+    issue_date_range = pd.date_range(
+        start="2024-01-01",
+        end=datetime.date.today() + pd.DateOffset(days=1),
+        freq="D",
+    )
+    dfs = []
+    for issue_date in tqdm(issue_date_range):
+        if issue_date in existing_df["issue_date"].unique():
+            if verbose:
+                print(f"Skipping {issue_date}, already processed")
+            continue
+        das_i = []
+        for leadtime in range(16):
+            valid_date = issue_date + pd.Timedelta(days=leadtime)
+            try:
+                da_in = load_chirps_gefs_raster(issue_date, valid_date)
+                da_in["valid_date"] = valid_date
+                das_i.append(da_in)
+            except ResourceNotFoundError as e:
+                if verbose:
+                    print(f"{e} for {issue_date} {valid_date}")
+
+        if das_i:
+            da_i = xr.concat(das_i, dim="valid_date")
+            da_i_clip = da_i.rio.clip(adm0.geometry, all_touched=True)
+            df_in = (
+                da_i_clip.mean(dim=["x", "y"])
+                .to_dataframe(name="mean")["mean"]
+                .reset_index()
+            )
+            df_in["issue_date"] = issue_date
+            dfs.append(df_in)
+        else:
+            if verbose:
+                print(f"no files for issue_date {issue_date}")
+
+    updated_df = pd.concat(dfs + [existing_df], ignore_index=True)
+    blob_name = (
+        f"{blob.PROJECT_PREFIX}/processed/chirps/gefs/hti/"
+        f"hti_chirps_gefs_mean_daily_2024.parquet"
+    )
+    blob.upload_parquet_to_blob(blob_name, updated_df)
+
+
+def load_recent_chirps_gefs_mean_daily():
+    return blob.load_parquet_from_blob(
+        f"{blob.PROJECT_PREFIX}/processed/chirps/gefs/hti/"
+        "hti_chirps_gefs_mean_daily_2024.parquet"
+    )
+
+
 def load_chirps_gefs_mean_daily():
     data = blob.load_blob_data(
-        "processed/chirps/gefs/hti/"
+        f"{blob.PROJECT_PREFIX}/processed/chirps/gefs/hti/"
         "hti_chirps_gefs_mean_daily_2000_2023.parquet"
     )
     return pd.read_parquet(BytesIO(data))
