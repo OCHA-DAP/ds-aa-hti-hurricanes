@@ -147,3 +147,5 @@ token.json
 .DS_Store
 
 sandbox
+
+temp*
