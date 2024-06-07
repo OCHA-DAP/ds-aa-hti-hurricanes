@@ -96,7 +96,6 @@ def load_gdf_from_blob(
 
 
 def load_blob_data(blob_name, prod_dev: Literal["prod", "dev"] = "dev"):
-    print(len(os.getenv("DEV_BLOB_SAS")))
     if prod_dev == "dev":
         container_client = dev_container_client
     else:
