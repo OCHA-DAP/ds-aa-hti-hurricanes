@@ -3,7 +3,7 @@ name: Run download_chirps_gefs script
 on:
   schedule:
     # Runs every 6 hours
-    - cron: '0 */6 * * *'
+    - cron: '0 9 * * *'
   push:
     branches:
       - chirps-download
