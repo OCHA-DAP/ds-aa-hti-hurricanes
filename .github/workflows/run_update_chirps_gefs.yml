@@ -2,7 +2,6 @@ name: Run download_chirps_gefs script
 
 on:
   schedule:
-    # Runs every 6 hours
     - cron: '0 9 * * *'
   push:
     branches:
@@ -15,12 +14,15 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        ref: chirps-download
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11.4'
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
