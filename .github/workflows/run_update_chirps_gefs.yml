@@ -29,8 +29,7 @@ jobs:
 
     - name: Run script
       env:
-        API_KEY: ${{ secrets.API_KEY }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        # Add other environment variables as needed
+        DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
       run: |
         python update_chirps_gefs.py
