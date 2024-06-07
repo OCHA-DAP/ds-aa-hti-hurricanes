@@ -46,7 +46,3 @@ chirps_gefs.download_recent_chirps_gefs()
 ```python
 chirps_gefs.process_recent_chirps_gefs()
 ```
-
-```python
-
-```
