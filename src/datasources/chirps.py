@@ -27,7 +27,7 @@ def load_raster_stats():
 
 def calculate_raster_stats():
     ds = load_chirps_daily()
-    adm = codab.load_codab()
+    adm = codab.load_codab_from_blob()
     ds_clip = ds.rio.clip(adm.geometry, all_touched=True)
     stats = ds_clip.mean(dim=["X", "Y"]).rename({"prcp": "mean"})
 

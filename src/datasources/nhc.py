@@ -243,7 +243,7 @@ def load_processed_historical_forecasts():
 
 def calculate_hti_distance():
     df = load_processed_historical_forecasts()
-    adm0 = codab.load_codab(admin_level=0)
+    adm0 = codab.load_codab_from_blob(admin_level=0)
     adm0 = adm0.to_crs(3857)
 
     gdf = gpd.GeoDataFrame(

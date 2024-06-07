@@ -36,6 +36,12 @@ codab.download_codab_to_blob()
 
 ```python
 adm0 = codab.load_codab_from_blob(admin_level=0)
+adm0.total_bounds
+```
+
+```python
+adm0_g = codab.load_codab(admin_level=0)
+adm0_g.total_bounds
 ```
 
 ```python
@@ -44,10 +50,6 @@ adm0
 
 ```python
 adm0.total_bounds
-```
-
-```python
-
 ```
 
 ```python

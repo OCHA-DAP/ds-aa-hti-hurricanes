@@ -21,7 +21,7 @@ CHIRPS_GEFS_BLOB_DIR = "raw/chirps/gefs/hti"
 
 
 def download_recent_chirps_gefs():
-    adm0 = codab.load_codab(admin_level=0)
+    adm0 = codab.load_codab_from_blob(admin_level=0)
     total_bounds = adm0.total_bounds
 
     issue_date_range = pd.date_range(
@@ -52,7 +52,7 @@ def download_all_chirps_gefs():
     """Download all CHIRPS GEFS
     Takes around 40 hours
     """
-    adm0 = codab.load_codab(admin_level=0)
+    adm0 = codab.load_codab_from_blob(admin_level=0)
     total_bounds = adm0.total_bounds
     start_date = "2000-01-01"
     end_date = "2023-12-31"
@@ -139,7 +139,7 @@ def load_chirps_gefs_raster(
 
 
 def process_chirps_gefs(verbose: bool = False):
-    adm0 = codab.load_codab(admin_level=0)
+    adm0 = codab.load_codab_from_blob(admin_level=0)
     start_date = "2000-01-01"
     end_date = "2023-12-31"
 
@@ -186,7 +186,7 @@ def process_recent_chirps_gefs(verbose: bool = False):
         existing_df = pd.DataFrame(
             columns=["issue_date", "valid_date", "mean"]
         )
-    adm0 = codab.load_codab(admin_level=0)
+    adm0 = codab.load_codab_from_blob(admin_level=0)
     issue_date_range = pd.date_range(
         start="2024-01-01",
         end=datetime.date.today() + pd.DateOffset(days=1),
