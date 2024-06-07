@@ -1,0 +1,35 @@
+name: Run download_chirps_gefs script
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11.4'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Adjust this if your dependencies are listed elsewhere
+
+    - name: Run script
+      env:
+        DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
+        AA_DATA_DIR_NEW: ${{ secrets.AA_DATA_DIR_NEW }}
+        IMERG_USERNAME: ${{ secrets.IMERG_USERNAME }}
+        IMERG_PASSWORD: ${{ secrets.IMERG_PASSWORD }}
+      run: |
+        python update_chirps_gefs.py

@@ -9,9 +9,6 @@ import fsspec
 import geopandas as gpd
 import pandas as pd
 from azure.storage.blob import ContainerClient
-from dotenv import load_dotenv
-
-load_dotenv()
 
 PROD_BLOB_SAS = os.getenv("PROD_BLOB_SAS")
 PROD_BLOB_BASE_URL = "https://imb0chd0prod.blob.core.windows.net/"
