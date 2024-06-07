@@ -3,9 +3,6 @@ name: Run download_chirps_gefs script
 on:
   schedule:
     - cron: '0 9 * * *'
-  push:
-    branches:
-      - chirps-download
   workflow_dispatch:
 
 jobs:
@@ -15,8 +12,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        ref: chirps-download
 
     - name: Set up Python
       uses: actions/setup-python@v5
