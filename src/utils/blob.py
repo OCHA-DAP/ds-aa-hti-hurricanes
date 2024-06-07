@@ -9,9 +9,6 @@ import fsspec
 import geopandas as gpd
 import pandas as pd
 from azure.storage.blob import ContainerClient
-from dotenv import load_dotenv
-
-load_dotenv()
 
 PROD_BLOB_SAS = os.getenv("PROD_BLOB_SAS")
 PROD_BLOB_BASE_URL = "https://imb0chd0prod.blob.core.windows.net/"
@@ -99,6 +96,7 @@ def load_gdf_from_blob(
 
 
 def load_blob_data(blob_name, prod_dev: Literal["prod", "dev"] = "dev"):
+    print(len(os.getenv("DEV_BLOB_SAS")))
     if prod_dev == "dev":
         container_client = dev_container_client
     else:

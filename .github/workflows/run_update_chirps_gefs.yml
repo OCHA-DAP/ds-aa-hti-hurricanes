@@ -34,5 +34,9 @@ jobs:
         AA_DATA_DIR_NEW: ${{ secrets.AA_DATA_DIR_NEW }}
         IMERG_USERNAME: ${{ secrets.IMERG_USERNAME }}
         IMERG_PASSWORD: ${{ secrets.IMERG_PASSWORD }}
+        TEST1: ${{ secrets.TEST1 }}
+        TEST2: ${{ secrets.TEST2 }}
+        TEST3: ${{ secrets.TEST3 }}
+        TEST4: ${{ secrets.TEST4 }}
       run: |
         python update_chirps_gefs.py
