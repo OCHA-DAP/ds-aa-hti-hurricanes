@@ -16,7 +16,7 @@ IMERG_ZARR_ROOT = "az://global/imerg.zarr"
 
 IMERG_BASE_URL = (
     "https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGD"
-    "{run}.06/{date:%Y}/{date:%m}/3B-DAY-{run}.MS.MRG.3IMERG."
+    "{run}.0{version}/{date:%Y}/{date:%m}/3B-DAY-{run}.MS.MRG.3IMERG."
     "{date:%Y%m%d}-S000000-E235959.V06.nc4"
 )
 
@@ -27,7 +27,8 @@ def download_imerg(
     save_path: str = Path("temp/imerg_temp.nc"),
     verbose: bool = False,
 ):
-    url = IMERG_BASE_URL.format(run=run, date=date)
+    version = 6
+    url = IMERG_BASE_URL.format(run=run, date=date, version=version)
     if verbose:
         print("downloading from " + url)
     result = requests.get(url)
