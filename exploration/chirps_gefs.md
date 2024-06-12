@@ -37,7 +37,7 @@ from src.utils import blob
 ```
 
 ```python
-adm0 = codab.load_codab(admin_level=0)
+adm0 = codab.load_codab_from_blob(admin_level=0)
 adm0.plot()
 ```
 
@@ -62,4 +62,20 @@ for date in dates:
 
 ```python
 missing_dates
+```
+
+```python
+da_in = chirps_gefs.load_chirps_gefs_raster(
+    issue_date=pd.Timestamp("2021-08-01"),
+    valid_date=pd.Timestamp("2021-08-02"),
+)
+```
+
+```python
+ax = adm0.boundary.plot()
+da_in.plot(ax=ax)
+```
+
+```python
+da_in
 ```

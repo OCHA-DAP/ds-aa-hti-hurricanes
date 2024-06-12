@@ -23,6 +23,7 @@ jupyter:
 
 ```python
 import tempfile
+from io import BytesIO
 
 import pandas as pd
 import rioxarray as rxr
@@ -34,15 +35,27 @@ from tqdm.notebook import tqdm
 ```
 
 ```python
+existing_files = [
+    x.name
+    for x in blob.dev_glb_container_client.list_blobs(
+        name_starts_with="imerg/v07b"
+    )
+]
+```
+
+```python
+existing_files[-10:]
+```
+
+```python
 existing_files = [x.name for x in blob.dev_glb_container_client.list_blobs(name_starts_with="imerg/v07b")]
 
-for date in tqdm(pd.date_range("2003-03-11", "2020-01-19")):
+for date in tqdm(pd.date_range("2008-02-23", "2020-01-19")):
     output_path = f"imerg/v07b/imerg-daily-late-{date.date()}.tif"
     if output_path in existing_files:
         print(f"{output_path} already exists")
         continue
     imerg.download_imerg(date)
-    da_in = imerg.process_imerg()
     da_in = imerg.process_imerg()
     da_in = da_in.rename({"lon": "x", "lat": "y"}).squeeze(drop=True)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".tif") as tmpfile:
@@ -55,5 +68,22 @@ for date in tqdm(pd.date_range("2003-03-11", "2020-01-19")):
 ```
 
 ```python
+output_path
+```
 
+```python
+input_path = "imerg/v07b/imerg-daily-late-2003-05-17.tif"
+data = (
+    blob.dev_glb_container_client.get_blob_client(input_path)
+    .download_blob()
+    .readall()
+)
+```
+
+```python
+test = rxr.open_rasterio(BytesIO(data))
+```
+
+```python
+test.where(test > 0).plot()
 ```

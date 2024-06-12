@@ -8,6 +8,7 @@ from typing import Literal
 
 import pandas as pd
 import requests
+import rioxarray as rxr
 import xarray as xr
 
 from src.utils import blob
@@ -59,6 +60,22 @@ def process_imerg(path: str = "temp/imerg_temp.nc"):
 def load_imerg_zarr():
     fs = blob.get_fs()
     return xr.open_zarr(fs.get_mapper(IMERG_ZARR_ROOT), consolidated=True)
+
+
+def open_imerg_raster(date: pd.Timestamp):
+    blob_name = f"imerg/v07b/imerg-daily-late-{date.date()}.tif"
+    # blob_client = blob.dev_glb_container_client.get_blob_client(blob_name)
+    # session = AzureSession(blob_client)
+    cog_url = (
+        f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
+        f"{blob_name}?{blob.DEV_BLOB_SAS}"
+    )
+    da_out = rxr.open_rasterio(
+        cog_url, masked=True, chunks={"band": 1, "x": 20, "y": 20}
+    )
+    # with fsspec.open(cog_url) as file:
+    #     da_out = rxr.open_rasterio(file)
+    return da_out
 
 
 def append_imerg_zarr(da):
