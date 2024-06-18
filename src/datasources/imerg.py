@@ -18,18 +18,21 @@ IMERG_ZARR_ROOT = "az://global/imerg.zarr"
 IMERG_BASE_URL = (
     "https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGD"
     "{run}.0{version}/{date:%Y}/{date:%m}/3B-DAY-{run}.MS.MRG.3IMERG."
-    "{date:%Y%m%d}-S000000-E235959.V06.nc4"
+    "{date:%Y%m%d}-S000000-E235959.V0{version}{version_letter}.nc4"
 )
 
 
 def download_imerg(
     date: datetime.datetime,
     run: Literal["E", "L"] = "L",
+    version: int = 6,
     save_path: str = Path("temp/imerg_temp.nc"),
     verbose: bool = False,
 ):
-    version = 6
-    url = IMERG_BASE_URL.format(run=run, date=date, version=version)
+    version_letter = "B" if version == 7 else ""
+    url = IMERG_BASE_URL.format(
+        run=run, date=date, version=version, version_letter=version_letter
+    )
     if verbose:
         print("downloading from " + url)
     result = requests.get(url)
@@ -71,7 +74,7 @@ def open_imerg_raster(date: pd.Timestamp):
         f"{blob_name}?{blob.DEV_BLOB_SAS}"
     )
     da_out = rxr.open_rasterio(
-        cog_url, masked=True, chunks={"band": 1, "x": 20, "y": 20}
+        cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
     )
     # with fsspec.open(cog_url) as file:
     #     da_out = rxr.open_rasterio(file)

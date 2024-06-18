@@ -13,7 +13,7 @@ jupyter:
     name: ds-aa-hti-hurricanes
 ---
 
-# IMERG - Zarr
+# Three-stage trigger
 
 ```python
 %load_ext jupyter_black
@@ -22,5 +22,21 @@ jupyter:
 ```
 
 ```python
+from src.datasources import nhc, chirps, chirps_gefs
+```
 
+```python
+D_THRESH = 230
+```
+
+```python
+track_forecasts = nhc.load_hti_distances()
+```
+
+```python
+obsv_rain =
+```
+
+```python
+for issue_time, issue_group in
 ```

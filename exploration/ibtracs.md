@@ -28,6 +28,7 @@ import seaborn as sns
 import numpy as np
 
 from src.datasources import ibtracs, chirps, impact
+from src.utils import blob
 ```
 
 ```python
@@ -110,6 +111,11 @@ stats = stats.merge(hurricanes, on="sid")
 stats = stats.merge(affected, on="sid", how="left")
 stats["rank"] = stats["affected_population"].rank()
 stats
+```
+
+```python
+blob_name = f"{blob.PROJECT_PREFIX}/processed/stats_{d_thresh}km.csv"
+blob.upload_csv_to_blob(blob_name, stats)
 ```
 
 ```python

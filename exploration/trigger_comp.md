@@ -327,15 +327,19 @@ cols = [
 ]
 
 filename = f"{trigger_str}_triggers.csv"
-triggers[cols + [trigger_str]].dropna(
-    subset="affected_population"
-).sort_values("affected_population", ascending=False).to_csv(
-    ibtracs.IBTRACS_HTI_PROC_DIR / filename, index=False
-)
+triggers[cols + [trigger_str]].sort_values(
+    "affected_population", ascending=False
+).to_csv(ibtracs.IBTRACS_HTI_PROC_DIR / filename, index=False)
 ```
 
 ```python
-hits.iloc[:20]
+triggers
+```
+
+```python
+triggers[cols + [trigger_str]].sort_values(
+    "affected_population", ascending=False
+)
 ```
 
 ```python
@@ -386,7 +390,7 @@ plot_sids = triggers[triggers[all_bestcols].any(axis=1)]["sid"]
 ```
 
 ```python
-triggers["affected_population"].max()
+triggers
 ```
 
 ```python
@@ -415,7 +419,7 @@ ax.yaxis.set_major_formatter(formatter)
 ```python
 # 3 year RP
 plot_cols = [
-    "d220_s50_AND_max_roll2_sum_rain40"
+    "d230_s50_AND_max_roll2_sum_rain40"
     # "d230_s70_AND_max_roll3_sum_rain50"
     # "d230_s50_AND_max_q90_rain50",
     # "d230_s50_AND_max_mean_rain30",
@@ -451,6 +455,21 @@ for (i, j), val in np.ndenumerate(numeric_map):
 ax.set_xlim(-linewidth, numeric_map.shape[1] - linewidth)
 ax.set_ylim(numeric_map.shape[0] - linewidth, -linewidth)
 ax.invert_xaxis()
+```
+
+```python
+trigger_str = "d230_s50_AND_max_roll2_sum_rain40"
+trigger_list = df_im.T
+trigger_list = trigger_list[trigger_list[trigger_str]]
+trigger_list
+```
+
+```python
+triggers[triggers[trigger_str]][["sid", "name", trigger_str]]
+```
+
+```python
+
 ```
 
 ```python

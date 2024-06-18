@@ -8,7 +8,7 @@ from typing import Literal
 import fsspec
 import geopandas as gpd
 import pandas as pd
-from azure.storage.blob import ContainerClient
+from azure.storage.blob import ContainerClient, ContentSettings
 
 PROD_BLOB_SAS = os.getenv("PROD_BLOB_SAS")
 PROD_BLOB_BASE_URL = "https://imb0chd0prod.blob.core.windows.net/"
@@ -51,6 +51,17 @@ def load_parquet_from_blob(
 ):
     blob_data = load_blob_data(blob_name, prod_dev=prod_dev)
     return pd.read_parquet(io.BytesIO(blob_data))
+
+
+def upload_csv_to_blob(
+    blob_name, df, prod_dev: Literal["prod", "dev"] = "dev"
+):
+    upload_blob_data(
+        blob_name,
+        df.to_csv(index=False),
+        prod_dev=prod_dev,
+        content_type="text/csv",
+    )
 
 
 def load_csv_from_blob(blob_name, prod_dev: Literal["prod", "dev"] = "dev"):
@@ -106,14 +117,27 @@ def load_blob_data(blob_name, prod_dev: Literal["prod", "dev"] = "dev"):
 
 
 def upload_blob_data(
-    blob_name, data, prod_dev: Literal["prod", "dev"] = "dev"
+    blob_name,
+    data,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    content_type: str = None,
 ):
     if prod_dev == "dev":
         container_client = dev_container_client
     else:
         container_client = prod_container_client
+
+    if content_type is None:
+        content_settings = ContentSettings(
+            content_type="application/octet-stream"
+        )
+    else:
+        content_settings = ContentSettings(content_type=content_type)
+
     blob_client = container_client.get_blob_client(blob_name)
-    blob_client.upload_blob(data, overwrite=True)
+    blob_client.upload_blob(
+        data, overwrite=True, content_settings=content_settings
+    )
 
 
 def list_container_blobs(

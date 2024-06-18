@@ -39,13 +39,31 @@ from src.datasources import imerg, codab
 from src.utils import blob
 ```
 
+Just loading CODAB for later plotting
+
 ```python
 adm0 = codab.load_codab_from_blob(admin_level=0)
 ```
 
+Create auth files to access NASA GES DISC server
+
 ```python
 # imerg.create_auth_files()
 ```
+
+Cycle over all days to:
+
+1. Download IMERG file as entire file (streaming from the `.nc` wasn't working,
+I think due to permissions)
+2. Process IMERG (basically just selecting a single variable)
+3. Append to `zarr` store in the blob -
+this is what was taking so much time, and getting slower.
+
+Doing the same things in Databricks was a bit quicker for some steps,
+but the appending process still took a very long time.
+
+Only thing I found is that using `fsspec` is a bit faster than using
+`zarr.storage.ABSStore`
 
 ```python
 ds = imerg.load_imerg_zarr()
@@ -61,6 +79,9 @@ for date in tqdm(pd.date_range("2003-03-11", "2020-01-19")):
     print(time.time() - start)
 ```
 
+I tried monitoring some of the processes with Dask but was
+hard to tell why things were so slow
+
 ```python
 client = Client()
 ```
@@ -75,9 +96,13 @@ ds = imerg.load_imerg_zarr()
 print(time.time() - start)
 ```
 
+Tried saving to a `zarr` locally but took too long
+
 ```python
 ds.to_zarr("temp/imerg.zarr")
 ```
+
+Attempts to read from blob using `fsspec` instead.
 
 ```python
 store = blob.get_fs().get_mapper(imerg.IMERG_ZARR_ROOT)

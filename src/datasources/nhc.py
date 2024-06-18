@@ -12,7 +12,7 @@ from src.datasources import chirps_gefs, codab, ibtracs
 from src.utils import blob
 
 
-def calculate_hist_fcast_monitors():
+def calculate_hist_fcast_monitors(lt_cutoff_hrs: int = None):
     sid_atcf = ibtracs.load_ibtracs_sid_atcf_names()
     sid_atcf.loc[:, "name"] = sid_atcf["name"].str.capitalize()
     sid_atcf.loc[:, "usa_atcf_id"] = sid_atcf["usa_atcf_id"].str.lower()
@@ -44,6 +44,13 @@ def calculate_hist_fcast_monitors():
     dicts = []
     for atcf_id, storm_group in tqdm(tracks.groupby("atcf_id")):
         for issue_time, issue_group in storm_group.groupby("issue_time"):
+            past_cutoff = False
+            if lt_cutoff_hrs is not None:
+                closest_time = issue_group.loc[
+                    issue_group["hti_distance_km"].idxmin()
+                ]
+                if closest_time["lt"] < pd.Timedelta(hours=lt_cutoff_hrs):
+                    past_cutoff = True
             rain_i = rain[rain["issue_date"] == issue_time.date()]
             for lt_name, lt in lts.items():
                 dff_lt = issue_group[
@@ -69,24 +76,29 @@ def calculate_hist_fcast_monitors():
                             rain_i["valid_date"] <= (issue_time + lt).date()
                         ]["roll2_sum_bw"].max(),
                         "wind": dff_lt["windspeed"].max(),
+                        "past_cutoff": past_cutoff,
                     }
                 )
 
+    lt_cutoff_hrs_str = (
+        "" if lt_cutoff_hrs is None else f"_{lt_cutoff_hrs}cutoffhrs"
+    )
     monitors = pd.DataFrame(dicts)
     monitors = monitors.merge(sid_atcf)
-    save_blob = "ds-aa-hti-hurricanes/processed/monitors.parquet"
+    save_blob = (
+        f"ds-aa-hti-hurricanes/processed/monitors{lt_cutoff_hrs_str}.parquet"
+    )
     blob.upload_blob_data(save_blob, monitors.to_parquet(), prod_dev="dev")
 
 
-def load_hist_fcast_monitors():
-    return pd.read_parquet(
-        BytesIO(
-            blob.load_blob_data(
-                "ds-aa-hti-hurricanes/processed/monitors.parquet",
-                prod_dev="dev",
-            )
-        )
+def load_hist_fcast_monitors(lt_cutoff_hrs: int = None):
+    lt_cutoff_hrs_str = (
+        "" if lt_cutoff_hrs is None else f"_{lt_cutoff_hrs}cutoffhrs"
     )
+    blob_name = (
+        f"ds-aa-hti-hurricanes/processed/monitors{lt_cutoff_hrs_str}.parquet"
+    )
+    return blob.load_parquet_from_blob(blob_name, prod_dev="dev")
 
 
 def download_historical_forecasts(
@@ -268,7 +280,8 @@ def load_hti_distances():
     return pd.read_parquet(
         BytesIO(
             blob.load_blob_data(
-                "processed/noaa/nhc/historical_forecasts/"
+                f"{blob.PROJECT_PREFIX}/"
+                f"processed/noaa/nhc/historical_forecasts/"
                 "hti_distances_2000_2023.parquet"
             )
         )

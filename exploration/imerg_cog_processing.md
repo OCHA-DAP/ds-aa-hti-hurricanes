@@ -23,9 +23,11 @@ jupyter:
 
 ```python
 import time
+import datetime
 from io import BytesIO
 
 import pandas as pd
+import matplotlib.pyplot as plt
 import rioxarray as rxr
 import xarray as xr
 from tqdm.notebook import tqdm
@@ -43,20 +45,85 @@ minx, miny, maxx, maxy = adm0.total_bounds
 ```
 
 ```python
-das = []
-for date in tqdm(pd.date_range("2007-07-01", "2007-10-01")):
-    da_in = imerg.open_imerg_raster(date)
-    da_in = da_in.squeeze(drop=True)
-    da_in["date"] = date
-    das.append(da_in)
+minx, miny, maxx, maxy
 ```
 
 ```python
-das[0]
+blob_names = existing_files = [
+    x.name
+    for x in blob.dev_glb_container_client.list_blobs(
+        name_starts_with="imerg/v6/"
+    )
+]
+```
+
+```python
+# do everything in one step
+
+dicts = []
+for blob_name in tqdm(blob_names):
+    cog_url = (
+        f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
+        f"{blob_name}?{blob.DEV_BLOB_SAS}"
+    )
+    da_in = rxr.open_rasterio(
+        cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
+    )
+    da_in = da_in.squeeze(drop=True)
+    date_in = pd.to_datetime(blob_name.split(".")[0][-10:])
+    da_box = da_in.sel(x=slice(minx, maxx), y=slice(miny, maxy))
+    da_box_up = raster.upsample_dataarray(
+        da_box, lat_dim="y", lon_dim="x", resolution=0.05
+    )
+    da_box_up = da_box_up.rio.write_crs(4326)
+    da_clip = da_box_up.rio.clip(adm0.geometry, all_touched=True)
+    da_mean = da_clip.mean()
+    mean_val = float(da_mean.compute())
+    dicts.append({"date": date_in, "mean": mean_val})
+    df_in = pd.DataFrame([{"date": date_in, "mean": mean_val}])
+    blob_name = f"{blob.PROJECT_PREFIX}/processed/imerg/date_means/imerg-late-hti-mean_{date_in.date()}.parquet"
+    blob.upload_parquet_to_blob(blob_name, df_in)
+```
+
+```python
+df_in
+```
+
+```python
+f"imerg-late-hti-mean_{date_in.date()}.parquet"
+```
+
+```python
+blob_names = existing_files = [
+    x.name
+    for x in blob.dev_glb_container_client.list_blobs(
+        name_starts_with="imerg/v6/"
+    )
+]
+
+das = []
+for blob_name in tqdm(blob_names):
+    cog_url = (
+        f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
+        f"{blob_name}?{blob.DEV_BLOB_SAS}"
+    )
+    da_in = rxr.open_rasterio(
+        cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
+    )
+    da_in = da_in.squeeze(drop=True)
+    date_in = pd.to_datetime(blob_name.split(".")[0][-10:])
+    da_in["date"] = date_in
+    das.append(da_in)
+
+da_glb = xr.concat(das, dim="date")
 ```
 
 ```python
 da_glb = xr.concat(das, dim="date")
+```
+
+```python
+da_glb
 ```
 
 ```python
@@ -75,56 +142,43 @@ da_box
 
 ```python
 da_box_up = da_box_up.rio.write_crs(4326)
-```
-
-```python
 da_clip = da_box_up.rio.clip(adm0.geometry, all_touched=True)
 ```
 
 ```python
-da_clip.mean(dim=["x", "y"]).compute()
+da_clip
 ```
 
 ```python
-da_clip.isel(date=0).plot()
+da_clip["date"] = pd.to_datetime(da_clip.date)
 ```
 
 ```python
-start = time.time()
-test = imerg.open_imerg_raster(pd.Timestamp("2007-11-01"))
-subset = test.sel(x=slice(minx, maxx), y=slice(miny, maxy))
-print(time.time() - start)
-start = time.time()
-subset.plot()
-print(time.time() - start)
-start = time.time()
+da_clip
 ```
 
 ```python
-da_up = raster.upsample_dataarray(
-    subset, lat_dim="y", lon_dim="x", resolution=0.05
-)
-da_up = da_up.rio.write_crs(4326)
-da_clip = da_up.rio.clip(adm0.geometry, all_touched=True)
+%time da_mean = da_clip.mean(dim=["x", "y"])
 ```
 
 ```python
-da_clip.where(da_clip > 0).plot()
+%time da_mean.isel(date=4).compute()
 ```
 
 ```python
-start = time.time()
-input_path = "imerg/v07b/imerg-daily-late-2003-05-17.tif"
-data = (
-    blob.dev_glb_container_client.get_blob_client(input_path)
-    .download_blob()
-    .readall()
-)
-test = rxr.open_rasterio(BytesIO(data))
-subset = test.sel(x=slice(minx, maxx), y=slice(miny, maxy))
-print(time.time() - start)
-start = time.time()
-subset.plot()
-print(time.time() - start)
-start = time.time()
+2 * 7754 / 60 / 60
+```
+
+```python
+f"{datetime.datetime.today() - pd.DateOffset(days=1):%Y%m%d}"
+```
+
+```python
+f"{(datetime.datetime.today() - pd.DateOffset(days=1)).date()}"
+```
+
+```python
+fig, ax = plt.subplots(dpi=300)
+adm0.boundary.plot(ax=ax, linewidth=0.5, color="white")
+da_clip.sel(date="2007-10-28").plot(ax=ax)
 ```

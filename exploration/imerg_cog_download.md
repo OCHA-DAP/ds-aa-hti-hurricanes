@@ -38,7 +38,7 @@ from tqdm.notebook import tqdm
 existing_files = [
     x.name
     for x in blob.dev_glb_container_client.list_blobs(
-        name_starts_with="imerg/v07b"
+        name_starts_with="imerg/v6"
     )
 ]
 ```
@@ -48,9 +48,19 @@ existing_files[-10:]
 ```
 
 ```python
-existing_files = [x.name for x in blob.dev_glb_container_client.list_blobs(name_starts_with="imerg/v07b")]
+for date in tqdm(pd.date_range(end="2024-06-01", periods=10)[::-1]):
+    print(date)
+```
 
-for date in tqdm(pd.date_range("2008-02-23", "2020-01-19")):
+```python
+existing_files = [
+    x.name
+    for x in blob.dev_glb_container_client.list_blobs(
+        name_starts_with="imerg/v07b"
+    )
+]
+
+for date in tqdm(pd.date_range("2020-01-19", "2024-06-01")):
     output_path = f"imerg/v07b/imerg-daily-late-{date.date()}.tif"
     if output_path in existing_files:
         print(f"{output_path} already exists")
@@ -62,9 +72,9 @@ for date in tqdm(pd.date_range("2008-02-23", "2020-01-19")):
         temp_filename = tmpfile.name
         da_in.rio.to_raster(temp_filename, driver="COG")
         with open(temp_filename, "rb") as f:
-            blob.dev_glb_container_client.get_blob_client(output_path).upload_blob(
-                f, overwrite=True
-            )
+            blob.dev_glb_container_client.get_blob_client(
+                output_path
+            ).upload_blob(f, overwrite=True)
 ```
 
 ```python
