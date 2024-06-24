@@ -1,4 +1,4 @@
-name: Run download_chirps_gefs script
+name: Check trigger
 
 on:
   workflow_dispatch:
