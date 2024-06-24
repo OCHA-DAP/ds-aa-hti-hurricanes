@@ -1,8 +1,6 @@
 name: Run download_chirps_gefs script
 
 on:
-  schedule:
-    - cron: '0 9 * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,6 +10,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        ref: monitoring
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -27,9 +27,5 @@ jobs:
     - name: Run script
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
-        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
-        AA_DATA_DIR_NEW: ${{ secrets.AA_DATA_DIR_NEW }}
-        IMERG_USERNAME: ${{ secrets.IMERG_USERNAME }}
-        IMERG_PASSWORD: ${{ secrets.IMERG_PASSWORD }}
       run: |
-        python pipelines/update_chirps_gefs.py
+        python pipelines/check_trigger.py
