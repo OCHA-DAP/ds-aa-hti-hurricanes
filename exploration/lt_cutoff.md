@@ -223,3 +223,7 @@ df_plot.set_index("nameyear")[cols].style.bar(
 ```python
 df_plot
 ```
+
+```python
+
+```

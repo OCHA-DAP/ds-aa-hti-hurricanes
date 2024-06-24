@@ -28,8 +28,7 @@ from src.datasources import impact, codab
 ```
 
 ```python
-adm = codab.load_codab()
-adm2 = adm.dissolve("ADM2_PCODE")
+adm2 = codab.load_codab_from_blob(admin_level=2)
 ```
 
 ```python
@@ -63,4 +62,19 @@ for sid, group in df.groupby("sid"):
         f"{name.strip().capitalize()} {year}\nPopulation totale affectée: {affected:,.0f}"
     )
     ax.axis("off")
+```
+
+```python
+df.groupby(["ADM2_PCODE"])["affected_population"].sum().reset_index()
+```
+
+```python
+gdf_plot = adm2.merge(
+    df.groupby(["ADM2_PCODE"])["affected_population"].sum().reset_index(),
+    on="ADM2_PCODE",
+).plot(column="affected_population")
+```
+
+```python
+
 ```
