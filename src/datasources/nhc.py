@@ -246,7 +246,8 @@ def load_processed_historical_forecasts():
     return pd.read_csv(
         BytesIO(
             blob.load_blob_data(
-                "processed/noaa/nhc/historical_forecasts/al_2000_2023.csv"
+                f"{blob.PROJECT_PREFIX}/"
+                f"processed/noaa/nhc/historical_forecasts/al_2000_2023.csv"
             )
         ),
         parse_dates=["issue_time", "valid_time"],
@@ -285,4 +286,14 @@ def load_hti_distances():
                 "hti_distances_2000_2023.parquet"
             )
         )
+    )
+
+
+def load_recent_glb_forecasts():
+    return blob.load_csv_from_blob(
+        "noaa/nhc/forecasted_tracks.csv",
+        prod_dev="dev",
+        container_name="global",
+        parse_dates=["issuance", "validTime"],
+        sep=";",
     )

@@ -29,9 +29,15 @@ DEV_BLOB_GLB_URL = (
 PROJECT_PREFIX = "ds-aa-hti-hurricanes"
 
 
-prod_container_client = ContainerClient.from_container_url(PROD_BLOB_AA_URL)
-dev_container_client = ContainerClient.from_container_url(DEV_BLOB_PROJ_URL)
-dev_glb_container_client = ContainerClient.from_container_url(DEV_BLOB_GLB_URL)
+def get_container_client(
+    container_name: str = "projects", prod_dev: Literal["prod", "dev"] = "dev"
+):
+    sas = DEV_BLOB_SAS if prod_dev == "dev" else PROD_BLOB_SAS
+    container_url = (
+        f"https://imb0chd0{prod_dev}.blob.core.windows.net/"
+        f"{container_name}?{sas}"
+    )
+    return ContainerClient.from_container_url(container_url)
 
 
 def get_fs():
@@ -41,32 +47,56 @@ def get_fs():
 
 
 def upload_parquet_to_blob(
-    blob_name, df, prod_dev: Literal["prod", "dev"] = "dev"
+    blob_name,
+    df,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
 ):
-    upload_blob_data(blob_name, df.to_parquet(), prod_dev=prod_dev)
+    upload_blob_data(
+        blob_name,
+        df.to_parquet(),
+        prod_dev=prod_dev,
+        container_name=container_name,
+    )
 
 
 def load_parquet_from_blob(
-    blob_name, prod_dev: Literal["prod", "dev"] = "dev"
+    blob_name,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
 ):
-    blob_data = load_blob_data(blob_name, prod_dev=prod_dev)
+    blob_data = load_blob_data(
+        blob_name, prod_dev=prod_dev, container_name=container_name
+    )
     return pd.read_parquet(io.BytesIO(blob_data))
 
 
 def upload_csv_to_blob(
-    blob_name, df, prod_dev: Literal["prod", "dev"] = "dev"
+    blob_name,
+    df,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
+    **kwargs,
 ):
     upload_blob_data(
         blob_name,
-        df.to_csv(index=False),
+        df.to_csv(index=False, **kwargs),
         prod_dev=prod_dev,
         content_type="text/csv",
+        container_name=container_name,
     )
 
 
-def load_csv_from_blob(blob_name, prod_dev: Literal["prod", "dev"] = "dev"):
-    blob_data = load_blob_data(blob_name, prod_dev=prod_dev)
-    return pd.read_csv(io.BytesIO(blob_data))
+def load_csv_from_blob(
+    blob_name,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
+    **kwargs,
+):
+    blob_data = load_blob_data(
+        blob_name, prod_dev=prod_dev, container_name=container_name
+    )
+    return pd.read_csv(io.BytesIO(blob_data), **kwargs)
 
 
 def upload_gdf_to_blob(
@@ -106,11 +136,14 @@ def load_gdf_from_blob(
     return gdf
 
 
-def load_blob_data(blob_name, prod_dev: Literal["prod", "dev"] = "dev"):
-    if prod_dev == "dev":
-        container_client = dev_container_client
-    else:
-        container_client = prod_container_client
+def load_blob_data(
+    blob_name,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
+):
+    container_client = get_container_client(
+        prod_dev=prod_dev, container_name=container_name
+    )
     blob_client = container_client.get_blob_client(blob_name)
     data = blob_client.download_blob().readall()
     return data
@@ -120,12 +153,12 @@ def upload_blob_data(
     blob_name,
     data,
     prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
     content_type: str = None,
 ):
-    if prod_dev == "dev":
-        container_client = dev_container_client
-    else:
-        container_client = prod_container_client
+    container_client = get_container_client(
+        prod_dev=prod_dev, container_name=container_name
+    )
 
     if content_type is None:
         content_settings = ContentSettings(
@@ -141,12 +174,13 @@ def upload_blob_data(
 
 
 def list_container_blobs(
-    name_starts_with=None, prod_dev: Literal["prod", "dev"] = "dev"
+    name_starts_with=None,
+    prod_dev: Literal["prod", "dev"] = "dev",
+    container_name: str = "projects",
 ):
-    if prod_dev == "dev":
-        container_client = dev_container_client
-    else:
-        container_client = prod_container_client
+    container_client = get_container_client(
+        prod_dev=prod_dev, container_name=container_name
+    )
     return [
         blob.name
         for blob in container_client.list_blobs(
