@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: ipynb,md
+    formats: md,ipynb
     text_representation:
       extension: .md
       format_name: markdown
@@ -86,99 +86,31 @@ for blob_name in tqdm(blob_names):
 ```
 
 ```python
-df_in
-```
-
-```python
-f"imerg-late-hti-mean_{date_in.date()}.parquet"
-```
-
-```python
-blob_names = existing_files = [
-    x.name
-    for x in blob.dev_glb_container_client.list_blobs(
-        name_starts_with="imerg/v6/"
-    )
-]
-
-das = []
+# load all the individual parquets
+dfs = []
 for blob_name in tqdm(blob_names):
-    cog_url = (
-        f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
-        f"{blob_name}?{blob.DEV_BLOB_SAS}"
-    )
-    da_in = rxr.open_rasterio(
-        cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
-    )
-    da_in = da_in.squeeze(drop=True)
     date_in = pd.to_datetime(blob_name.split(".")[0][-10:])
-    da_in["date"] = date_in
-    das.append(da_in)
-
-da_glb = xr.concat(das, dim="date")
+    parquet_name = f"{blob.PROJECT_PREFIX}/processed/imerg/date_means/imerg-late-hti-mean_{date_in.date()}.parquet"
+    df_in = blob.load_parquet_from_blob(parquet_name)
+    dfs.append(df_in)
 ```
 
 ```python
-da_glb = xr.concat(das, dim="date")
+df = pd.concat(dfs)
 ```
 
 ```python
-da_glb
+df
 ```
 
 ```python
-da_box = da_glb.sel(x=slice(minx, maxx), y=slice(miny, maxy))
-```
-
-```python
-da_box_up = raster.upsample_dataarray(
-    da_box, lat_dim="y", lon_dim="x", resolution=0.05
+blob_name = (
+    f"{blob.PROJECT_PREFIX}/processed/imerg/hti_imerg_daily_mean_v6.parquet"
 )
+blob.upload_parquet_to_blob(blob_name, df)
 ```
 
 ```python
-da_box
-```
-
-```python
-da_box_up = da_box_up.rio.write_crs(4326)
-da_clip = da_box_up.rio.clip(adm0.geometry, all_touched=True)
-```
-
-```python
-da_clip
-```
-
-```python
-da_clip["date"] = pd.to_datetime(da_clip.date)
-```
-
-```python
-da_clip
-```
-
-```python
-%time da_mean = da_clip.mean(dim=["x", "y"])
-```
-
-```python
-%time da_mean.isel(date=4).compute()
-```
-
-```python
-2 * 7754 / 60 / 60
-```
-
-```python
-f"{datetime.datetime.today() - pd.DateOffset(days=1):%Y%m%d}"
-```
-
-```python
-f"{(datetime.datetime.today() - pd.DateOffset(days=1)).date()}"
-```
-
-```python
-fig, ax = plt.subplots(dpi=300)
-adm0.boundary.plot(ax=ax, linewidth=0.5, color="white")
-da_clip.sel(date="2007-10-28").plot(ax=ax)
+test = blob.load_parquet_from_blob(blob_name)
+test
 ```

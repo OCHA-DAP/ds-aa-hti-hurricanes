@@ -1,2 +1,4 @@
+from src.email import email_utils
+
 if __name__ == "__main__":
-    pass
+    email_utils.send_trigger_emails()
