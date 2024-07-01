@@ -76,5 +76,7 @@ gdf_plot = adm2.merge(
 ```
 
 ```python
-
+df.groupby("typhoon_name").first().sort_values("affected_population").plot.bar(
+    y="affected_population"
+)
 ```
