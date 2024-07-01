@@ -28,5 +28,11 @@ jobs:
     - name: Run script
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+        CHD_DS_HOST: ${{ secrets.CHD_DS_HOST }}
+        CHD_DS_PORT: ${{ secrets.CHD_DS_PORT }}
+        CHD_DS_USERNAME: ${{ secrets.CHD_DS_USERNAME }}
+        CHD_DS_PASSWORD: ${{ secrets.CHD_DS_PASSWORD }}
+        CHD_DS_ADDRESS: ${{ secrets.CHD_DS_ADDRESS }}
+
       run: |
         python pipelines/check_trigger.py
