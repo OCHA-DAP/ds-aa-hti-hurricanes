@@ -11,20 +11,20 @@ import pandas as pd
 from azure.storage.blob import ContainerClient, ContentSettings
 
 PROD_BLOB_SAS = os.getenv("PROD_BLOB_SAS")
-PROD_BLOB_BASE_URL = "https://imb0chd0prod.blob.core.windows.net/"
-PROD_BLOB_AA_BASE_URL = PROD_BLOB_BASE_URL + "aa-data"
-PROD_BLOB_AA_URL = PROD_BLOB_AA_BASE_URL + "?" + PROD_BLOB_SAS
+# PROD_BLOB_BASE_URL = "https://imb0chd0prod.blob.core.windows.net/"
+# PROD_BLOB_AA_BASE_URL = PROD_BLOB_BASE_URL + "aa-data"
+# PROD_BLOB_AA_URL = PROD_BLOB_AA_BASE_URL + "?" + PROD_BLOB_SAS
 
 DEV_BLOB_SAS = os.getenv("DEV_BLOB_SAS")
 DEV_BLOB_NAME = "imb0chd0dev"
-DEV_BLOB_BASE_URL = f"https://{DEV_BLOB_NAME}.blob.core.windows.net/"
-DEV_BLOB_PROJ_BASE_URL = DEV_BLOB_BASE_URL + "projects"
-DEV_BLOB_PROJ_URL = DEV_BLOB_PROJ_BASE_URL + "?" + DEV_BLOB_SAS
-
-GLOBAL_CONTAINER_NAME = "global"
-DEV_BLOB_GLB_URL = (
-    DEV_BLOB_BASE_URL + GLOBAL_CONTAINER_NAME + "?" + DEV_BLOB_SAS
-)
+# DEV_BLOB_BASE_URL = f"https://{DEV_BLOB_NAME}.blob.core.windows.net/"
+# DEV_BLOB_PROJ_BASE_URL = DEV_BLOB_BASE_URL + "projects"
+# DEV_BLOB_PROJ_URL = DEV_BLOB_PROJ_BASE_URL + "?" + DEV_BLOB_SAS
+#
+# GLOBAL_CONTAINER_NAME = "global"
+# DEV_BLOB_GLB_URL = (
+#     DEV_BLOB_BASE_URL + GLOBAL_CONTAINER_NAME + "?" + DEV_BLOB_SAS
+# )
 
 PROJECT_PREFIX = "ds-aa-hti-hurricanes"
 
