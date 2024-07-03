@@ -2,7 +2,7 @@ name: Download recent CHIRPS-GEFS
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '50 8 * * *'
   workflow_dispatch:
 
 jobs:
