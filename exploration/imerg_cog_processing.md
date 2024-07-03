@@ -32,7 +32,7 @@ import rioxarray as rxr
 import xarray as xr
 from tqdm.notebook import tqdm
 
-from src.datasources import imerg, codab
+from src.datasources import imerg, codab, chirps
 from src.utils import blob, raster
 ```
 
@@ -111,6 +111,18 @@ blob.upload_parquet_to_blob(blob_name, df)
 ```
 
 ```python
-test = blob.load_parquet_from_blob(blob_name)
+test = imerg.load_imerg_mean()
 test
+```
+
+```python
+test.dtypes
+```
+
+```python
+test_chirps = chirps.load
+```
+
+```python
+test_chirps
 ```

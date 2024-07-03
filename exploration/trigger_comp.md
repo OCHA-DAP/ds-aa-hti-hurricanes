@@ -30,7 +30,7 @@ from tqdm.notebook import tqdm
 from matplotlib.ticker import FuncFormatter
 from matplotlib.colors import ListedColormap
 
-from src.datasources import ibtracs, chirps, impact, gtcm
+from src.datasources import ibtracs, chirps, impact, gtcm, imerg
 ```
 
 ```python
@@ -176,7 +176,14 @@ rain
 ```
 
 ```python
-MAX_RAIN = rain.drop(columns="T").max().max()
+rain_imerg = imerg.load_imerg_mean()
+rain_imerg["roll2"] = (
+    rain_imerg["mean"].rolling(window=2, center=True, min_periods=1).sum()
+)
+```
+
+```python
+MAX_RAIN = max(rain.drop(columns="T").max().max(), rain_imerg["mean"].max())
 ```
 
 ```python
@@ -201,6 +208,7 @@ for d_thresh in d_threshs:
         end_day = pd.Timestamp(
             group["time"].max().date() + pd.Timedelta(days=1)
         )
+
         rain_f = rain[(rain["T"] >= start_day) & (rain["T"] <= end_day)]
         end_day_early = pd.Timestamp(group["time"].max().date())
         rain_f_early = rain[
@@ -210,6 +218,11 @@ for d_thresh in d_threshs:
         rain_f_short = rain[
             (rain["T"] >= start_day_late) & (rain["T"] <= end_day_early)
         ]
+        rain_imerg_f = rain_imerg[
+            (rain_imerg["date"] >= start_day_late)
+            & (rain_imerg["date"] <= end_day)
+        ]
+
         dict_out = {
             "sid": sid,
             "max_wind": group["usa_wind"].max(),
@@ -220,6 +233,7 @@ for d_thresh in d_threshs:
             "max_roll3_sum_rain": rain_f_short["roll3_sum"].max(),
             "max_roll2_sum_rain": rain_f_early["roll2_sum_fw"].max(),
             # "max_roll2_bw_sum_rain": rain_f["roll2_sum_bw"].max(),
+            "max_roll2_sum_rain_imerg": rain_imerg_f["roll2"].max(),
             "d_thresh": d_thresh,
         }
         # for x in range(10, 91, 10):
@@ -313,6 +327,26 @@ triggers["nameyear"] = (
     triggers["name"].str.capitalize() + " " + triggers["year"].astype(str)
 )
 hits = hits.sort_values("affected_captured", ascending=False)
+```
+
+```python
+hits[hits["trig_str"].str.contains("d230")].iloc[:50]
+```
+
+```python
+trigger_str = "d380_s70_AND_max_roll2_sum_rain_imerg40"
+# trigger_str = "d230_s50_AND_max_roll2_sum_rain_imerg60"
+cols = [
+    "sid",
+    "name",
+    "year",
+    "affected_population",
+    "rank",
+    "target",
+]
+triggers[cols + [trigger_str]].iloc[:50].sort_values(
+    "affected_population", ascending=False
+)
 ```
 
 ```python

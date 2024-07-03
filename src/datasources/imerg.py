@@ -50,6 +50,14 @@ def download_imerg(
         print("failed to download from " + url)
 
 
+def load_imerg_mean():
+    blob_name = (
+        f"{blob.PROJECT_PREFIX}/processed/imerg/"
+        f"hti_imerg_daily_mean_v6.parquet"
+    )
+    return blob.load_parquet_from_blob(blob_name)
+
+
 def process_imerg(path: str = "temp/imerg_temp.nc"):
     ds = xr.open_dataset(path)
     ds = ds.transpose("lat", "lon", "time", "nv")

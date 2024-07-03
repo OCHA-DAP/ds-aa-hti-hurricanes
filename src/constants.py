@@ -9,3 +9,12 @@ GUSTAV_ATCF_ID = "al072008"
 IKE_ATCF_ID = "al092008"
 
 D_THRESH = 230
+
+CERF_SIDS = [
+    "2016273N13300",  # Matthew
+    "2008245N17323",  # Ike
+    "2008238N13293",  # Gustav
+    "2008241N19303",  # Hanna
+    "2008229N18293",  # Fay
+    "2012296N14283",  # Sandy
+]

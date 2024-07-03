@@ -46,8 +46,8 @@ stats
 
 ```python
 rain_col = "max_roll2_sum_rain"
-current_p = 12.105361
-current_s = 101.250000
+current_p = 7.958333
+current_s = 135
 current_name = "Beryl"
 CHD_GREEN = "#1bb580"
 
@@ -104,7 +104,7 @@ ax.annotate(
     fontweight="bold",
 )
 ax.annotate(
-    f"\n   Prévision 30 juillet 21h00 UTC",
+    f"\n   Prévision 2 juillet 15h00 UTC",
     (current_s, current_p),
     va="center",
     ha="left",
