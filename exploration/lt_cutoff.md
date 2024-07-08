@@ -165,7 +165,7 @@ triggers["action_lt"].mean()
 
 ```python
 lt_threshs = {
-    "readiness": {"p": 35, "s": 34},
+    "readiness": {"p": 42, "s": 64},
     "action": {"p": 42, "s": 64},
 }
 triggers_cutoff = determine_triggers(
@@ -193,7 +193,7 @@ df_plot["any"] = df_plot["action|obsv"] | df_plot["readiness"]
 df_plot["affected_population"] = (
     df_plot["affected_population"].fillna(0).astype(int)
 )
-df_plot = df_plot.sort_values(["affected_population"] + cols, ascending=False)
+# df_plot = df_plot.sort_values(["affected_population"] + cols, ascending=False)
 ```
 
 ```python

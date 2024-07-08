@@ -49,12 +49,60 @@ minx, miny, maxx, maxy
 ```
 
 ```python
-blob_names = existing_files = [
-    x.name
-    for x in blob.dev_glb_container_client.list_blobs(
-        name_starts_with="imerg/v6/"
+# v7 current
+blob_names = blob.list_container_blobs(
+    name_starts_with="imerg/v7/imerg-daily-late-2024", container_name="global"
+)
+```
+
+```python
+dicts = []
+for blob_name in tqdm(blob_names):
+    cog_url = (
+        f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
+        f"{blob_name}?{blob.DEV_BLOB_SAS}"
     )
-]
+    da_in = rxr.open_rasterio(
+        cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
+    )
+    da_in = da_in.squeeze(drop=True)
+    date_in = pd.to_datetime(blob_name.split(".")[0][-10:])
+    da_box = da_in.sel(x=slice(minx, maxx), y=slice(miny, maxy))
+    da_box_up = raster.upsample_dataarray(
+        da_box, lat_dim="y", lon_dim="x", resolution=0.05
+    )
+    da_box_up = da_box_up.rio.write_crs(4326)
+    da_clip = da_box_up.rio.clip(adm0.geometry, all_touched=True)
+    da_mean = da_clip.mean()
+    mean_val = float(da_mean.compute())
+    dicts.append({"date": date_in, "mean": mean_val})
+```
+
+```python
+df = pd.DataFrame(dicts)
+```
+
+```python
+df
+```
+
+```python
+blob_name = f"{blob.PROJECT_PREFIX}/processed/imerg/hti_imerg_daily_mean_v7_2024.parquet"
+blob.upload_parquet_to_blob(blob_name, df)
+```
+
+```python
+# v6 historical
+```
+
+```python
+blob_names = blob.list_container_blobs(
+    name_starts_with="imerg/v6/", container_name="global"
+)
+```
+
+```python
+blob_names[-1]
 ```
 
 ```python
@@ -116,13 +164,28 @@ test
 ```
 
 ```python
-test.dtypes
+blob_names = blob.list_container_blobs(
+    name_starts_with="imerg/v7/", container_name="global"
+)
 ```
 
 ```python
-test_chirps = chirps.load
+cog_url = (
+    f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
+    f"{blob_names[-1]}?{blob.DEV_BLOB_SAS}"
+)
 ```
 
 ```python
-test_chirps
+blob_names[-1]
+```
+
+```python
+da_in = rxr.open_rasterio(
+    cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
+)
+```
+
+```python
+da_in
 ```

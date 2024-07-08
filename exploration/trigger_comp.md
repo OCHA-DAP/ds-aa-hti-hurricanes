@@ -43,9 +43,11 @@ from src.datasources import ibtracs, chirps, impact, gtcm, imerg
 
 ```python
 # 3yr RP
-TARGET_ACT = 8
+# TARGET_ACT = 8
+# 4yr RP
+# TARGET_ACT = 6
 # 5yr RP
-# TARGET_ACT = 5
+TARGET_ACT = 5
 MAX_DISTANCE = 500
 CAT_1 = 64
 CAT_2 = 83
@@ -126,13 +128,13 @@ TARGET_YEARS = hurricanes["year"].unique()[:TARGET_ACT]
 print(TARGET_YEARS)
 
 # 3 year RP
-MAX_RANK = 10
+# MAX_RANK = 10
 
 # 4 year RP
 # MAX_RANK = 8
 
 # 5 year RP
-# MAX_RANK = 7
+MAX_RANK = 7
 
 hurricanes["target"] = hurricanes["rank"] <= MAX_RANK
 TARGET_SIDS = hurricanes[hurricanes["target"]]["sid"]
@@ -327,6 +329,10 @@ triggers["nameyear"] = (
     triggers["name"].str.capitalize() + " " + triggers["year"].astype(str)
 )
 hits = hits.sort_values("affected_captured", ascending=False)
+```
+
+```python
+hits.iloc[:50]
 ```
 
 ```python

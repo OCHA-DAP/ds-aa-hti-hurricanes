@@ -18,3 +18,20 @@ CERF_SIDS = [
     "2008229N18293",  # Fay
     "2012296N14283",  # Sandy
 ]
+
+FRENCH_MONTHS = {
+    "Jan": "jan.",
+    "Feb": "fév.",
+    "Mar": "mars",
+    "Apr": "avr.",
+    "May": "mai",
+    "Jun": "juin",
+    "Jul": "juil.",
+    "Aug": "août",
+    "Sep": "sept.",
+    "Oct": "oct.",
+    "Nov": "nov.",
+    "Dec": "déc.",
+}
+
+CHD_GREEN = "#1bb580"

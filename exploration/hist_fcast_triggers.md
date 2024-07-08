@@ -199,8 +199,8 @@ metrics["lt_hours"] = metrics["lt"].dt.total_seconds() / 3600
 ```python
 for lt_name, (rp_min, rp_max) in [
     # ("readiness", (1.5, 2.8)),
-    ("readiness", (2.8, 3.5)),
-    ("action", (2.8, 3.5)),
+    ("readiness", (2.9, 5)),
+    ("action", (2.9, 4.5)),
 ]:
     for var in ["fn", "fp", "lt_hours", "rp", "affected_population"]:
         pivot_df = metrics[

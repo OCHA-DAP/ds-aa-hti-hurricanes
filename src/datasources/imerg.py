@@ -50,10 +50,11 @@ def download_imerg(
         print("failed to download from " + url)
 
 
-def load_imerg_mean():
+def load_imerg_mean(version: int = 6, recent: bool = False):
+    year_str = "_2024" if recent else ""
     blob_name = (
         f"{blob.PROJECT_PREFIX}/processed/imerg/"
-        f"hti_imerg_daily_mean_v6.parquet"
+        f"hti_imerg_daily_mean_v{version}{year_str}.parquet"
     )
     return blob.load_parquet_from_blob(blob_name)
 

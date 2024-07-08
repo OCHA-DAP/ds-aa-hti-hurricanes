@@ -297,3 +297,13 @@ def load_recent_glb_forecasts():
         parse_dates=["issuance", "validTime"],
         sep=";",
     )
+
+
+def load_recent_glb_obsv():
+    return blob.load_csv_from_blob(
+        "noaa/nhc/observed_tracks.csv",
+        prod_dev="dev",
+        container_name="global",
+        parse_dates=["lastUpdate"],
+        sep=";",
+    )

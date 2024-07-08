@@ -84,8 +84,9 @@ rain_imerg["roll2"] = (
 ```
 
 ```python
-d_thresh = 230
+# d_thresh = 230
 # d_thresh = 380
+d_thresh = 20
 
 tracks_f = tracks[tracks["distance (m)"] < d_thresh * 1000]
 
