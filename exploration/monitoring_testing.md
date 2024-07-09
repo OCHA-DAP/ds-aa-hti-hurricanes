@@ -195,6 +195,10 @@ df_new_monitoring.iloc[-5:]
 ```
 
 ```python
+df_new_monitoring
+```
+
+```python
 most_recent_point = df_new_monitoring.loc[
     df_new_monitoring["issue_time"].idxmax()
 ]

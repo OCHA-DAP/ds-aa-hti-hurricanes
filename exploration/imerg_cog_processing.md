@@ -56,8 +56,23 @@ blob_names = blob.list_container_blobs(
 ```
 
 ```python
+blob_name = f"{blob.PROJECT_PREFIX}/processed/imerg/hti_imerg_daily_mean_v7_2024.parquet"
+df = blob.load_parquet_from_blob(blob_name)
+```
+
+```python
+df
+```
+
+```python
 dicts = []
 for blob_name in tqdm(blob_names):
+    date_in = pd.to_datetime(blob_name.split(".")[0][-10:])
+    if date_in in df["date"].unique():
+        print(f"already calculated for {date_in}")
+        continue
+    else:
+        print(f"calculating for {date_in}")
     cog_url = (
         f"https://{blob.DEV_BLOB_NAME}.blob.core.windows.net/global/"
         f"{blob_name}?{blob.DEV_BLOB_SAS}"
@@ -66,7 +81,6 @@ for blob_name in tqdm(blob_names):
         cog_url, masked=True, chunks={"band": 1, "x": 3600, "y": 1800}
     )
     da_in = da_in.squeeze(drop=True)
-    date_in = pd.to_datetime(blob_name.split(".")[0][-10:])
     da_box = da_in.sel(x=slice(minx, maxx), y=slice(miny, maxy))
     da_box_up = raster.upsample_dataarray(
         da_box, lat_dim="y", lon_dim="x", resolution=0.05
@@ -79,16 +93,20 @@ for blob_name in tqdm(blob_names):
 ```
 
 ```python
-df = pd.DataFrame(dicts)
+df_new = pd.DataFrame(dicts)
 ```
 
 ```python
-df
+df_combined = pd.concat([df, df_new], ignore_index=True)
+```
+
+```python
+df_combined
 ```
 
 ```python
 blob_name = f"{blob.PROJECT_PREFIX}/processed/imerg/hti_imerg_daily_mean_v7_2024.parquet"
-blob.upload_parquet_to_blob(blob_name, df)
+blob.upload_parquet_to_blob(blob_name, df_combined)
 ```
 
 ```python
