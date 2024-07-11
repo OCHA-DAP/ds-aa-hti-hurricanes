@@ -21,15 +21,28 @@ EMAIL_PORT = int(os.getenv("CHD_DS_PORT"))
 EMAIL_PASSWORD = os.getenv("CHD_DS_EMAIL_PASSWORD")
 EMAIL_USERNAME = os.getenv("CHD_DS_EMAIL_USERNAME")
 EMAIL_ADDRESS = os.getenv("CHD_DS_EMAIL_ADDRESS")
-TEST_RUN = os.getenv("TEST_RUN")
-if TEST_RUN is None:
-    TEST_RUN = True
+TEST_LIST = os.getenv("TEST_LIST")
+if TEST_LIST == "False":
+    TEST_LIST = False
+else:
+    TEST_LIST = True
+TEST_STORM = os.getenv("TEST_STORM")
+if TEST_STORM == "False":
+    TEST_STORM = False
+else:
+    TEST_STORM = True
+
+print(f"TEST_LIST: {TEST_LIST}")
+print(f"TEST_STORM: {TEST_STORM}")
 
 TEMPLATES_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "templates"
 STATIC_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "static"
 
 
-def add_test_row_to_monitoring(df_monitoring: pd.DataFrame):
+def add_test_row_to_monitoring(df_monitoring: pd.DataFrame) -> pd.DataFrame:
+    """Add test row to monitoring df to simulate new monitoring point.
+    This new monitoring point will cause an activation of all three triggers.
+    """
     print("adding test row to monitoring data")
     df_monitoring_test = df_monitoring[
         df_monitoring["monitor_id"] == "al022024_fcast_2024-07-01T15:00:00"
@@ -55,26 +68,35 @@ def add_test_row_to_monitoring(df_monitoring: pd.DataFrame):
     return df_monitoring
 
 
-def get_distribution_list():
-    if TEST_RUN:
+def get_distribution_list() -> pd.DataFrame:
+    """Load distribution list from blob storage."""
+    if TEST_LIST:
         blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
     else:
         blob_name = f"{blob.PROJECT_PREFIX}/email/distribution_list.csv"
     return blob.load_csv_from_blob(blob_name)
 
 
-def load_email_record():
+def load_email_record() -> pd.DataFrame:
+    """Load record of emails that have been sent."""
     blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
     return blob.load_csv_from_blob(blob_name)
 
 
 def update_fcast_trigger_emails():
+    """Cycle through all historical monitoring points to see if we should have
+    sent a trigger email for any of them. If we need to send any emails,
+    send them.
+    """
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv="fcast"
     )
-    if TEST_RUN:
-        df_monitoring = add_test_row_to_monitoring(df_monitoring)
     df_existing_email_record = load_email_record()
+    if TEST_STORM:
+        df_monitoring = add_test_row_to_monitoring(df_monitoring)
+        df_existing_email_record = df_existing_email_record[
+            df_existing_email_record["atcf_id"] != "TEST_ATCF_ID"
+        ]
     dicts = []
     for atcf_id, group in df_monitoring.groupby("atcf_id"):
         for trigger_name in ["readiness", "action"]:
@@ -128,11 +150,12 @@ def send_info_emails(fcast_obsv: Literal["fcast", "obsv"]):
 
 
 def send_trigger_email(monitor_id: str, trigger_name: str):
+    """Send trigger email to distribution list."""
     fcast_obsv = "fcast" if trigger_name in ["readiness", "action"] else "obsv"
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv=fcast_obsv
     )
-    if TEST_RUN:
+    if TEST_STORM:
         df_monitoring = add_test_row_to_monitoring(df_monitoring)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
@@ -154,7 +177,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
     to_list = distribution_list[distribution_list["trigger"] == "to"]
     cc_list = distribution_list[distribution_list["trigger"] == "cc"]
 
-    test_subject = "TEST: " if TEST_RUN else ""
+    test_subject = "TEST : " if TEST_STORM else ""
 
     environment = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
 
@@ -194,7 +217,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
         name=cyclone_name,
         pub_time=pub_time,
         pub_date=pub_date,
-        test_email=TEST_RUN,
+        test_email=TEST_STORM,
         chd_banner_cid=chd_banner_cid[1:-1],
         ocha_logo_cid=ocha_logo_cid[1:-1],
     )

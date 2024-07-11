@@ -37,6 +37,10 @@ from src.utils import blob, raster
 ```
 
 ```python
+imerg.process_recent_imerg()
+```
+
+```python
 adm0 = codab.load_codab_from_blob()
 ```
 
@@ -56,8 +60,8 @@ blob_names = blob.list_container_blobs(
 ```
 
 ```python
-blob_name = f"{blob.PROJECT_PREFIX}/processed/imerg/hti_imerg_daily_mean_v7_2024.parquet"
-df = blob.load_parquet_from_blob(blob_name)
+# blob_name = f"{blob.PROJECT_PREFIX}/processed/imerg/hti_imerg_daily_mean_v7_2024.parquet"
+df = imerg.load_imerg_mean(version=7, recent=True)
 ```
 
 ```python

@@ -43,7 +43,7 @@ df
 
 ```python
 df = pd.DataFrame(
-    columns=["email", "name", "email_type", "to_cc"],
+    columns=["email", "name", "trigger", "info"],
     data=[
         ["downing.tristan@gmail.com", "TEST_NAME", "to", "to"],
         ["tristan.downing@humdata.org", "TEST_NAME", "cc", "cc"],
