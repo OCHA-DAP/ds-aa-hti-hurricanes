@@ -32,8 +32,8 @@ df = pd.DataFrame(
     columns=["email", "name", "trigger", "info"],
     data=[
         ["tristan.downing@un.org", "TEST_NAME", "to", "to"],
-        ["tristan.downing@humdata.org", "Tristan Downing", "cc", "cc"],
-        ["downing.tristan@gmail.com", "Tristan Downing", None, ""],
+        ["tristan.downing@humdata.org", "TEST_NAME", "cc", "cc"],
+        ["downing.tristan@gmail.com", "TEST_NAME", None, ""],
     ],
 )
 blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
@@ -45,10 +45,8 @@ df
 df = pd.DataFrame(
     columns=["email", "name", "email_type", "to_cc"],
     data=[
-        ["downing.tristan@gmail.com", "Tristan Downing", "trigger", "to"],
-        ["downing.tristan@gmail.com", "Tristan Downing", "trigger", "cc"],
-        ["downing.tristan@gmail.com", "Tristan Downing", "info", "to"],
-        ["downing.tristan@gmail.com", "Tristan Downing", "info", "cc"],
+        ["downing.tristan@gmail.com", "TEST_NAME", "to", "to"],
+        ["tristan.downing@humdata.org", "TEST_NAME", "cc", "cc"],
     ],
 )
 blob_name = f"{blob.PROJECT_PREFIX}/email/distribution_list.csv"

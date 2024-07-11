@@ -164,10 +164,10 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
     msg["Subject"] = (
         f"{test_subject}Action anticipatoire Haïti – "
         f"déclencheur {trigger_name_fr} atteint pour "
-        f"Cyclone {cyclone_name}"
+        f"{cyclone_name}"
     )
     msg["From"] = Address(
-        "OCHA Centre for Humanitarian Data",
+        "Centre de données humanitaires OCHA",
         EMAIL_ADDRESS.split("@")[0],
         EMAIL_ADDRESS.split("@")[1],
     )
