@@ -9,7 +9,7 @@ from shapely import Point
 
 from src.constants import HTI_ASAP0_ID
 
-DATA_DIR = Path(os.getenv("AA_DATA_DIR_NEW"))
+DATA_DIR = Path(os.getenv("AA_DATA_DIR_NEW", ""))
 IBTRACS_RAW_DIR = DATA_DIR / "public" / "raw" / "glb" / "ibtracs"
 IBTRACS_PROC_DIR = DATA_DIR / "public" / "processed" / "glb" / "ibtracs"
 IBTRACS_HTI_PROC_DIR = DATA_DIR / "public" / "processed" / "hti" / "ibtracs"
