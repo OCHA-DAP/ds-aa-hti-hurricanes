@@ -29,12 +29,11 @@ from src.utils import blob
 
 ```python
 df = pd.DataFrame(
-    columns=["email", "name", "email_type", "to_cc"],
+    columns=["email", "name", "trigger", "info"],
     data=[
-        ["tristan.downing@un.org", "Tristan Downing", "trigger", "to"],
-        ["tristan.downing@un.org", "Tristan Downing", "trigger", "cc"],
-        ["tristan.downing@un.org", "Tristan Downing", "info", "to"],
-        ["tristan.downing@un.org", "Tristan Downing", "info", "cc"],
+        ["tristan.downing@un.org", "TEST_NAME", "to", "to"],
+        ["tristan.downing@humdata.org", "Tristan Downing", "cc", "cc"],
+        ["downing.tristan@gmail.com", "Tristan Downing", None, ""],
     ],
 )
 blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
