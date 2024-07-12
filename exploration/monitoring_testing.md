@@ -47,9 +47,35 @@ adm0.plot()
 ```
 
 ```python
+monitoring_utils.update_fcast_monitoring(clobber=False)
+```
+
+```python
+df_tracks = nhc.load_recent_glb_forecasts()
+df_tracks = df_tracks[df_tracks["basin"] == "al"]
+```
+
+```python
+df_tracks["leadtime"] = df_tracks["validTime"] - df_tracks["issuance"]
+```
+
+```python
+df_tracks["leadtime"].max()
+```
+
+```python
+for issue_time, group in df_tracks.groupby("issuance"):
+    display(group)
+```
+
+```python
 df_monitoring = monitoring_utils.load_existing_monitoring_points(
     fcast_obsv="fcast"
 )
+```
+
+```python
+df_monitoring
 ```
 
 ```python
@@ -184,10 +210,21 @@ ax.set_title(
 ```
 
 ```python
+clobber = False
+```
+
+```python
 # observational
 
 obsv_tracks = nhc.load_recent_glb_obsv()
-obsv_tracks = obsv_tracks[obsv_tracks["name"] == "Beryl"]
+obsv_tracks = obsv_tracks[obsv_tracks["basin"] == "al"]
+obsv_tracks = obsv_tracks.rename(columns={"id": "atcf_id"})
+obsv_tracks = obsv_tracks.sort_values("lastUpdate")
+# obsv_tracks = obsv_tracks[obsv_tracks["name"] == "Beryl"]
+```
+
+```python
+obsv_tracks[obsv_tracks["name"] == "Chris"]
 ```
 
 ```python
@@ -195,6 +232,9 @@ obsv_rain = imerg.load_imerg_mean(version=7, recent=True)
 obsv_rain["roll2_sum"] = (
     obsv_rain["mean"].rolling(window=2, center=True, min_periods=1).sum()
 )
+obsv_rain["issue_time"] = obsv_rain["date"].apply(
+    lambda x: x.tz_localize("UTC")
+) + pd.Timedelta(hours=15, days=1)
 ```
 
 ```python
@@ -202,22 +242,133 @@ obsv_rain
 ```
 
 ```python
-cols = ["latitude", "longitude", "intensity", "pressure"]
-df_interp = (
-    obsv_tracks.set_index("lastUpdate")[cols]
-    .resample("30min")
-    .interpolate()
-    .reset_index()
-)
-gdf = gpd.GeoDataFrame(
-    data=df_interp,
-    geometry=gpd.points_from_xy(df_interp["longitude"], df_interp["latitude"]),
-    crs=4326,
+df_existing_monitoring = monitoring_utils.load_existing_monitoring_points(
+    "obsv"
 )
 ```
 
 ```python
-obsv_tracks
+df_existing_monitoring
+```
+
+```python
+cols = ["latitude", "longitude", "intensity", "pressure"]
+
+dicts = []
+for atcf_id, group in obsv_tracks.groupby("atcf_id"):
+    df_interp = (
+        group.set_index("lastUpdate")[cols]
+        .resample("30min")
+        .interpolate()
+        .reset_index()
+    )
+    gdf = gpd.GeoDataFrame(
+        data=df_interp,
+        geometry=gpd.points_from_xy(
+            df_interp["longitude"], df_interp["latitude"]
+        ),
+        crs=4326,
+    )
+    gdf["hti_distance"] = (
+        gdf.to_crs(3857).geometry.distance(adm0.iloc[0].geometry) / 1000
+    )
+    for issue_time in obsv_rain["issue_time"]:
+        monitor_id = f"{atcf_id}_obsv_{issue_time.isoformat().split('+')[0]}"
+        if (
+            monitor_id in df_existing_monitoring["monitor_id"].unique()
+            and not clobber
+        ):
+            print(f"already monitored for {monitor_id}")
+            continue
+        rain_recent = obsv_rain[obsv_rain["issue_time"] <= issue_time]
+        gdf_recent = gdf[gdf["lastUpdate"] <= issue_time]
+        if gdf_recent.empty:
+            # skip as storm is not active yet
+            continue
+        if rain_recent["date"].max().date() - gdf_recent[
+            "lastUpdate"
+        ].max().date() > pd.Timedelta(days=1):
+            # skip as storm is not longer active
+            continue
+
+        name = group[group["lastUpdate"] <= issue_time].iloc[-1]["name"]
+
+        # closest pass
+        landfall_row = gdf_recent.loc[gdf_recent["hti_distance"].idxmin()]
+        closest_s = landfall_row["intensity"]
+        landfall_start_day = landfall_row["lastUpdate"].date()
+        landfall_end_day_late = landfall_start_day + pd.Timedelta(days=1)
+        obsv_rain_landfall = rain_recent[
+            (rain_recent["date"].dt.date >= landfall_start_day)
+            & (rain_recent["date"].dt.date <= landfall_end_day_late)
+        ]
+        closest_p = obsv_rain_landfall["roll2_sum"].max()
+
+        # obsv trigger
+        gdf_dist = gdf_recent[gdf_recent["hti_distance"] < D_THRESH]
+        max_s = gdf_dist["intensity"].max()
+        start_day = pd.Timestamp(gdf_dist["lastUpdate"].min().date())
+        end_day_late = pd.Timestamp(
+            gdf_dist["lastUpdate"].max().date() + pd.Timedelta(days=1)
+        )
+        # rainfall is no longer relevant if past the date the storm left
+        # the trigger zone
+        rainfall_relevant = rain_recent["date"].max() <= end_day_late
+        obsv_rain_f = rain_recent[
+            (rain_recent["date"] >= start_day)
+            & (rain_recent["date"] <= end_day_late)
+        ]
+        max_p = obsv_rain_f["roll2_sum"].max()
+        obsv_trigger = (max_p > monitoring_utils.THRESHS["obsv"]["p"]) & (
+            max_s > monitoring_utils.THRESHS["obsv"]["s"]
+        )
+        dicts.append(
+            {
+                "monitor_id": monitor_id,
+                "atcf_id": atcf_id,
+                "name": name,
+                "issue_time": issue_time,
+                "min_dist": gdf_recent["hti_distance"].min(),
+                "closest_s": closest_s,
+                "closest_p": closest_p,
+                "obsv_s": max_s,
+                "obsv_p": max_p,
+                "rainfall_relevant": rainfall_relevant,
+                "obsv_trigger": obsv_trigger,
+            }
+        )
+
+df_new_monitoring = pd.DataFrame(dicts)
+```
+
+```python
+df_new_monitoring
+```
+
+```python
+if clobber:
+    df_monitoring_combined = df_new_monitoring
+else:
+    df_monitoring_combined = pd.concat(
+        [df_existing_monitoring, df_new_monitoring]
+    )
+```
+
+```python
+df_monitoring_combined
+```
+
+```python
+blob_name = f"{blob.PROJECT_PREFIX}/monitoring/hti_obsv_monitoring.parquet"
+blob.upload_parquet_to_blob(blob_name, df_monitoring_combined, index=False)
+```
+
+```python
+dummy_df_monitoring
+```
+
+```python
+gdf
 ```
 
 ```python
