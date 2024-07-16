@@ -26,6 +26,9 @@ def load_raster_stats():
 
 
 def calculate_raster_stats():
+    """Calculate raster stats for CHIRPS daily.
+    Does mean and percentiles.
+    """
     ds = load_chirps_daily()
     adm = codab.load_codab_from_blob()
     ds_clip = ds.rio.clip(adm.geometry, all_touched=True)
@@ -47,6 +50,9 @@ def load_chirps_daily():
 
 
 def process_chirps_daily():
+    """Cycle over individual CHIRPS daily files and concatenate them into
+    one file.
+    """
     if not CHIRPS_PROC_DIR.exists():
         os.makedirs(CHIRPS_PROC_DIR, exist_ok=True)
     dates = pd.date_range(start="2000-01-01", end="2023-12-31", freq="D")
@@ -72,6 +78,13 @@ def process_chirps_daily():
 def download_chirps_daily(
     d: datetime.datetime, total_bounds, clobber: bool = False
 ):
+    """
+    Download CHIRPS daily data for a specific date.
+    :param d: date
+    :param total_bounds: total_bounds from CODAB
+    :param clobber:
+    :return:
+    """
     if not CHIRPS_RAW_DIR.exists():
         os.makedirs(CHIRPS_RAW_DIR, exist_ok=True)
 

@@ -81,6 +81,7 @@ def download_chirps_gefs(
     clobber: bool = False,
     verbose: bool = False,
 ):
+    """Download CHIRPS GEFS data for a specific issue and valid date."""
     url = CHIRPS_GEFS_URL.format(
         iss_year=issue_date.year,
         iss_month=issue_date.month,
@@ -125,6 +126,7 @@ def download_chirps_gefs(
 def load_chirps_gefs_raster(
     issue_date: pd.Timestamp, valid_date: pd.Timestamp
 ):
+    """Load CHIRPS GEFS raster data for a specific issue and valid date."""
     filename = (
         f"chirps-gefs-hti_"
         f"issued-{issue_date.date()}_valid-{valid_date.date()}.tif"
@@ -139,6 +141,9 @@ def load_chirps_gefs_raster(
 
 
 def process_chirps_gefs(verbose: bool = False):
+    """Calculate spatial mean from all historical CHIRPS-GEFS forecasts
+    for Haiti.
+    """
     adm0 = codab.load_codab_from_blob(admin_level=0)
     start_date = "2000-01-01"
     end_date = "2023-12-31"
@@ -180,6 +185,7 @@ def process_chirps_gefs(verbose: bool = False):
 
 
 def process_recent_chirps_gefs(verbose: bool = False):
+    """Process only 2024 CHIRPS-GEFS forecasts for Haiti."""
     try:
         existing_df = load_recent_chirps_gefs_mean_daily()
     except ResourceNotFoundError:

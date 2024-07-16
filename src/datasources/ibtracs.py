@@ -50,6 +50,7 @@ def load_ibtracs_with_wind(wind_provider: Literal["usa", "wmo"] = "usa"):
 
 
 def process_hti_distances():
+    """Merge Haiti track data (distances were pre-calculated)"""
     all_distances = load_all_adm0_distances()
     all_tracks = load_ibtracs_with_wind()
     hti_distances = all_distances[all_distances["asap0_id"] == HTI_ASAP0_ID]
@@ -77,6 +78,7 @@ def load_raw_ibtracs():
 
 
 def process_ibtracs_sid_atcf_names():
+    """Match SID (used by IBTrACS) and ATCF_ID (used by NOAA NHC)"""
     ds = load_raw_ibtracs()
     ds_f = ds[["sid", "usa_atcf_id", "name"]]
     df = ds_f.to_dataframe()

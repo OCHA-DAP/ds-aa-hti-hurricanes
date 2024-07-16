@@ -33,15 +33,13 @@ from matplotlib.colors import ListedColormap
 from src.datasources import ibtracs, chirps, impact, gtcm, imerg
 ```
 
-```python
-24 / 5
-```
+Adjust `TARGET_ACT` to determine how many storms we want to target.
+Only needs to be done if you want to calculate accuracy metrics
+(TP, FP, etc)
 
 ```python
-24 / 8
-```
+# adjust TARGET_ACT to determine how many storms we want to target
 
-```python
 # 3yr RP
 # TARGET_ACT = 8
 # 4yr RP
@@ -59,7 +57,13 @@ JEANNE = "2004258N16300"
 IVAN = "2004247N10332"
 ```
 
+This loads the impact predictions from the impact model.
+We don't currently use the impact model so you can skip
+this cell.
+
 ```python
+# load impact predictions from impact model
+# currently, not being used, so this cell can be skipped
 impactmodel = gtcm.load_gtcm_impact()
 impactmodel["nameyear"] = (
     impactmodel["event"].str.capitalize()
@@ -76,6 +80,8 @@ impactmodel["model_trigger"] = impactmodel["prediction_adm0"] >= x
 impactmodel
 ```
 
+Load observational tracks with distance to Haiti already calculated.
+
 ```python
 tracks = ibtracs.load_hti_distances()
 ```
@@ -83,6 +89,12 @@ tracks = ibtracs.load_hti_distances()
 ```python
 MAX_SPEED = tracks["usa_wind"].max()
 ```
+
+Load impact data.
+
+The `affected_population_adj` was just adjusting the impact for storms
+whose impact may have been attributed to a different storm.
+We decided to stick with the normal impact, so this can be ignored.
 
 ```python
 affected = impact.load_hti_impact()
@@ -112,6 +124,9 @@ affected["rank_adj"] = affected["affected_population_adj"].rank(
 )
 ```
 
+Join impact to storms. Again you can ignore the stuff about
+adjusted impact.
+
 ```python
 hurricanes = (
     tracks[tracks["distance (m)"] <= MAX_DISTANCE * 1000]
@@ -127,6 +142,7 @@ display(hurricanes[:20])
 TARGET_YEARS = hurricanes["year"].unique()[:TARGET_ACT]
 print(TARGET_YEARS)
 
+# select desired return period
 # 3 year RP
 # MAX_RANK = 10
 
@@ -156,6 +172,11 @@ hurricanes.sort_values("year")["year"].unique()
 TARGET_SIDS
 ```
 
+Load the rain raster stats,
+and calculate the rolling values.
+`fw` and `bw` is just to account for the 2-day rolling
+not having a center date.
+
 ```python
 rain = chirps.load_raster_stats()
 rain["roll3_sum"] = (
@@ -177,6 +198,12 @@ rain["roll2_sum_fw"] = rain["roll2_sum_bw"].shift(-1).fillna(0)
 rain
 ```
 
+Load IMERG rain data.
+(The previous analysis was done with CHIRPS rainfall, before
+we started using IMERG. It is also better matched to the
+CHIRPS-GEFS forecast, so we will use these figures for showing how
+bad a forecast is.)
+
 ```python
 rain_imerg = imerg.load_imerg_mean()
 rain_imerg["roll2"] = (
@@ -191,6 +218,14 @@ MAX_RAIN = max(rain.drop(columns="T").max().max(), rain_imerg["mean"].max())
 ```python
 MAX_RAIN
 ```
+
+First cycle over distance thresholds to get stats for each
+distance cut-off. If you already have a distance threshold in mind
+you can just calculate each storms stats for that one threshold.
+
+The commented-out section at the bottom records the results for
+different ways to aggregate the rainfall. I stopped using this
+to save time after noting that `mean` seemed to work the best.
 
 ```python
 d_threshs = range(0, MAX_DISTANCE + 1, 10)
@@ -238,6 +273,7 @@ for d_thresh in d_threshs:
             "max_roll2_sum_rain_imerg": rain_imerg_f["roll2"].max(),
             "d_thresh": d_thresh,
         }
+
         # for x in range(10, 91, 10):
         #     dict_out.update(
         #         {
@@ -252,6 +288,15 @@ stats = pd.DataFrame(dicts)
 stats = stats.merge(hurricanes, on="sid")
 stats
 ```
+
+Cycle over rainfall thresholds `p_threshs` and `p_metrics`
+(the different ways to aggregate the precipitation).
+This isn't shown here, but `mean`
+seemed to be the best for Haiti, so that is the only aggregation
+that is used for IMERG.
+
+Only save the triggers that have the correct return period
+(i.e. `dfff["year"].nunique() == TARGET_ACT`)
 
 ```python
 # p_metrics = [
@@ -331,13 +376,21 @@ triggers["nameyear"] = (
 hits = hits.sort_values("affected_captured", ascending=False)
 ```
 
+See which triggers performend the best (i.e., would have triggered
+for cyclones that affected the most people, in col `affected_captured`)
+
 ```python
 hits.iloc[:50]
 ```
 
+Check the triggers that fit with the previously established
+230 km distance threshold.
+
 ```python
 hits[hits["trig_str"].str.contains("d230")].iloc[:50]
 ```
+
+Save some specific triggers.
 
 ```python
 trigger_str = "d380_s70_AND_max_roll2_sum_rain_imerg40"
@@ -381,6 +434,9 @@ triggers[cols + [trigger_str]].sort_values(
     "affected_population", ascending=False
 )
 ```
+
+Different ways at looking at accuracy - can be ignored
+for now.
 
 ```python
 base_cols = [
@@ -432,6 +488,11 @@ plot_sids = triggers[triggers[all_bestcols].any(axis=1)]["sid"]
 ```python
 triggers
 ```
+
+Below is just plotting.
+First the bar chart for impact, then separately the
+red boxes to indicate which cyclones would have triggered.
+These were then just combined on a slide.
 
 ```python
 df_plot = triggers[
