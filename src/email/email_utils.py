@@ -32,39 +32,59 @@ if TEST_STORM == "False":
 else:
     TEST_STORM = True
 
-print(f"TEST_LIST: {TEST_LIST}")
-print(f"TEST_STORM: {TEST_STORM}")
-
 TEMPLATES_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "templates"
 STATIC_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "static"
 
 
-def add_test_row_to_monitoring(df_monitoring: pd.DataFrame) -> pd.DataFrame:
+def add_test_row_to_monitoring(
+    df_monitoring: pd.DataFrame, fcast_obsv: Literal["fcast", "obsv"]
+) -> pd.DataFrame:
     """Add test row to monitoring df to simulate new monitoring point.
     This new monitoring point will cause an activation of all three triggers.
     """
     print("adding test row to monitoring data")
-    df_monitoring_test = df_monitoring[
-        df_monitoring["monitor_id"] == "al022024_fcast_2024-07-01T15:00:00"
-    ].copy()
-    df_monitoring_test[
-        [
-            "monitor_id",
-            "name",
-            "atcf_id",
-            "readiness_trigger",
-            "action_trigger",
-        ]
-    ] = (
-        "TEST_MONITOR_ID",
-        "TEST_STORM_NAME",
-        "TEST_ATCF_ID",
-        True,
-        True,
-    )
-    df_monitoring = pd.concat(
-        [df_monitoring, df_monitoring_test], ignore_index=True
-    )
+    if fcast_obsv == "fcast":
+        df_monitoring_test = df_monitoring[
+            df_monitoring["monitor_id"] == "al022024_fcast_2024-07-01T15:00:00"
+        ].copy()
+        df_monitoring_test[
+            [
+                "monitor_id",
+                "name",
+                "atcf_id",
+                "readiness_trigger",
+                "action_trigger",
+            ]
+        ] = (
+            "TEST_MONITOR_ID",
+            "TEST_STORM_NAME",
+            "TEST_ATCF_ID",
+            True,
+            True,
+        )
+        df_monitoring = pd.concat(
+            [df_monitoring, df_monitoring_test], ignore_index=True
+        )
+    else:
+        df_monitoring_test = df_monitoring[
+            df_monitoring["monitor_id"] == "al022024_obsv_2024-07-04T15:00:00"
+        ].copy()
+        df_monitoring_test[
+            [
+                "monitor_id",
+                "name",
+                "atcf_id",
+                "obsv_trigger",
+            ]
+        ] = (
+            "TEST_MONITOR_ID",
+            "TEST_STORM_NAME",
+            "TEST_ATCF_ID",
+            True,
+        )
+        df_monitoring = pd.concat(
+            [df_monitoring, df_monitoring_test], ignore_index=True
+        )
     return df_monitoring
 
 
@@ -83,19 +103,70 @@ def load_email_record() -> pd.DataFrame:
     return blob.load_csv_from_blob(blob_name)
 
 
+def update_obsv_trigger_emails():
+    df_monitoring = monitoring_utils.load_existing_monitoring_points("obsv")
+    df_existing_email_record = load_email_record()
+    if TEST_STORM:
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, "obsv")
+        df_existing_email_record = df_existing_email_record[
+            ~(
+                (df_existing_email_record["atcf_id"] == "TEST_ATCF_ID")
+                & (df_existing_email_record["email_type"] == "obsv")
+            )
+        ]
+    dicts = []
+    for atcf_id, group in df_monitoring.groupby("atcf_id"):
+        if (
+            atcf_id
+            in df_existing_email_record[
+                df_existing_email_record["email_type"] == "obsv"
+            ]["atcf_id"].unique()
+        ):
+            print(f"already sent obsv email for {atcf_id}")
+        else:
+            for monitor_id, row in group.set_index("monitor_id").iterrows():
+                if row["obsv_trigger"]:
+                    try:
+                        print(f"sending obsv email for {monitor_id}")
+                        send_trigger_email(
+                            monitor_id=monitor_id, trigger_name="obsv"
+                        )
+                        dicts.append(
+                            {
+                                "monitor_id": monitor_id,
+                                "atcf_id": atcf_id,
+                                "email_type": "obsv",
+                            }
+                        )
+                    except Exception as e:
+                        print(f"could not send email for {monitor_id}: {e}")
+
+    df_new_email_record = pd.DataFrame(dicts)
+    df_combined_email_record = pd.concat(
+        [df_existing_email_record, df_new_email_record], ignore_index=True
+    )
+    blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
+    blob.upload_csv_to_blob(blob_name, df_combined_email_record)
+
+
 def update_fcast_trigger_emails():
     """Cycle through all historical monitoring points to see if we should have
     sent a trigger email for any of them. If we need to send any emails,
     send them.
     """
-    df_monitoring = monitoring_utils.load_existing_monitoring_points(
-        fcast_obsv="fcast"
-    )
+    df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
-        df_monitoring = add_test_row_to_monitoring(df_monitoring)
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
         df_existing_email_record = df_existing_email_record[
-            df_existing_email_record["atcf_id"] != "TEST_ATCF_ID"
+            ~(
+                (df_existing_email_record["atcf_id"] != "TEST_ATCF_ID")
+                & (
+                    df_existing_email_record["email_type"].isin(
+                        ["readiness", "action"]
+                    )
+                )
+            )
         ]
     dicts = []
     for atcf_id, group in df_monitoring.groupby("atcf_id"):
@@ -153,10 +224,10 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
     """Send trigger email to distribution list."""
     fcast_obsv = "fcast" if trigger_name in ["readiness", "action"] else "obsv"
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
-        fcast_obsv=fcast_obsv
+        fcast_obsv
     )
     if TEST_STORM:
-        df_monitoring = add_test_row_to_monitoring(df_monitoring)
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
     cyclone_name = monitoring_point["name"]
@@ -172,6 +243,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
         trigger_name_fr = "action"
     else:
         trigger_name_fr = "observationnel"
+    fcast_obsv_fr = "observation" if fcast_obsv == "obsv" else "prévision"
 
     distribution_list = get_distribution_list()
     to_list = distribution_list[distribution_list["trigger"] == "to"]
@@ -181,7 +253,8 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
 
     environment = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
 
-    template = environment.get_template(f"{trigger_name}.html")
+    template_name = "observational" if trigger_name == "obsv" else trigger_name
+    template = environment.get_template(f"{template_name}.html")
     msg = EmailMessage()
     msg.set_charset("utf-8")
     msg["Subject"] = (
@@ -217,6 +290,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
         name=cyclone_name,
         pub_time=pub_time,
         pub_date=pub_date,
+        fcast_obsv=fcast_obsv_fr,
         test_email=TEST_STORM,
         chd_banner_cid=chd_banner_cid[1:-1],
         ocha_logo_cid=ocha_logo_cid[1:-1],

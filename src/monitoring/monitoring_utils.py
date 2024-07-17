@@ -75,7 +75,7 @@ def update_obsv_monitoring(clobber: bool = False):
             if rain_recent["date"].max().date() - gdf_recent[
                 "lastUpdate"
             ].max().date() > pd.Timedelta(days=1):
-                # skip as storm is not longer active
+                # skip as storm is no longer active
                 continue
 
             name = group[group["lastUpdate"] <= issue_time].iloc[-1]["name"]

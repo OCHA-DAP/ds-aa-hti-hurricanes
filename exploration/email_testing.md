@@ -88,7 +88,28 @@ blob.upload_parquet_to_blob(blob_name, df_monitoring)
 
 ```python
 df_existing_email_record = email_utils.load_email_record()
+```
 
+```python
+df_existing_email_record
+```
+
+```python
+df_existing_email_record = df_existing_email_record[
+    df_existing_email_record["atcf_id"] == "TEST_ATCF_ID"
+]
+```
+
+```python
+df_existing_email_record
+```
+
+```python
+blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
+blob.upload_csv_to_blob(blob_name, df_existing_email_record)
+```
+
+```python
 # remove last line for testing
 df_existing_email_record = df_existing_email_record.iloc[:-1]
 display(df_existing_email_record)
@@ -150,5 +171,11 @@ blob.upload_csv_to_blob(blob_name, df_combined_email_record)
 ```
 
 ```python
+# obsv
 
+df_monitoring = monitoring_utils.load_existing_monitoring_points("obsv")
+```
+
+```python
+df_monitoring
 ```
