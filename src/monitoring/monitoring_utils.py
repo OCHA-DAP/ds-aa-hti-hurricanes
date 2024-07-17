@@ -22,7 +22,7 @@ def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
     return blob.load_parquet_from_blob(blob_name)
 
 
-def update_obsv_monitoring(clobber: bool = False):
+def update_obsv_monitoring(clobber: bool = False, verbose: bool = False):
     adm0 = codab.load_codab_from_blob().to_crs(3857)
     obsv_tracks = nhc.load_recent_glb_obsv()
     obsv_tracks = obsv_tracks[obsv_tracks["basin"] == "al"]
@@ -65,7 +65,8 @@ def update_obsv_monitoring(clobber: bool = False):
                 monitor_id in df_existing_monitoring["monitor_id"].unique()
                 and not clobber
             ):
-                print(f"already monitored for {monitor_id}")
+                if verbose:
+                    print(f"already monitored for {monitor_id}")
                 continue
             rain_recent = obsv_rain[obsv_rain["issue_time"] <= issue_time]
             gdf_recent = gdf[gdf["lastUpdate"] <= issue_time]
@@ -136,7 +137,7 @@ def update_obsv_monitoring(clobber: bool = False):
     blob.upload_parquet_to_blob(blob_name, df_monitoring_combined, index=False)
 
 
-def update_fcast_monitoring(clobber: bool = False):
+def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
     adm0 = codab.load_codab_from_blob().to_crs(3857)
     df_gefs_all = chirps_gefs.load_recent_chirps_gefs_mean_daily()
     df_gefs_all["issue_time_approx"] = (
@@ -169,7 +170,8 @@ def update_fcast_monitoring(clobber: bool = False):
                 monitor_id in df_existing_monitoring["monitor_id"].unique()
                 and not clobber
             ):
-                print(f"already monitored for {monitor_id}")
+                if verbose:
+                    print(f"already monitored for {monitor_id}")
                 continue
             else:
                 print(f"monitoring for {monitor_id}")
