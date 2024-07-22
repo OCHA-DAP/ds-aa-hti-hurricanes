@@ -74,7 +74,7 @@ obsv_triggers["year"].unique()
 ```
 
 ```python
-monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=36)
+monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=48)
 ```
 
 ```python
@@ -156,6 +156,10 @@ triggers = determine_triggers(lt_threshs, monitors)
 ```
 
 ```python
+triggers
+```
+
+```python
 triggers[~triggers["action"].isnull()]
 ```
 
@@ -179,6 +183,10 @@ triggers_cutoff[~triggers_cutoff["readiness"].isnull()]
 
 ```python
 triggers_cutoff["action_lt"].mean()
+```
+
+```python
+triggers_cutoff["action_lt"].min()
 ```
 
 ```python

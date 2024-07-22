@@ -70,7 +70,7 @@ stats
 ```
 
 ```python
-monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=36)
+monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=48)
 ```
 
 ```python
@@ -128,9 +128,10 @@ def determine_triggers(lt_threshs, obsv_threshs):
 
     triggers = (
         stats.merge(fcast_triggers, how="outer", on="sid")
-        .merge(affected, how="left")
+        .merge(affected, how="outer")
         .merge(sid_atcf)
     )
+    # print(trigger)
 
     for lt_name in ["readiness", "action"]:
         triggers[lt_name] = ~triggers[f"{lt_name}_date"].isnull()
@@ -244,6 +245,22 @@ lt_threshs = {
 # obsv_threshs = {"p": 60, "s": 50}
 # 4yr RP
 obsv_threshs = {"p": 70, "s": 50}
+# 5yr RP
+# obsv_threshs = {"p": 60, "s": 70}
+determine_triggers(lt_threshs, obsv_threshs)
+```
+
+```python
+# option 5
+lt_threshs = {
+    # "readiness": {"p": 35, "s": 34, "lt_days": 5},
+    "readiness": {"p": 56, "s": 56, "lt_days": 5},
+    "action": {"p": 56, "s": 56, "lt_days": 3},
+}
+# 3yr RP
+obsv_threshs = {"p": 60, "s": 50}
+# 4yr RP
+# obsv_threshs = {"p": 70, "s": 50}
 # 5yr RP
 # obsv_threshs = {"p": 60, "s": 70}
 determine_triggers(lt_threshs, obsv_threshs)

@@ -1,3 +1,4 @@
+import base64
 import os
 import smtplib
 import ssl
@@ -103,6 +104,56 @@ def load_email_record() -> pd.DataFrame:
     return blob.load_csv_from_blob(blob_name)
 
 
+def open_static_image(filename: str) -> str:
+    filepath = STATIC_DIR / filename
+    with open(filepath, "rb") as image_file:
+        encoded_image = base64.b64encode(image_file.read()).decode()
+    return encoded_image
+
+
+def update_fcast_info_emails():
+    df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
+    df_existing_email_record = load_email_record()
+    if TEST_STORM:
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
+        df_existing_email_record = df_existing_email_record[
+            ~(
+                (df_existing_email_record["atcf_id"] != "TEST_ATCF_ID")
+                & (df_existing_email_record["email_type"] == "info")
+            )
+        ]
+
+    dicts = []
+    for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
+        if (
+            monitor_id
+            in df_existing_email_record[
+                df_existing_email_record["email_type"] == "info"
+            ]["monitor_id"].unique()
+        ):
+            print(f"already sent info email for {monitor_id}")
+        else:
+            try:
+                print(f"sending info email for {monitor_id}")
+                send_info_email(monitor_id=monitor_id, fcast_obsv="obsv")
+                dicts.append(
+                    {
+                        "monitor_id": monitor_id,
+                        "atcf_id": row["atcf_id"],
+                        "email_type": "info",
+                    }
+                )
+            except Exception as e:
+                print(f"could not send info email for {monitor_id}: {e}")
+
+    df_new_email_record = pd.DataFrame(dicts)
+    df_combined_email_record = pd.concat(
+        [df_existing_email_record, df_new_email_record], ignore_index=True
+    )
+    blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
+    blob.upload_csv_to_blob(blob_name, df_combined_email_record)
+
+
 def update_obsv_trigger_emails():
     df_monitoring = monitoring_utils.load_existing_monitoring_points("obsv")
     df_existing_email_record = load_email_record()
@@ -123,6 +174,14 @@ def update_obsv_trigger_emails():
             ]["atcf_id"].unique()
         ):
             print(f"already sent obsv email for {atcf_id}")
+        elif (
+            atcf_id
+            in df_existing_email_record[
+                df_existing_email_record["email_type"] == "action"
+            ]["atcf_id"].unique()
+            and not TEST_STORM
+        ):
+            print(f"already sent action email for {atcf_id}")
         else:
             for monitor_id, row in group.set_index("monitor_id").iterrows():
                 if row["obsv_trigger"]:
@@ -139,7 +198,10 @@ def update_obsv_trigger_emails():
                             }
                         )
                     except Exception as e:
-                        print(f"could not send email for {monitor_id}: {e}")
+                        print(
+                            f"could not send trigger email for {monitor_id}: "
+                            f"{e}"
+                        )
 
     df_new_email_record = pd.DataFrame(dicts)
     df_combined_email_record = pd.concat(
@@ -160,7 +222,7 @@ def update_fcast_trigger_emails():
         df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
         df_existing_email_record = df_existing_email_record[
             ~(
-                (df_existing_email_record["atcf_id"] != "TEST_ATCF_ID")
+                (df_existing_email_record["atcf_id"] == "TEST_ATCF_ID")
                 & (
                     df_existing_email_record["email_type"].isin(
                         ["readiness", "action"]
@@ -205,7 +267,8 @@ def update_fcast_trigger_emails():
                             )
                         except Exception as e:
                             print(
-                                f"could not send email for {monitor_id}: {e}"
+                                f"could not send trigger email for "
+                                f"{monitor_id}: {e}"
                             )
 
     df_new_email_record = pd.DataFrame(dicts)
@@ -216,7 +279,21 @@ def update_fcast_trigger_emails():
     blob.upload_csv_to_blob(blob_name, df_combined_email_record)
 
 
-def send_info_emails(fcast_obsv: Literal["fcast", "obsv"]):
+def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
+    df_monitoring = monitoring_utils.load_existing_monitoring_points(
+        fcast_obsv
+    )
+    if TEST_STORM:
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
+    monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
+    print(monitoring_point)
+    # haiti_tz = pytz.timezone("America/Port-au-Prince")
+    # cyclone_name = monitoring_point["name"]
+    # issue_time = monitoring_point["issue_time"]
+    # issue_time_hti = issue_time.astimezone(haiti_tz)
+    # pub_time = issue_time_hti.strftime("%Hh%M")
+    # pub_date = issue_time_hti.strftime("%-d %b %Y")
+
     pass
 
 

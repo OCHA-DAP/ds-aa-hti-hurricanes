@@ -31,6 +31,7 @@ from src.monitoring import monitoring_utils
 from src.email import email_utils
 from src.utils import blob
 from src.constants import *
+from src.email import plotting
 ```
 
 ```python
@@ -47,28 +48,6 @@ df_monitoring = monitoring_utils.load_existing_monitoring_points(
 df_monitoring = df_monitoring[
     df_monitoring["monitor_id"].str.contains("fcast")
 ]
-```
-
-```python
-df_monitoring
-```
-
-```python
-df_monitoring_test = df_monitoring[
-    df_monitoring["monitor_id"] == "al022024_fcast_2024-07-01T15:00:00"
-].copy()
-df_monitoring_test[
-    ["monitor_id", "name", "atcf_id", "readiness_trigger", "action_trigger"]
-] = (
-    "TEST_MONITOR_ID",
-    "TEST_STORM_NAME",
-    "TEST_ATCF_ID",
-    True,
-    True,
-)
-df_monitoring = pd.concat(
-    [df_monitoring, df_monitoring_test], ignore_index=True
-)
 ```
 
 ```python
@@ -119,63 +98,28 @@ blob.upload_csv_to_blob(blob_name, df_existing_email_record)
 ```
 
 ```python
-# trigger email
+# plotting
 
-dicts = []
-for atcf_id, group in df_monitoring.groupby("atcf_id"):
-    for trigger_name in ["readiness", "action"]:
-        if (
-            atcf_id
-            in df_existing_email_record[
-                df_existing_email_record["email_type"] == trigger_name
-            ]["atcf_id"].unique()
-        ):
-            print(f"already sent {trigger_name} email for {atcf_id}")
-        else:
-            for (
-                monitor_id,
-                row,
-            ) in group.set_index("monitor_id").iterrows():
-                if row[f"{trigger_name}_trigger"] and not row["past_cutoff"]:
-                    try:
-                        print(f"sending {trigger_name} email for {monitor_id}")
-                        email_utils.send_trigger_email(
-                            monitor_id=monitor_id,
-                            trigger_name=trigger_name,
-                        )
-                        dicts.append(
-                            {
-                                "monitor_id": monitor_id,
-                                "atcf_id": atcf_id,
-                                "email_type": trigger_name,
-                            }
-                        )
-                    except Exception as e:
-                        print(f"could not send email for {monitor_id}: {e}")
-                        traceback.print_exc()
-                        pass
+from
 
-df_new_email_record = pd.DataFrame(dicts)
-df_combined_email_record = pd.concat(
-    [df_existing_email_record, df_new_email_record], ignore_index=True
-)
-```
+df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
+if TEST_STORM:
+    df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
+monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
+haiti_tz = pytz.timezone("America/Port-au-Prince")
+cyclone_name = monitoring_point["name"]
+atcf_id = monitoring_point["atcf_id"]
+issue_time = monitoring_point["issue_time"]
+print(type(issue_time))
+issue_time_hti = issue_time.astimezone(haiti_tz)
+pub_time = issue_time_hti.strftime("%Hh%M")
+pub_date = issue_time_hti.strftime("%-d %b %Y")
 
-```python
-df_combined_email_record
-```
-
-```python
-blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
-blob.upload_csv_to_blob(blob_name, df_combined_email_record)
-```
-
-```python
-# obsv
-
-df_monitoring = monitoring_utils.load_existing_monitoring_points("obsv")
-```
-
-```python
-df_monitoring
+df_tracks = nhc.load_recent_glb_forecasts()
+print(df_tracks.dtypes)
+df_single_track = df_tracks[
+    (df_tracks["id"] == atcf_id)
+    & (df_tracks["issuance"] == issue_time)
+]
+print(df_single_track)
 ```
