@@ -28,7 +28,7 @@ import pandas as pd
 import pytz
 
 from src.monitoring import monitoring_utils
-from src.email import email, utils
+from src.email import update_emails, utils
 from src.utils import blob
 from src.constants import *
 from src.email import plotting
@@ -66,7 +66,9 @@ blob.upload_parquet_to_blob(blob_name, df_monitoring)
 ```
 
 ```python
-df_existing_email_record = email.load_email_record()
+import src.email.utils
+
+df_existing_email_record = src.email.utils.load_email_record()
 ```
 
 ```python

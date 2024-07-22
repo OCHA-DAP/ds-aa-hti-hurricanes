@@ -5,6 +5,8 @@ from typing import Literal
 
 import pandas as pd
 
+from src.utils import blob
+
 EMAIL_HOST = os.getenv("CHD_DS_HOST")
 EMAIL_PORT = int(os.getenv("CHD_DS_PORT"))
 EMAIL_PASSWORD = os.getenv("CHD_DS_EMAIL_PASSWORD")
@@ -86,3 +88,18 @@ def open_static_image(filename: str) -> str:
     with open(filepath, "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode()
     return encoded_image
+
+
+def get_distribution_list() -> pd.DataFrame:
+    """Load distribution list from blob storage."""
+    if TEST_LIST:
+        blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
+    else:
+        blob_name = f"{blob.PROJECT_PREFIX}/email/distribution_list.csv"
+    return blob.load_csv_from_blob(blob_name)
+
+
+def load_email_record() -> pd.DataFrame:
+    """Load record of emails that have been sent."""
+    blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
+    return blob.load_csv_from_blob(blob_name)

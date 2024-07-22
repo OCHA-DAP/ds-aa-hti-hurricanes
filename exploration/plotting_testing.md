@@ -33,7 +33,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.datasources import nhc, codab
-from src.email.email import (
+from src.email.update_emails import (
     TEST_STORM,
 )
 from src.email.utils import add_test_row_to_monitoring, open_static_image
