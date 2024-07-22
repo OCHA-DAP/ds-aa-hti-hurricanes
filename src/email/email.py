@@ -1,11 +1,9 @@
-import base64
-import os
+import io
 import smtplib
 import ssl
 from email.headerregistry import Address
 from email.message import EmailMessage
 from email.utils import make_msgid
-from pathlib import Path
 from typing import Literal
 
 import pandas as pd
@@ -14,79 +12,23 @@ from html2text import html2text
 from jinja2 import Environment, FileSystemLoader
 
 from src.constants import FRENCH_MONTHS
+from src.email.plotting import get_plot_blob_name
+from src.email.utils import (
+    EMAIL_ADDRESS,
+    EMAIL_HOST,
+    EMAIL_PASSWORD,
+    EMAIL_PORT,
+    EMAIL_USERNAME,
+    STATIC_DIR,
+    TEMPLATES_DIR,
+    TEST_ATCF_ID,
+    TEST_LIST,
+    TEST_MONITOR_ID,
+    TEST_STORM,
+    add_test_row_to_monitoring,
+)
 from src.monitoring import monitoring_utils
 from src.utils import blob
-
-EMAIL_HOST = os.getenv("CHD_DS_HOST")
-EMAIL_PORT = int(os.getenv("CHD_DS_PORT"))
-EMAIL_PASSWORD = os.getenv("CHD_DS_EMAIL_PASSWORD")
-EMAIL_USERNAME = os.getenv("CHD_DS_EMAIL_USERNAME")
-EMAIL_ADDRESS = os.getenv("CHD_DS_EMAIL_ADDRESS")
-TEST_LIST = os.getenv("TEST_LIST")
-if TEST_LIST == "False":
-    TEST_LIST = False
-else:
-    TEST_LIST = True
-TEST_STORM = os.getenv("TEST_STORM")
-if TEST_STORM == "False":
-    TEST_STORM = False
-else:
-    TEST_STORM = True
-
-TEMPLATES_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "templates"
-STATIC_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "static"
-
-
-def add_test_row_to_monitoring(
-    df_monitoring: pd.DataFrame, fcast_obsv: Literal["fcast", "obsv"]
-) -> pd.DataFrame:
-    """Add test row to monitoring df to simulate new monitoring point.
-    This new monitoring point will cause an activation of all three triggers.
-    """
-    print("adding test row to monitoring data")
-    if fcast_obsv == "fcast":
-        df_monitoring_test = df_monitoring[
-            df_monitoring["monitor_id"] == "al022024_fcast_2024-07-01T15:00:00"
-        ].copy()
-        df_monitoring_test[
-            [
-                "monitor_id",
-                "name",
-                "atcf_id",
-                "readiness_trigger",
-                "action_trigger",
-            ]
-        ] = (
-            "TEST_MONITOR_ID",
-            "TEST_STORM_NAME",
-            "TEST_ATCF_ID",
-            True,
-            True,
-        )
-        df_monitoring = pd.concat(
-            [df_monitoring, df_monitoring_test], ignore_index=True
-        )
-    else:
-        df_monitoring_test = df_monitoring[
-            df_monitoring["monitor_id"] == "al022024_obsv_2024-07-04T15:00:00"
-        ].copy()
-        df_monitoring_test[
-            [
-                "monitor_id",
-                "name",
-                "atcf_id",
-                "obsv_trigger",
-            ]
-        ] = (
-            "TEST_MONITOR_ID",
-            "TEST_STORM_NAME",
-            "TEST_ATCF_ID",
-            True,
-        )
-        df_monitoring = pd.concat(
-            [df_monitoring, df_monitoring_test], ignore_index=True
-        )
-    return df_monitoring
 
 
 def get_distribution_list() -> pd.DataFrame:
@@ -104,21 +46,14 @@ def load_email_record() -> pd.DataFrame:
     return blob.load_csv_from_blob(blob_name)
 
 
-def open_static_image(filename: str) -> str:
-    filepath = STATIC_DIR / filename
-    with open(filepath, "rb") as image_file:
-        encoded_image = base64.b64encode(image_file.read()).decode()
-    return encoded_image
-
-
-def update_fcast_info_emails():
+def update_fcast_info_emails(verbose: bool = False):
     df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
         df_existing_email_record = df_existing_email_record[
             ~(
-                (df_existing_email_record["atcf_id"] != "TEST_ATCF_ID")
+                (df_existing_email_record["atcf_id"] == TEST_ATCF_ID)
                 & (df_existing_email_record["email_type"] == "info")
             )
         ]
@@ -131,11 +66,12 @@ def update_fcast_info_emails():
                 df_existing_email_record["email_type"] == "info"
             ]["monitor_id"].unique()
         ):
-            print(f"already sent info email for {monitor_id}")
+            if verbose:
+                print(f"already sent info email for {monitor_id}")
         else:
             try:
                 print(f"sending info email for {monitor_id}")
-                send_info_email(monitor_id=monitor_id, fcast_obsv="obsv")
+                send_info_email(monitor_id=monitor_id, fcast_obsv="fcast")
                 dicts.append(
                     {
                         "monitor_id": monitor_id,
@@ -161,7 +97,7 @@ def update_obsv_trigger_emails():
         df_monitoring = add_test_row_to_monitoring(df_monitoring, "obsv")
         df_existing_email_record = df_existing_email_record[
             ~(
-                (df_existing_email_record["atcf_id"] == "TEST_ATCF_ID")
+                (df_existing_email_record["atcf_id"] == TEST_ATCF_ID)
                 & (df_existing_email_record["email_type"] == "obsv")
             )
         ]
@@ -283,18 +219,119 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
-    if TEST_STORM:
+    if monitor_id == TEST_MONITOR_ID:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
-    print(monitoring_point)
-    # haiti_tz = pytz.timezone("America/Port-au-Prince")
-    # cyclone_name = monitoring_point["name"]
-    # issue_time = monitoring_point["issue_time"]
-    # issue_time_hti = issue_time.astimezone(haiti_tz)
-    # pub_time = issue_time_hti.strftime("%Hh%M")
-    # pub_date = issue_time_hti.strftime("%-d %b %Y")
+    haiti_tz = pytz.timezone("America/Port-au-Prince")
+    cyclone_name = monitoring_point["name"]
+    issue_time = monitoring_point["issue_time"]
+    issue_time_hti = issue_time.astimezone(haiti_tz)
+    pub_time = issue_time_hti.strftime("%Hh%M")
+    pub_date = issue_time_hti.strftime("%-d %b %Y")
+    for en_mo, fr_mo in FRENCH_MONTHS.items():
+        pub_date = pub_date.replace(en_mo, fr_mo)
+    fcast_obsv_fr = "observation" if fcast_obsv == "obsv" else "prévision"
+    activation_subject = "(PAS D'ACTIVATION)"
+    if fcast_obsv == "fcast":
+        readiness = (
+            "ACTIVÉ" if monitoring_point["readiness_trigger"] else "NON ACTIVÉ"
+        )
+        action = (
+            "ACTIVÉ" if monitoring_point["action_trigger"] else "NON ACTIVÉ"
+        )
+        obsv = ""
+    else:
+        readiness = ""
+        action = ""
+        obsv = "ACTIVÉ" if monitoring_point["obsv_trigger"] else "NON ACTIVÉ"
 
-    pass
+    distribution_list = get_distribution_list()
+    to_list = distribution_list[distribution_list["trigger"] == "to"]
+    cc_list = distribution_list[distribution_list["trigger"] == "cc"]
+
+    test_subject = "TEST : " if TEST_STORM else ""
+
+    environment = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
+
+    template_name = "informational"
+    template = environment.get_template(f"{template_name}.html")
+    msg = EmailMessage()
+    msg.set_charset("utf-8")
+    msg["Subject"] = (
+        f"{test_subject}Action anticipatoire Haïti – information sur "
+        f"prévision {cyclone_name} {pub_time}, {pub_date} {activation_subject}"
+    )
+    msg["From"] = Address(
+        "Centre de données humanitaires OCHA",
+        EMAIL_ADDRESS.split("@")[0],
+        EMAIL_ADDRESS.split("@")[1],
+    )
+    msg["To"] = [
+        Address(
+            row["name"],
+            row["email"].split("@")[0],
+            row["email"].split("@")[1],
+        )
+        for _, row in to_list.iterrows()
+    ]
+    msg["Cc"] = [
+        Address(
+            row["name"],
+            row["email"].split("@")[0],
+            row["email"].split("@")[1],
+        )
+        for _, row in cc_list.iterrows()
+    ]
+    map_cid = make_msgid(domain="humdata.org")
+    chd_banner_cid = make_msgid(domain="humdata.org")
+    ocha_logo_cid = make_msgid(domain="humdata.org")
+
+    html_str = template.render(
+        name=cyclone_name,
+        pub_time=pub_time,
+        pub_date=pub_date,
+        fcast_obsv=fcast_obsv_fr,
+        readiness=readiness,
+        action=action,
+        obsv=obsv,
+        test_email=TEST_STORM,
+        map_cid=map_cid[1:-1],
+        chd_banner_cid=chd_banner_cid[1:-1],
+        ocha_logo_cid=ocha_logo_cid[1:-1],
+    )
+    text_str = html2text(html_str)
+    msg.set_content(text_str)
+    msg.add_alternative(html_str, subtype="html")
+
+    for plot_type, cid in zip(["map"], [map_cid]):
+        blob_name = get_plot_blob_name(monitor_id, plot_type)
+        image_data = io.BytesIO()
+        blob_client = blob.get_container_client().get_blob_client(blob_name)
+        blob_client.download_blob().download_to_stream(image_data)
+        image_data.seek(0)
+        msg.get_payload()[1].add_related(
+            image_data.read(), "image", "png", cid=cid
+        )
+
+    for filename, cid in zip(
+        ["centre_banner.png", "ocha_logo_wide.png"],
+        [chd_banner_cid, ocha_logo_cid],
+    ):
+        img_path = STATIC_DIR / filename
+        with open(img_path, "rb") as img:
+            msg.get_payload()[1].add_related(
+                img.read(), "image", "png", cid=cid
+            )
+
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, context=context) as server:
+        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+        server.sendmail(
+            EMAIL_ADDRESS,
+            to_list["email"].tolist() + cc_list["email"].tolist(),
+            msg.as_string(),
+        )
 
 
 def send_trigger_email(monitor_id: str, trigger_name: str):
@@ -303,7 +340,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
-    if TEST_STORM:
+    if monitor_id == TEST_MONITOR_ID:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")

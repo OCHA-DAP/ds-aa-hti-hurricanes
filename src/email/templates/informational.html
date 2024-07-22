@@ -3,30 +3,27 @@
 {% block content %}
 <div style="font-size:10px;padding: 6px 10px 6px 10px;background-color:#CCCCCC;color:#FFFFFF">
   <p style="margin:0;">
-    This email is purely advisory, and does not serve as an official notice for the anticipatory action framework. Official notices of activation are sent by a separate email. This email also does not constitute an official forecast. Under the World Meteorological Organization's Tropical Cyclone Programme, RSMC Nadi is responsible for monitoring tropical cyclones in the region; the <a href="https://www.met.gov.fj/index.php?page=trackmap">forecast track map</a> published on their website should be treated as authoritative.
+    Cet e-mail est purement consultatif et ne sert pas d'avis officiel pour le cadre d'action anticipatoire. Les avis officiels d'activation sont envoyés par un autre e-mail. Cet e-mail ne constitue pas non plus une prévision officielle. Le <a href="https://www.meteo-haiti.gouv.ht/cyclone.php">Communiqué d'activité cyclonique</a> publié par l'Unité HydroMétéorologique d'Haïti est la source officielle pour les informations locales. Dans le cadre du Tropical Cyclone Programme de l'Organisation météorologique mondiale, RSMC Miami, géré par le National Hurricane Center de NOAA, est chargé de surveiller les cyclones tropicaux dans la région ; <a href="https://www.nhc.noaa.gov/cyclones/">leur prévisions des cyclones</a> font autorité.
   </p>
 </div>
 <div>
-  <p>Dear colleagues,</p>
+  <p>Chers collègues,</p>
   <p>
-    The forecast for cyclone {{ name }} produced at {{ pub_time }} on {{ pub_date }} (Fiji local time) has been shared with us by the Fiji Meteorological Service, operators of Regional Specialized Meteorological Centre (RSMC) Nadi.
+    Les {{ fcast_obsv }} pour {{ name }} de {{ pub_time }}, {{ pub_date }} (heure locale Haïti) viennent d'être émisees par le National Hurricane Center de NOAA, opérateur du Regional Specialized Meteorological Centre (RSMC) Miami.
   </p>
   <p>
-    Readiness trigger: <b>{{ readiness }}</b><br>
-    Action trigger: <b>{{ action }}</b>
+    Déclencheur de mobilisation : <b>{{ readiness }}</b><br>
+    Déclencheur d'action: <b>{{ action }}</b>
   </p>
   <p>
-    A plot of the forecast is shown below. Due to the increased uncertainty of forecasting tropical cyclones beyond 72 hours, this portion of the forecast should be treated with caution.
+    Un tracé des {{ fcast_obsv }} est présenté ci-dessous.
   </p>
   <img src="cid:{{ map_cid }}" width="600"/>
+
   <p>
-    The plot below shows the distance of each Province to the forecasted cyclone path, including the approximate uncertainty of the cyclone's path at its closest pass to the Province. Attached to this email is a CSV with this data, and another one with the distances to each Tikina. Note that the CSV filenames are based on the UTC publication time of this forecast.
+    Le code utilisé pour produire cette alerte est disponible sur GitHub <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">ici</a>.
   </p>
-  <img src="cid:{{ distances_cid }}" width="600"/>
-  <p>
-    The code used to produce this alert is available on GitHub <a href="https://github.com/OCHA-DAP/pa-aa-fji-storms/blob/add-trigger/src/update_trigger.py">here</a>.
-  </p>
-  <p>Best wishes,</p>
-  <p>OCHA Center for Humanitarian Data</p>
+  <p>Meilleures salutations,</p>
+  <p>Centre de données humanitaires OCHA</p>
 </div>
 {% endblock content %}

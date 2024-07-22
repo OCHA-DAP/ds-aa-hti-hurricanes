@@ -9,8 +9,8 @@ import pytz
 
 from src.constants import FRENCH_MONTHS, LON_ZOOM_RANGE
 from src.datasources import codab, nhc
-from src.email.email_utils import (
-    TEST_STORM,
+from src.email.utils import (
+    TEST_MONITOR_ID,
     add_test_row_to_monitoring,
     open_static_image,
 )
@@ -18,7 +18,7 @@ from src.monitoring import monitoring_utils
 from src.utils import blob
 
 
-def get_blob_name(monitor_id, plot_type: Literal["map"]):
+def get_plot_blob_name(monitor_id, plot_type: Literal["map"]):
     return f"{blob.PROJECT_PREFIX}/plots/fcast/{monitor_id}_{plot_type}.png"
 
 
@@ -37,7 +37,7 @@ def update_fcast_plots(clobber: bool = False, verbose: bool = False):
 
     for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
         for plot_type in ["map"]:
-            blob_name = get_blob_name(monitor_id, plot_type)
+            blob_name = get_plot_blob_name(monitor_id, plot_type)
             if blob_name in existing_plot_blobs and not clobber:
                 if verbose:
                     print(f"Skipping {blob_name}, already exists")
@@ -83,7 +83,7 @@ def create_fcast_plot(monitor_id, plot_type: Literal["map"]):
         df_monitoring = monitoring_utils.load_existing_monitoring_points(
             "fcast"
         )
-        if TEST_STORM:
+        if monitor_id == TEST_MONITOR_ID:
             df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
         monitoring_point = df_monitoring.set_index("monitor_id").loc[
             monitor_id
@@ -259,5 +259,5 @@ def create_fcast_plot(monitor_id, plot_type: Literal["map"]):
         fig.write_image(buffer, format="png", scale=2.08)
         buffer.seek(0)
 
-        blob_name = get_blob_name(monitor_id, plot_type)
+        blob_name = get_plot_blob_name(monitor_id, plot_type)
         blob.upload_blob_data(blob_name, buffer)
