@@ -33,18 +33,19 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.datasources import nhc, codab
-from src.email.update_emails import (
+from src.email.email_utils import (
     TEST_STORM,
+    add_test_row_to_monitoring,
+    open_static_image,
 )
-from src.email.utils import add_test_row_to_monitoring, open_static_image
-from src.email.plotting import get_plot_blob_name, update_fcast_plots
+from src.email.plotting import get_blob_name, update_fcast_plots
 from src.monitoring import monitoring_utils
 from src.utils import blob
 from src.constants import *
 ```
 
 ```python
-update_fcast_plots(clobber=True)
+update_fcast_plots(verbose=True, clobber=["scatter"])
 ```
 
 ```python

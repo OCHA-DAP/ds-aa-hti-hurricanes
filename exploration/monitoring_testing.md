@@ -60,15 +60,6 @@ df_tracks["leadtime"] = df_tracks["validTime"] - df_tracks["issuance"]
 ```
 
 ```python
-df_tracks["leadtime"].max()
-```
-
-```python
-for issue_time, group in df_tracks.groupby("issuance"):
-    display(group)
-```
-
-```python
 df_monitoring = monitoring_utils.load_existing_monitoring_points(
     fcast_obsv="fcast"
 )
@@ -99,6 +90,10 @@ def sid_color(sid):
 stats["marker_size"] = stats["affected_population"] / 6e2
 stats["marker_size"] = stats["marker_size"].fillna(1)
 stats["color"] = stats["sid"].apply(sid_color)
+```
+
+```python
+most_recent_point["min_dist"] >= D_THRESH
 ```
 
 ```python
@@ -207,6 +202,30 @@ ax.set_title(
     f"Comparaison de précipitations, vent, et impact\n"
     f"Seuil de distance = {D_THRESH} km"
 )
+
+if most_recent_point["min_dist"] >= D_THRESH:
+    rect = plt.Rectangle(
+        (0, 0),
+        1,
+        1,
+        transform=ax.transAxes,
+        color="white",
+        alpha=0.7,
+        zorder=3,
+    )
+    ax.add_patch(rect)
+
+    # Add white text in the middle
+    ax.text(
+        0.5,
+        0.5,
+        f"{current_name} pas prévu d'être\nà moins de {D_THRESH} de Haïti",
+        fontsize=30,
+        color="grey",
+        ha="center",
+        va="center",
+        transform=ax.transAxes,
+    )
 ```
 
 ```python
