@@ -37,6 +37,8 @@ def convert_datetime_to_fr_str(x: pd.Timestamp) -> str:
 
 
 def update_fcast_plots(clobber: list = None, verbose: bool = False):
+    if clobber is None:
+        clobber = []
     df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
     existing_plot_blobs = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/plots/fcast/"
