@@ -55,24 +55,28 @@ def update_fcast_plots(clobber: list = None, verbose: bool = False):
                     print(f"Skipping {blob_name}, already exists")
                 continue
             print(f"Creating {blob_name}")
-            create_plot(monitor_id, plot_type)
+            create_plot(monitor_id, plot_type, "fcast")
 
 
-def create_plot(monitor_id: str, plot_type: Literal["map", "scatter"]):
+def create_plot(
+    monitor_id: str,
+    plot_type: Literal["map", "scatter"],
+    fcast_obsv: Literal["fcast", "obsv"],
+):
     if plot_type == "map":
-        create_map_plot(monitor_id)
+        create_map_plot(monitor_id, fcast_obsv)
     elif plot_type == "scatter":
-        create_scatter_plot(monitor_id)
+        create_scatter_plot(monitor_id, fcast_obsv)
     else:
         raise ValueError(f"Unknown plot type: {plot_type}")
 
 
-def create_scatter_plot(monitor_id: str):
+def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
-        fcast_obsv="fcast"
+        fcast_obsv
     )
     if monitor_id == TEST_MONITOR_ID:
-        df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
     cyclone_name = monitoring_point["name"]
@@ -227,7 +231,7 @@ def create_scatter_plot(monitor_id: str):
     plt.close(fig)
 
 
-def create_map_plot(monitor_id: str):
+def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     adm = codab.load_codab_from_blob(admin_level=0)
     trig_zone = codab.load_buffer()
     lts = {
@@ -260,9 +264,11 @@ def create_map_plot(monitor_id: str):
             },
         },
     }
-    df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
+    df_monitoring = monitoring_utils.load_existing_monitoring_points(
+        fcast_obsv
+    )
     if monitor_id == TEST_MONITOR_ID:
-        df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
     cyclone_name = monitoring_point["name"]
