@@ -18,6 +18,7 @@ from src.constants import (
 from src.datasources import codab, nhc
 from src.email.utils import (
     TEST_MONITOR_ID,
+    TEST_STORM,
     add_test_row_to_monitoring,
     open_static_image,
 )
@@ -40,6 +41,8 @@ def update_fcast_plots(clobber: list = None, verbose: bool = False):
     if clobber is None:
         clobber = []
     df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
+    if TEST_STORM:
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
     existing_plot_blobs = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/plots/fcast/"
     )
