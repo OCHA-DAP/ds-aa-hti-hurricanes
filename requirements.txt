@@ -5,6 +5,7 @@ fsspec==2024.6.0
 geopandas==0.14.3
 html2text==2024.2.26
 Jinja2==3.1.4
+kaleido==0.2.1
 matplotlib==3.8.3
 pandas==2.2.2
 plotly==5.22.0
