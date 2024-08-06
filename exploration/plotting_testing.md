@@ -43,6 +43,11 @@ from src.email.plotting import get_plot_blob_name
 from src.monitoring import monitoring_utils
 from src.utils import blob
 from src.constants import *
+from src.email import plotting
+```
+
+```python
+plotting.update_plots("obsv", verbose=True, clobber=["map"])
 ```
 
 ```python
@@ -51,10 +56,6 @@ def convert_datetime_to_fr_str(x: pd.Timestamp) -> str:
     for en_mo, fr_mo in FRENCH_MONTHS.items():
         fr_str = fr_str.replace(en_mo, fr_mo)
     return fr_str
-```
-
-```python
-update_fcast_plots(verbose=True, clobber=["scatter"])
 ```
 
 ```python
@@ -97,7 +98,7 @@ lts = {
     },
     "obsv": {
         "color": "dodgerblue",
-        "plot_color": "grey",
+        "plot_color": "black",
         "dash": "dot",
         "label": "Observationnel",
         "zorder": 1,
@@ -162,10 +163,6 @@ tracks_f["validTime_hti"] = tracks_f["validTime"].apply(
 tracks_f["valid_time_str"] = tracks_f["validTime_hti"].apply(
     convert_datetime_to_fr_str
 )
-```
-
-```python
-tracks_f
 ```
 
 ```python
@@ -240,14 +237,82 @@ for lt_name in relevant_lts:
             hovertemplate=("Heure valide: %{customdata}<extra></extra>"),
         )
     )
+    if lt_name in ["readiness", "obsv"]:
+        # rain_level = dff["roll2_rain_dist"].max()
+        if pd.isnull(rain_level):
+            rain_level_str = ""
+        else:
+            rain_level_str = int(rain_level)
+        if rain_level > lt_params["threshs"]["roll2_rain_dist"]:
+            fig.add_trace(
+                go.Scattermapbox(
+                    lon=[-72.3],
+                    lat=[19],
+                    mode="markers",
+                    marker=dict(size=50, color="red"),
+                )
+            )
+        fig.add_trace(
+            go.Scattermapbox(
+                lon=[-72.3],
+                lat=[19],
+                mode="text+markers",
+                text=[rain_level_str],
+                marker=dict(size=40, color="blue"),
+                textfont=dict(size=20, color="white"),
+                hoverinfo="none",
+            )
+        )
 
-encoded_legend = open_static_image("map_legend.png")
+
+adm_centroid = adm.to_crs(3857).centroid.to_crs(4326)[0]
+centroid_lat, centroid_lon = adm_centroid.y, adm_centroid.x
+
+if fcast_obsv == "fcast":
+    lat_max = max(tracks_f["latitude"])
+    lat_max = max(lat_max, centroid_lat)
+    lat_min = min(tracks_f["latitude"])
+    lat_min = min(lat_min, centroid_lat)
+    lon_max = max(tracks_f["longitude"])
+    lon_max = max(lon_max, centroid_lon)
+    lon_min = min(tracks_f["longitude"])
+    lon_min = min(lon_min, centroid_lon)
+    width_to_height = 1
+    margin = 1.7
+    height = (lat_max - lat_min) * margin * width_to_height
+    width = (lon_max - lon_min) * margin
+    lon_zoom = np.interp(width, LON_ZOOM_RANGE, range(20, 0, -1))
+    lat_zoom = np.interp(height, LON_ZOOM_RANGE, range(20, 0, -1))
+    zoom = round(min(lon_zoom, lat_zoom), 2)
+    center_lat = (lat_max + lat_min) / 2
+    center_lon = (lon_max + lon_min) / 2
+else:
+    zoom = 5.8
+    center_lat = centroid_lat
+    center_lon = centroid_lon
+
+issue_time_str_fr = convert_datetime_to_fr_str(issue_time_hti)
+fcast_obsv_fr = "Observations" if fcast_obsv == "obsv" else "Prévisions"
+plot_title = (
+    f"{fcast_obsv_fr} NOAA pour {cyclone_name}<br>"
+    f"<sup>Émises {issue_time_str_fr} (heure locale Haïti)</sup>"
+)
+
+if fcast_obsv == "fcast":
+    legend_filename = "map_legend.png"
+    aspect = 1
+else:
+    legend_filename = "map_legend_obsv.png"
+    aspect = 1.3
+
+
+encoded_legend = open_static_image(legend_filename)
 fig.update_layout(
-    # title=plot_title,
+    title=plot_title,
     mapbox_style="open-street-map",
-    # mapbox_zoom=zoom,
-    # mapbox_center_lat=(lat_max + lat_min) / 2,
-    # mapbox_center_lon=(lon_max + lon_min) / 2,
+    mapbox_zoom=zoom,
+    mapbox_center_lat=center_lat,
+    mapbox_center_lon=center_lon,
     margin={"r": 0, "t": 50, "l": 0, "b": 0},
     height=850,
     width=800,
@@ -260,7 +325,7 @@ fig.update_layout(
             x=0.01,
             y=0.01,
             sizex=0.3,
-            sizey=0.3,
+            sizey=0.3 / aspect,
             xanchor="left",
             yanchor="bottom",
             opacity=0.7,

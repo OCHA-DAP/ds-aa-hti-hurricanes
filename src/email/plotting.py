@@ -17,7 +17,8 @@ from src.constants import (
 )
 from src.datasources import codab, nhc
 from src.email.utils import (
-    TEST_MONITOR_ID,
+    TEST_FCAST_MONITOR_ID,
+    TEST_OBSV_MONITOR_ID,
     TEST_STORM,
     add_test_row_to_monitoring,
     open_static_image,
@@ -27,7 +28,11 @@ from src.utils import blob
 
 
 def get_plot_blob_name(monitor_id, plot_type: Literal["map", "scatter"]):
-    return f"{blob.PROJECT_PREFIX}/plots/fcast/{monitor_id}_{plot_type}.png"
+    fcast_obsv = "fcast" if "fcast" in monitor_id.lower() else "obsv"
+    return (
+        f"{blob.PROJECT_PREFIX}/plots/{fcast_obsv}/"
+        f"{monitor_id}_{plot_type}.png"
+    )
 
 
 def convert_datetime_to_fr_str(x: pd.Timestamp) -> str:
@@ -37,14 +42,20 @@ def convert_datetime_to_fr_str(x: pd.Timestamp) -> str:
     return fr_str
 
 
-def update_fcast_plots(clobber: list = None, verbose: bool = False):
+def update_plots(
+    fcast_obsv: Literal["fcast", "obsv"],
+    clobber: list = None,
+    verbose: bool = False,
+):
     if clobber is None:
         clobber = []
-    df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
+    df_monitoring = monitoring_utils.load_existing_monitoring_points(
+        fcast_obsv
+    )
     if TEST_STORM:
-        df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
+        df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     existing_plot_blobs = blob.list_container_blobs(
-        name_starts_with=f"{blob.PROJECT_PREFIX}/plots/fcast/"
+        name_starts_with=f"{blob.PROJECT_PREFIX}/plots/{fcast_obsv}/"
     )
 
     for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
@@ -55,7 +66,7 @@ def update_fcast_plots(clobber: list = None, verbose: bool = False):
                     print(f"Skipping {blob_name}, already exists")
                 continue
             print(f"Creating {blob_name}")
-            create_plot(monitor_id, plot_type, "fcast")
+            create_plot(monitor_id, plot_type, fcast_obsv)
 
 
 def create_plot(
@@ -72,10 +83,12 @@ def create_plot(
 
 
 def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
+    if fcast_obsv == "obsv":
+        return
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
-    if monitor_id == TEST_MONITOR_ID:
+    if monitor_id in [TEST_FCAST_MONITOR_ID, TEST_OBSV_MONITOR_ID]:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
@@ -263,11 +276,25 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
                 "dist_min": 230,
             },
         },
+        "obsv": {
+            "color": "dodgerblue",
+            "plot_color": "black",
+            "dash": "dot",
+            "label": "Observationnel",
+            "zorder": 1,
+            "lt_max": pd.Timedelta(days=0),
+            "lt_min": pd.Timedelta(days=0),
+            "threshs": {
+                "roll2_rain_dist": 60,
+                "wind_dist": 50,
+                "dist_min": 230,
+            },
+        },
     }
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
-    if monitor_id == TEST_MONITOR_ID:
+    if monitor_id in [TEST_FCAST_MONITOR_ID, TEST_OBSV_MONITOR_ID]:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
@@ -278,10 +305,23 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     issue_time = monitoring_point["issue_time"]
     issue_time_hti = issue_time.astimezone(haiti_tz)
 
-    df_tracks = nhc.load_recent_glb_forecasts()
-    tracks_f = df_tracks[
-        (df_tracks["id"] == atcf_id) & (df_tracks["issuance"] == issue_time)
-    ].copy()
+    if fcast_obsv == "fcast":
+        df_tracks = nhc.load_recent_glb_forecasts()
+        tracks_f = df_tracks[
+            (df_tracks["id"] == atcf_id)
+            & (df_tracks["issuance"] == issue_time)
+        ].copy()
+    else:
+        df_tracks = nhc.load_recent_glb_obsv()
+        tracks_f = df_tracks[
+            (df_tracks["id"] == atcf_id)
+            & (df_tracks["lastUpdate"] <= issue_time)
+        ].copy()
+        tracks_f = tracks_f.rename(
+            columns={"lastUpdate": "validTime", "intensity": "maxwind"}
+        )
+        tracks_f["issuance"] = tracks_f["validTime"]
+
     tracks_f["validTime_hti"] = tracks_f["validTime"].apply(
         lambda x: x.astimezone(haiti_tz)
     )
@@ -290,7 +330,8 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     )
 
     tracks_f["lt"] = tracks_f["validTime"] - tracks_f["issuance"]
-    rain_level = monitoring_point["readiness_p"]
+    rain_plot_var = "readiness_p" if fcast_obsv == "fcast" else "obsv_p"
+    rain_level = monitoring_point[rain_plot_var]
     fig = go.Figure()
 
     # adm0 outline
@@ -319,16 +360,22 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         )
     )
 
-    for lt_name in ["readiness", "action"]:
+    relevant_lts = (
+        ["readiness", "action"] if fcast_obsv == "fcast" else ["obsv"]
+    )
+    for lt_name in relevant_lts:
         lt_params = lts[lt_name]
-        dff = tracks_f[
-            (tracks_f["lt"] <= lt_params["lt_max"])
-            & (tracks_f["lt"] >= lt_params["lt_min"])
-        ]
+        if lt_name == "obsv":
+            dff = tracks_f.copy()
+        else:
+            dff = tracks_f[
+                (tracks_f["lt"] <= lt_params["lt_max"])
+                & (tracks_f["lt"] >= lt_params["lt_min"])
+            ]
         # triggered points
         dff_trig = dff[
             (dff["maxwind"] >= lt_params["threshs"]["wind_dist"])
-            & (dff["lt"] > lt_params["lt_min"])
+            & (dff["lt"] >= lt_params["lt_min"])
         ]
         fig.add_trace(
             go.Scattermapbox(
@@ -354,7 +401,7 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         )
 
         # rainfall
-        if lt_name == "readiness":
+        if lt_name in ["readiness", "obsv"]:
             # rain_level = dff["roll2_rain_dist"].max()
             if pd.isnull(rain_level):
                 rain_level_str = ""
@@ -382,37 +429,52 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
             )
     adm_centroid = adm.to_crs(3857).centroid.to_crs(4326)[0]
     centroid_lat, centroid_lon = adm_centroid.y, adm_centroid.x
-    lat_max = max(tracks_f["latitude"])
-    lat_max = max(lat_max, centroid_lat)
-    lat_min = min(tracks_f["latitude"])
-    lat_min = min(lat_min, centroid_lat)
-    lon_max = max(tracks_f["longitude"])
-    lon_max = max(lon_max, centroid_lon)
-    lon_min = min(tracks_f["longitude"])
-    lon_min = min(lon_min, centroid_lon)
 
-    width_to_height = 1
-    margin = 1.7
-    height = (lat_max - lat_min) * margin * width_to_height
-    width = (lon_max - lon_min) * margin
-    lon_zoom = np.interp(width, LON_ZOOM_RANGE, range(20, 0, -1))
-    lat_zoom = np.interp(height, LON_ZOOM_RANGE, range(20, 0, -1))
-    zoom = round(min(lon_zoom, lat_zoom), 2)
+    if fcast_obsv == "fcast":
+        lat_max = max(tracks_f["latitude"])
+        lat_max = max(lat_max, centroid_lat)
+        lat_min = min(tracks_f["latitude"])
+        lat_min = min(lat_min, centroid_lat)
+        lon_max = max(tracks_f["longitude"])
+        lon_max = max(lon_max, centroid_lon)
+        lon_min = min(tracks_f["longitude"])
+        lon_min = min(lon_min, centroid_lon)
+        width_to_height = 1
+        margin = 1.7
+        height = (lat_max - lat_min) * margin * width_to_height
+        width = (lon_max - lon_min) * margin
+        lon_zoom = np.interp(width, LON_ZOOM_RANGE, range(20, 0, -1))
+        lat_zoom = np.interp(height, LON_ZOOM_RANGE, range(20, 0, -1))
+        zoom = round(min(lon_zoom, lat_zoom), 2)
+        center_lat = (lat_max + lat_min) / 2
+        center_lon = (lon_max + lon_min) / 2
+    else:
+        zoom = 5.8
+        center_lat = centroid_lat
+        center_lon = centroid_lon
 
     issue_time_str_fr = convert_datetime_to_fr_str(issue_time_hti)
+    fcast_obsv_fr = "Observations" if fcast_obsv == "obsv" else "Prévisions"
     plot_title = (
-        f"Prévision NOAA pour {cyclone_name}<br>"
-        f"<sup>Émise {issue_time_str_fr} (heure locale Haïti)</sup>"
+        f"{fcast_obsv_fr} NOAA pour {cyclone_name}<br>"
+        f"<sup>Émises {issue_time_str_fr} (heure locale Haïti)</sup>"
     )
 
-    encoded_legend = open_static_image("map_legend.png")
+    if fcast_obsv == "fcast":
+        legend_filename = "map_legend.png"
+        aspect = 1
+    else:
+        legend_filename = "map_legend_obsv.png"
+        aspect = 1.3
+
+    encoded_legend = open_static_image(legend_filename)
 
     fig.update_layout(
         title=plot_title,
         mapbox_style="open-street-map",
         mapbox_zoom=zoom,
-        mapbox_center_lat=(lat_max + lat_min) / 2,
-        mapbox_center_lon=(lon_max + lon_min) / 2,
+        mapbox_center_lat=center_lat,
+        mapbox_center_lon=center_lon,
         margin={"r": 0, "t": 50, "l": 0, "b": 0},
         height=850,
         width=800,
@@ -425,7 +487,7 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
                 x=0.01,
                 y=0.01,
                 sizex=0.3,
-                sizey=0.3,
+                sizey=0.3 / aspect,
                 xanchor="left",
                 yanchor="bottom",
                 opacity=0.7,

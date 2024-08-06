@@ -20,7 +20,8 @@ from src.email.utils import (
     EMAIL_USERNAME,
     STATIC_DIR,
     TEMPLATES_DIR,
-    TEST_MONITOR_ID,
+    TEST_FCAST_MONITOR_ID,
+    TEST_OBSV_MONITOR_ID,
     TEST_STORM,
     add_test_row_to_monitoring,
     get_distribution_list,
@@ -33,7 +34,7 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
-    if monitor_id == TEST_MONITOR_ID:
+    if monitor_id in [TEST_FCAST_MONITOR_ID, TEST_OBSV_MONITOR_ID]:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")
@@ -156,7 +157,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
-    if monitor_id == TEST_MONITOR_ID:
+    if monitor_id in [TEST_FCAST_MONITOR_ID, TEST_OBSV_MONITOR_ID]:
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     monitoring_point = df_monitoring.set_index("monitor_id").loc[monitor_id]
     haiti_tz = pytz.timezone("America/Port-au-Prince")

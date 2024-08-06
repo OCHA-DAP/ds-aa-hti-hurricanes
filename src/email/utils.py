@@ -25,6 +25,8 @@ else:
 
 TEST_ATCF_ID = "TEST_ATCF_ID"
 TEST_MONITOR_ID = "TEST_MONITOR_ID"
+TEST_FCAST_MONITOR_ID = "TEST_FCAST_MONITOR_ID"
+TEST_OBSV_MONITOR_ID = "TEST_OBSV_MONITOR_ID"
 TEST_STORM_NAME = "TEST_STORM_NAME"
 
 TEMPLATES_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "templates"
@@ -51,7 +53,7 @@ def add_test_row_to_monitoring(
                 "action_trigger",
             ]
         ] = (
-            TEST_MONITOR_ID,
+            TEST_FCAST_MONITOR_ID,
             TEST_STORM_NAME,
             TEST_ATCF_ID,
             True,
@@ -72,7 +74,7 @@ def add_test_row_to_monitoring(
                 "obsv_trigger",
             ]
         ] = (
-            TEST_MONITOR_ID,
+            TEST_OBSV_MONITOR_ID,
             TEST_STORM_NAME,
             TEST_ATCF_ID,
             True,
