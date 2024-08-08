@@ -14,6 +14,7 @@ from src.constants import FRENCH_MONTHS
 from src.email.plotting import get_plot_blob_name
 from src.email.utils import (
     EMAIL_ADDRESS,
+    EMAIL_DISCLAIMER,
     EMAIL_HOST,
     EMAIL_PASSWORD,
     EMAIL_PORT,
@@ -111,6 +112,7 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         action=action,
         obsv=obsv,
         test_email=TEST_STORM,
+        email_disclaimer=EMAIL_DISCLAIMER,
         map_cid=map_cid[1:-1],
         scatter_cid=scatter_cid[1:-1],
         chd_banner_cid=chd_banner_cid[1:-1],
@@ -223,6 +225,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
         pub_date=pub_date,
         fcast_obsv=fcast_obsv_fr,
         test_email=TEST_STORM,
+        email_disclaimer=EMAIL_DISCLAIMER,
         chd_banner_cid=chd_banner_cid[1:-1],
         ocha_logo_cid=ocha_logo_cid[1:-1],
     )

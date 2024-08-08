@@ -33,8 +33,8 @@ from src.utils import blob
 df = pd.DataFrame(
     columns=["email", "name", "trigger", "info"],
     data=[
-        ["tristan.downing@un.org", "TEST_NAME", "to", "to"]
-        ["downing.tristan@gmail.com", "TEST_NAME", "to", Non],
+        ["tristan.downing@un.org", "TEST_NAME", "to", "to"],
+        ["downing.tristan@gmail.com", "TEST_NAME", "to", None],
     ],
 )
 blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
@@ -49,6 +49,7 @@ df = pd.DataFrame(
     columns=["email", "name", "trigger", "info"],
     data=[
         ["regina.omlor@un.org", "Regina Omlor", "to", "to"],
+        [""]
         ["silvia.pieretto@wfp.org", "Silvia Pieretto", "to", "to"],
         ["daniel.ham@wfp.org", "Daniel Ham", "to", "to"],
         ["clement.rouquette@wfp.org", "Clement Rouquette", "to", "to"],

@@ -12,16 +12,24 @@ EMAIL_PORT = int(os.getenv("CHD_DS_PORT"))
 EMAIL_PASSWORD = os.getenv("CHD_DS_EMAIL_PASSWORD")
 EMAIL_USERNAME = os.getenv("CHD_DS_EMAIL_USERNAME")
 EMAIL_ADDRESS = os.getenv("CHD_DS_EMAIL_ADDRESS")
+
 TEST_LIST = os.getenv("TEST_LIST")
 if TEST_LIST == "False":
     TEST_LIST = False
 else:
     TEST_LIST = True
+
 TEST_STORM = os.getenv("TEST_STORM")
 if TEST_STORM == "False":
     TEST_STORM = False
 else:
     TEST_STORM = True
+
+EMAIL_DISCLAIMER = os.getenv("EMAIL_DISCLAIMER")
+if EMAIL_DISCLAIMER == "True":
+    EMAIL_DISCLAIMER = True
+else:
+    EMAIL_DISCLAIMER = False
 
 TEST_ATCF_ID = "TEST_ATCF_ID"
 TEST_MONITOR_ID = "TEST_MONITOR_ID"
