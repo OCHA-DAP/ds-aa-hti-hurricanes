@@ -61,8 +61,8 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         obsv = "ACTIVÉ" if monitoring_point["obsv_trigger"] else "NON ACTIVÉ"
 
     distribution_list = get_distribution_list()
-    to_list = distribution_list[distribution_list["trigger"] == "to"]
-    cc_list = distribution_list[distribution_list["trigger"] == "cc"]
+    to_list = distribution_list[distribution_list["info"] == "to"]
+    cc_list = distribution_list[distribution_list["info"] == "cc"]
 
     test_subject = "TEST : " if TEST_STORM else ""
 
