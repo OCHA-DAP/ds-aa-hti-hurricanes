@@ -83,8 +83,6 @@ def create_plot(
 
 
 def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
-    if fcast_obsv == "obsv":
-        return
     df_monitoring = monitoring_utils.load_existing_monitoring_points(
         fcast_obsv
     )
@@ -97,6 +95,18 @@ def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     issue_time_hti = issue_time.astimezone(haiti_tz)
     blob_name = f"{blob.PROJECT_PREFIX}/processed/stats_{D_THRESH}km.csv"
     stats = blob.load_csv_from_blob(blob_name)
+    if fcast_obsv == "fcast":
+        rain_plot_var = "readiness_p"
+        s_plot_var = "readiness_s"
+        rain_col = "max_roll2_sum_rain"
+        rain_source_str = "CHIRPS"
+        rain_ymax = 100
+    else:
+        rain_plot_var = "obsv_p"
+        s_plot_var = "obsv_s"
+        rain_col = "max_roll2_sum_rain_imerg"
+        rain_source_str = "IMERG"
+        rain_ymax = 170
 
     def sid_color(sid):
         color = "blue"
@@ -107,18 +117,14 @@ def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     stats["marker_size"] = stats["affected_population"] / 6e2
     stats["marker_size"] = stats["marker_size"].fillna(1)
     stats["color"] = stats["sid"].apply(sid_color)
-    rain_col = "max_roll2_sum_rain"
-    current_p = monitoring_point["readiness_p"]
-    current_s = monitoring_point["readiness_s"]
+    current_p = monitoring_point[rain_plot_var]
+    current_s = monitoring_point[s_plot_var]
     issue_time_str_fr = convert_datetime_to_fr_str(issue_time_hti)
 
     date_str = (
         f"Prévision "
         f'{monitoring_point["issue_time"].strftime("%Hh%M %d %b UTC")}'
     )
-
-    rain_source_str = "IMERG" if "imerg" in rain_col else "CHIRPS"
-    rain_ymax = 170 if "imerg" in rain_col else 100
 
     for en_mo, fr_mo in FRENCH_MONTHS.items():
         date_str = date_str.replace(en_mo, fr_mo)
