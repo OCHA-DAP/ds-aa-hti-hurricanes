@@ -33,6 +33,8 @@ jobs:
         CHD_DS_EMAIL_USERNAME: ${{ secrets.CHD_DS_EMAIL_USERNAME }}
         CHD_DS_EMAIL_PASSWORD: ${{ secrets.CHD_DS_EMAIL_PASSWORD }}
         CHD_DS_EMAIL_ADDRESS: ${{ secrets.CHD_DS_EMAIL_ADDRESS }}
+        TEST_LIST: ${{ vars.TEST_LIST }}
+        TEST_STORM: ${{ vars.TEST_STORM }}
 
       run: |
         python pipelines/check_fcast_trigger.py
