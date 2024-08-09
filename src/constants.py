@@ -62,3 +62,9 @@ LON_ZOOM_RANGE = np.array(
         360.0,
     ]
 )
+LT_CUTOFF_HRS = 36
+THRESHS = {
+    "readiness": {"p": 42, "s": 64, "lt_days": 5},
+    "action": {"p": 42, "s": 64, "lt_days": 3},
+    "obsv": {"p": 60, "s": 50},
+}

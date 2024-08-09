@@ -271,6 +271,8 @@ df_existing_monitoring
 ```
 
 ```python
+import src.constants
+
 cols = ["latitude", "longitude", "intensity", "pressure"]
 
 dicts = []
@@ -289,13 +291,13 @@ for atcf_id, group in obsv_tracks.groupby("atcf_id"):
         crs=4326,
     )
     gdf["hti_distance"] = (
-        gdf.to_crs(3857).geometry.distance(adm0.iloc[0].geometry) / 1000
+            gdf.to_crs(3857).geometry.distance(adm0.iloc[0].geometry) / 1000
     )
     for issue_time in obsv_rain["issue_time"]:
         monitor_id = f"{atcf_id}_obsv_{issue_time.isoformat().split('+')[0]}"
         if (
-            monitor_id in df_existing_monitoring["monitor_id"].unique()
-            and not clobber
+                monitor_id in df_existing_monitoring["monitor_id"].unique()
+                and not clobber
         ):
             print(f"already monitored for {monitor_id}")
             continue
@@ -320,7 +322,7 @@ for atcf_id, group in obsv_tracks.groupby("atcf_id"):
         obsv_rain_landfall = rain_recent[
             (rain_recent["date"].dt.date >= landfall_start_day)
             & (rain_recent["date"].dt.date <= landfall_end_day_late)
-        ]
+            ]
         closest_p = obsv_rain_landfall["roll2_sum"].max()
 
         # obsv trigger
@@ -336,10 +338,10 @@ for atcf_id, group in obsv_tracks.groupby("atcf_id"):
         obsv_rain_f = rain_recent[
             (rain_recent["date"] >= start_day)
             & (rain_recent["date"] <= end_day_late)
-        ]
+            ]
         max_p = obsv_rain_f["roll2_sum"].max()
-        obsv_trigger = (max_p > monitoring_utils.THRESHS["obsv"]["p"]) & (
-            max_s > monitoring_utils.THRESHS["obsv"]["s"]
+        obsv_trigger = (max_p > src.constants.THRESHS["obsv"]["p"]) & (
+                max_s > src.constants.THRESHS["obsv"]["s"]
         )
         dicts.append(
             {

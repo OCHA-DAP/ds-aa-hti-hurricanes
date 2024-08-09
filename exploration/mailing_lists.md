@@ -49,11 +49,14 @@ df = pd.DataFrame(
     columns=["email", "name", "trigger", "info"],
     data=[
         ["regina.omlor@un.org", "Regina Omlor", "to", "to"],
-        [""]
+        ["schneider1@un.org", "Emmanuelle Schneider", "to", "to"],
+        ["shedna.italis@un.org", "Shedna Italis", "to", "to"],
         ["silvia.pieretto@wfp.org", "Silvia Pieretto", "to", "to"],
         ["daniel.ham@wfp.org", "Daniel Ham", "to", "to"],
         ["clement.rouquette@wfp.org", "Clement Rouquette", "to", "to"],
         ["erwan.rumen@wfp.org", "Erwan Ruman", "to", None],
+        ["dfebei@iom.int", "Daniele Feibei", "to", "to"],
+        ["dtphiri@unicef.org", "Dorica Tasuzgika Phiri", "to", "to"],
         ["tristan.downing@un.org", "Tristan Downing", "cc", "cc"],
     ],
 )

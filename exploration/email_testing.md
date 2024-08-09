@@ -35,11 +35,15 @@ from src.email import plotting
 ```
 
 ```python
+update_emails.update_obsv_info_emails()
+```
+
+```python
 MIN_EMAIL_DISTANCE = 1000
 ```
 
 ```python
-df_existing_email_record = src.email.utils.load_email_record()
+df_existing_email_record = utils.load_email_record()
 df_existing_email_record
 ```
 

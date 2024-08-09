@@ -14,6 +14,7 @@ from src.constants import (
     D_THRESH,
     FRENCH_MONTHS,
     LON_ZOOM_RANGE,
+    THRESHS,
 )
 from src.datasources import codab, nhc
 from src.email.utils import (
@@ -101,12 +102,20 @@ def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         rain_col = "max_roll2_sum_rain"
         rain_source_str = "CHIRPS"
         rain_ymax = 100
+        s_thresh = THRESHS["readiness"]["s"]
+        rain_thresh = THRESHS["readiness"]["p"]
+        fcast_obsv_fr = "prévisions"
+        no_pass_text = "pas prévu de passer"
     else:
         rain_plot_var = "obsv_p"
         s_plot_var = "obsv_s"
         rain_col = "max_roll2_sum_rain_imerg"
         rain_source_str = "IMERG"
         rain_ymax = 170
+        s_thresh = THRESHS["obsv"]["s"]
+        rain_thresh = THRESHS["obsv"]["p"]
+        fcast_obsv_fr = "observations"
+        no_pass_text = "n'a pas passé"
 
     def sid_color(sid):
         color = "blue"
@@ -168,7 +177,7 @@ def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         fontweight="bold",
     )
     ax.annotate(
-        f"\n   prévision émise" f"\n   {issue_time_str_fr}",
+        f"\n   {fcast_obsv_fr} émises" f"\n   {issue_time_str_fr}",
         (current_s, current_p),
         va="center",
         ha="left",
@@ -176,17 +185,16 @@ def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         fontstyle="italic",
     )
 
-    for rain_thresh, s_thresh in zip([42], [64]):
-        ax.axvline(x=s_thresh, color="lightgray", linewidth=0.5)
-        ax.axhline(y=rain_thresh, color="lightgray", linewidth=0.5)
-        ax.fill_between(
-            np.arange(s_thresh, 200, 1),
-            rain_thresh,
-            200,
-            color="gold",
-            alpha=0.2,
-            zorder=-1,
-        )
+    ax.axvline(x=s_thresh, color="lightgray", linewidth=0.5)
+    ax.axhline(y=rain_thresh, color="lightgray", linewidth=0.5)
+    ax.fill_between(
+        np.arange(s_thresh, 200, 1),
+        rain_thresh,
+        200,
+        color="gold",
+        alpha=0.2,
+        zorder=-1,
+    )
 
     ax.annotate(
         "\nZone de déclenchement   ",
@@ -234,7 +242,7 @@ def create_scatter_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         ax.text(
             0.5,
             0.5,
-            f"{cyclone_name} pas prévu de passer\n"
+            f"{cyclone_name} {no_pass_text}\n"
             f"à moins de {D_THRESH} km de Haïti",
             fontsize=30,
             color="grey",
@@ -263,9 +271,9 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
             "lt_max": pd.Timedelta(days=3),
             "lt_min": pd.Timedelta(days=-1),
             "threshs": {
-                "roll2_rain_dist": 42,
-                "wind_dist": 64,
-                "dist_min": 230,
+                "roll2_rain_dist": THRESHS["action"]["p"],
+                "wind_dist": THRESHS["action"]["s"],
+                "dist_min": D_THRESH,
             },
         },
         "readiness": {
@@ -277,9 +285,9 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
             "lt_max": pd.Timedelta(days=5),
             "lt_min": pd.Timedelta(days=2),
             "threshs": {
-                "roll2_rain_dist": 42,
-                "wind_dist": 64,
-                "dist_min": 230,
+                "roll2_rain_dist": THRESHS["readiness"]["p"],
+                "wind_dist": THRESHS["readiness"]["s"],
+                "dist_min": D_THRESH,
             },
         },
         "obsv": {
@@ -291,9 +299,9 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
             "lt_max": pd.Timedelta(days=0),
             "lt_min": pd.Timedelta(days=0),
             "threshs": {
-                "roll2_rain_dist": 60,
-                "wind_dist": 50,
-                "dist_min": 230,
+                "roll2_rain_dist": THRESHS["obsv"]["p"],
+                "wind_dist": THRESHS["obsv"]["s"],
+                "dist_min": D_THRESH,
             },
         },
     }

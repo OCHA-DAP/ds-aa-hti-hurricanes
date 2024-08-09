@@ -48,9 +48,16 @@ from src.email import plotting
 ```
 
 ```python
-plotting.update_plots("obsv", verbose=True, clobber=["map"])
+plotting.update_plots("obsv", verbose=True, clobber=["scatter"])
 ```
 
 ```python
 plotting.create_scatter_plot(TEST_OBSV_MONITOR_ID, fcast_obsv="obsv")
+# plotting.create_map_plot(TEST_OBSV_MONITOR_ID, fcast_obsv="obsv")
+# plotting.create_scatter_plot(TEST_FCAST_MONITOR_ID, fcast_obsv="fcast")
+# plotting.create_map_plot(TEST_FCAST_MONITOR_ID, fcast_obsv="fcast")
+```
+
+```python
+
 ```

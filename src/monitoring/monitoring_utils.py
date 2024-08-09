@@ -3,16 +3,9 @@ from typing import Literal
 import geopandas as gpd
 import pandas as pd
 
+from src.constants import D_THRESH, LT_CUTOFF_HRS, THRESHS
 from src.datasources import chirps_gefs, codab, imerg, nhc
 from src.utils import blob
-
-D_THRESH = 230
-LT_CUTOFF_HRS = 36
-THRESHS = {
-    "readiness": {"p": 35, "s": 34, "lt_days": 5},
-    "action": {"p": 42, "s": 64, "lt_days": 3},
-    "obsv": {"p": 60, "s": 50},
-}
 
 
 def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
