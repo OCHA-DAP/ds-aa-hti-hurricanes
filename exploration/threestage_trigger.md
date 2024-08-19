@@ -50,10 +50,6 @@ affected = (
 ```
 
 ```python
-sid_atcf
-```
-
-```python
 blob_name = f"{blob.PROJECT_PREFIX}/processed/stats_{D_THRESH}km.csv"
 stats = blob.load_csv_from_blob(blob_name)
 stats = stats[
@@ -66,19 +62,11 @@ stats = stats[
 ```
 
 ```python
-stats
-```
-
-```python
 monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=48)
 ```
 
 ```python
 monitors
-```
-
-```python
-monitors[monitors["name"] == "Laura"].dropna(subset="wind_dist")
 ```
 
 ```python
@@ -149,8 +137,8 @@ def determine_triggers(lt_threshs, obsv_threshs):
         "nameyear",
         "year",
     ]
-    df_plot = triggers[cols]
-    df_plot = df_plot.set_index("nameyear")
+    df_plot = triggers[cols].rename(columns={"nameyear": "Système"})
+    df_plot = df_plot.set_index("Système")
     df_plot["affected_population"] = (
         df_plot["affected_population"].fillna(0).astype(int)
     )
@@ -169,8 +157,16 @@ def determine_triggers(lt_threshs, obsv_threshs):
     cols = ["readiness", "action", "obsv", "affected_population"]
     display(
         df_plot[cols]
+        .rename(
+            columns={
+                "readiness": "Mobilisation",
+                "action": "Action",
+                "obsv": "Observationnel",
+                "affected_population": "Population affectée",
+            }
+        )
         .style.bar(
-            subset="affected_population",
+            subset="Population affectée",
             color="dodgerblue",
             vmax=500000,
             props="width: 300px;",
@@ -178,14 +174,30 @@ def determine_triggers(lt_threshs, obsv_threshs):
         .map(highlight_true)
         .set_table_styles(
             {
-                "affected_population": [
+                "Population affectée": [
                     {"selector": "th", "props": [("text-align", "left")]},
                     {"selector": "td", "props": [("text-align", "left")]},
                 ]
             }
         )
-        .format({"affected_population": "{:,}"})
+        .format({"Population affectée": "{:,}"})
     )
+```
+
+```python
+# option FINAL
+lt_threshs = {
+    # "readiness": {"p": 35, "s": 34, "lt_days": 5},
+    "readiness": {"p": 42, "s": 64, "lt_days": 5},
+    "action": {"p": 42, "s": 64, "lt_days": 3},
+}
+# 3yr RP
+# obsv_threshs = {"p": 60, "s": 50}
+# 4yr RP
+obsv_threshs = {"p": 70, "s": 50}
+# 5yr RP
+# obsv_threshs = {"p": 60, "s": 70}
+determine_triggers(lt_threshs, obsv_threshs)
 ```
 
 ```python

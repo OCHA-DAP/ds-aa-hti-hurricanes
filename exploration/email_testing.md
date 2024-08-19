@@ -23,6 +23,7 @@ jupyter:
 
 ```python
 import traceback
+import os
 
 import pandas as pd
 import pytz
@@ -32,6 +33,18 @@ from src.email import update_emails, utils
 from src.utils import blob
 from src.constants import *
 from src.email import plotting
+```
+
+```python
+df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
+```
+
+```python
+df_monitoring.iloc[-20:]
+```
+
+```python
+update_emails.update_fcast_info_emails(verbose=True)
 ```
 
 ```python

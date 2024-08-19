@@ -1,5 +1,6 @@
 import pandas as pd
 
+from src.constants import MIN_EMAIL_DISTANCE
 from src.email.send_emails import send_info_email, send_trigger_email
 from src.email.utils import (
     TEST_ATCF_ID,
@@ -25,6 +26,13 @@ def update_fcast_info_emails(verbose: bool = False):
 
     dicts = []
     for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
+        if row["min_dist"] > MIN_EMAIL_DISTANCE:
+            if verbose:
+                print(
+                    f"min_dist is {row['min_dist']}, "
+                    f"skipping info email for {monitor_id}"
+                )
+            continue
         if (
             monitor_id
             in df_existing_email_record[
