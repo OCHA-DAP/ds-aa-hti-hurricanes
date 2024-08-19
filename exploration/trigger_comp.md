@@ -90,6 +90,10 @@ tracks = ibtracs.load_hti_distances()
 MAX_SPEED = tracks["usa_wind"].max()
 ```
 
+```python
+MAX_SPEED
+```
+
 Load impact data.
 
 The `affected_population_adj` was just adjusting the impact for storms
@@ -217,6 +221,10 @@ MAX_RAIN = max(rain.drop(columns="T").max().max(), rain_imerg["mean"].max())
 
 ```python
 MAX_RAIN
+```
+
+```python
+50 * 18 * 4 * 10 * 17
 ```
 
 First cycle over distance thresholds to get stats for each

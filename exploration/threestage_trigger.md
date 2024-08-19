@@ -50,8 +50,19 @@ affected = (
 ```
 
 ```python
+affected
+```
+
+```python
+triggers
+```
+
+```python
 blob_name = f"{blob.PROJECT_PREFIX}/processed/stats_{D_THRESH}km.csv"
 stats = blob.load_csv_from_blob(blob_name)
+```
+
+```python
 stats = stats[
     [
         "sid",
@@ -67,6 +78,10 @@ monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=48)
 
 ```python
 monitors
+```
+
+```python
+
 ```
 
 ```python
@@ -154,6 +169,7 @@ def determine_triggers(lt_threshs, obsv_threshs):
             return "background-color: crimson"
         return ""
 
+    affected_pop_col = "Population affectée (EM-DAT)"
     cols = ["readiness", "action", "obsv", "affected_population"]
     display(
         df_plot[cols]
@@ -162,26 +178,27 @@ def determine_triggers(lt_threshs, obsv_threshs):
                 "readiness": "Mobilisation",
                 "action": "Action",
                 "obsv": "Observationnel",
-                "affected_population": "Population affectée",
+                "affected_population": affected_pop_col,
             }
         )
         .style.bar(
-            subset="Population affectée",
+            subset=affected_pop_col,
             color="dodgerblue",
             vmax=500000,
-            props="width: 300px;",
+            props="width: 500px;",
         )
         .map(highlight_true)
         .set_table_styles(
             {
-                "Population affectée": [
+                affected_pop_col: [
                     {"selector": "th", "props": [("text-align", "left")]},
                     {"selector": "td", "props": [("text-align", "left")]},
                 ]
             }
         )
-        .format({"Population affectée": "{:,}"})
+        .format({affected_pop_col: "{:,}"})
     )
+    return triggers
 ```
 
 ```python
@@ -197,7 +214,7 @@ lt_threshs = {
 obsv_threshs = {"p": 70, "s": 50}
 # 5yr RP
 # obsv_threshs = {"p": 60, "s": 70}
-determine_triggers(lt_threshs, obsv_threshs)
+triggers = determine_triggers(lt_threshs, obsv_threshs)
 ```
 
 ```python

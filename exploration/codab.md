@@ -35,41 +35,24 @@ codab.download_codab_to_blob()
 ```
 
 ```python
-adm0 = codab.load_codab_from_blob(admin_level=0)
-adm0.total_bounds
-```
-
-```python
-adm0_g = codab.load_codab(admin_level=0)
-adm0_g.total_bounds
-```
-
-```python
-adm0
-```
-
-```python
-adm0.total_bounds
-```
-
-```python
 codab.process_buffer()
 ```
 
 ```python
+codab.process_buffer(distance_km=1000)
+```
+
+```python
 buffer = codab.load_buffer()
+buffer1000 = codab.load_buffer(distance_km=1000)
 ```
 
 ```python
-buffer
+buffer1000
 ```
 
 ```python
-adm
-```
-
-```python
-adm = codab.load_codab(admin_level=0)
+adm = codab.load_codab_from_blob(admin_level=0)
 ```
 
 ```python
@@ -101,10 +84,22 @@ fig.add_trace(
         hoverinfo="none",
     )
 )
+fig.add_trace(
+    go.Choroplethmapbox(
+        geojson=json.loads(buffer1000.geometry.to_json()),
+        locations=buffer.index,
+        z=[1],
+        colorscale="Greys",
+        marker_opacity=0.2,
+        showscale=False,
+        marker_line_width=0,
+        hoverinfo="none",
+    )
+)
 fig.update_layout(
     mapbox_style="open-street-map",
     margin={"r": 0, "t": 30, "l": 0, "b": 0},
-    title="Zone à moins de 230 km de Haïti",
+    title="Zones à moins de 230 km et 1000 km de Haïti",
     mapbox_zoom=5.8,
     mapbox_center_lat=19,
     mapbox_center_lon=-73,

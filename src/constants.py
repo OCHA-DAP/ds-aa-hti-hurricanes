@@ -66,7 +66,7 @@ LT_CUTOFF_HRS = 48
 THRESHS = {
     "readiness": {"p": 42, "s": 64, "lt_days": 5},
     "action": {"p": 42, "s": 64, "lt_days": 3},
-    "obsv": {"p": 60, "s": 50},
+    "obsv": {"p": 70, "s": 50},
 }
 
 MIN_EMAIL_DISTANCE = 1000
