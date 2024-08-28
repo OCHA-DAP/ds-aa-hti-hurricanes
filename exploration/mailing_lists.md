@@ -46,20 +46,28 @@ df
 
 ```python
 df = pd.DataFrame(
-    columns=["email", "name", "trigger", "info"],
+    columns=["name", "email", "trigger", "info"],
     data=[
         # OCHA HTI
-        ["regina.omlor@un.org", "Regina Omlor", "to", "to"],
-        ["schneider1@un.org", "Emmanuelle Schneider", "to", "to"],
-        ["shedna.italis@un.org", "Shedna Italis", "to", "to"],
-        ["silvia.pieretto@wfp.org", "Silvia Pieretto", "to", "to"],
-        ["daniel.ham@wfp.org", "Daniel Ham", "to", "to"],
-        ["clement.rouquette@wfp.org", "Clement Rouquette", "to", "to"],
-        ["erwan.rumen@wfp.org", "Erwan Ruman", "to", None],
-        ["dfebei@iom.int", "Daniele Feibei", "to", "to"],
-        ["dtphiri@unicef.org", "Dorica Tasuzgika Phiri", "to", "to"],
-        ["bmatous@unicef.org", "Boris Matous", "to", "to"],
-        ["tristan.downing@un.org", "Tristan Downing", "cc", "cc"],
+        ["Emmanuelle Schneider", "schneider1@un.org", "to", "to"],
+        ["Shedna Italis", "shedna.italis@un.org", "to", "to"],
+        # OCHA HQ
+        ["Regina Omlor", "regina.omlor@un.org", "cc", "to"],
+        ["Nicolas Rost", "rostn@un.org", "cc", "to"],
+        ["Julia Wittig", "wittigj@un.org", "cc", "to"],
+        ["Yakubu Alhassan", "yakubu.alhassan@un.org", "cc", "to"],
+        # WFP
+        ["Erwan Ruman", "erwan.rumen@wfp.org", "cc", None],
+        ["Silvia Pieretto", "silvia.pieretto@wfp.org", "cc", "to"],
+        ["Daniel Ham", "daniel.ham@wfp.org", "cc", "to"],
+        ["Clement Rouquette", "clement.rouquette@wfp.org", "cc", "to"],
+        # UNICEF
+        ["Dorica Tasuzgika Phiri", "dtphiri@unicef.org", "cc", "to"],
+        ["Boris Matous", "bmatous@unicef.org", "cc", "to"],
+        # IOM
+        ["Daniele Feibei", "dfebei@iom.int", "cc", "to"],
+        # me
+        ["Tristan Downing", "tristan.downing@un.org", "cc", "cc"],
     ],
 )
 df
