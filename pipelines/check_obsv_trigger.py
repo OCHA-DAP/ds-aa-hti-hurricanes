@@ -7,3 +7,4 @@ if __name__ == "__main__":
     monitoring_utils.update_obsv_monitoring()
     update_emails.update_obsv_trigger_emails()
     plotting.update_plots(fcast_obsv="obsv")
+    update_emails.update_obsv_info_emails()
