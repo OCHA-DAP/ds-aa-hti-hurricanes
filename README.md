@@ -1,6 +1,6 @@
 # Haiti Anticipatory Action: hurricanes
 
-[![Generic badge](https://img.shields.io/badge/STATUS-UNDER%20DEVELOPMENT-%23007CE0)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/STATUS-ENDORSED-%231EBFB3)](https://shields.io/)
 
 ## Directory structure
 
