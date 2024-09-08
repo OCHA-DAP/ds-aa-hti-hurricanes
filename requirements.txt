@@ -1,6 +1,7 @@
 azure-storage-blob==12.20.0
 cftime==1.6.3
 dask==2024.5.2
+fiona==1.9.6
 fsspec==2024.6.0
 geopandas==0.14.3
 html2text==2024.2.26
