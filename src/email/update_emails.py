@@ -1,3 +1,5 @@
+import traceback
+
 import pandas as pd
 
 from src.constants import MIN_EMAIL_DISTANCE
@@ -58,6 +60,7 @@ def update_obsv_info_emails(verbose: bool = False):
             )
         except Exception as e:
             print(f"could not send info email for {monitor_id}: {e}")
+            traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
     df_combined_email_record = pd.concat(
@@ -109,6 +112,7 @@ def update_fcast_info_emails(verbose: bool = False):
                 )
             except Exception as e:
                 print(f"could not send info email for {monitor_id}: {e}")
+                traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
     df_combined_email_record = pd.concat(
@@ -166,6 +170,7 @@ def update_obsv_trigger_emails():
                             f"could not send trigger email for {monitor_id}: "
                             f"{e}"
                         )
+                        traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
     df_combined_email_record = pd.concat(
@@ -234,6 +239,7 @@ def update_fcast_trigger_emails():
                                 f"could not send trigger email for "
                                 f"{monitor_id}: {e}"
                             )
+                            traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
     df_combined_email_record = pd.concat(

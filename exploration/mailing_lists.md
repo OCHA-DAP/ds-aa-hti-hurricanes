@@ -25,6 +25,7 @@ jupyter:
 import pandas as pd
 
 from src.utils import blob
+from src.email.utils import is_valid_email
 ```
 
 ## Test list
@@ -37,6 +38,8 @@ df = pd.DataFrame(
         ["downing.tristan@gmail.com", "TEST_NAME", "to", None],
     ],
 )
+print("invalid emails: ")
+display(df[~df["email"].apply(is_valid_email)])
 blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
 blob.upload_csv_to_blob(blob_name, df)
 df
@@ -48,6 +51,7 @@ df
 df = pd.DataFrame(
     columns=["name", "email", "trigger", "info"],
     data=[
+        # HC
         # OCHA HTI
         ["Emmanuelle Schneider", "schneider1@un.org", "to", "to"],
         ["Shedna Italis", "shedna.italis@un.org", "to", "to"],
@@ -56,6 +60,7 @@ df = pd.DataFrame(
         ["Nicolas Rost", "rostn@un.org", "cc", "to"],
         ["Julia Wittig", "wittigj@un.org", "cc", "to"],
         ["Yakubu Alhassan", "yakubu.alhassan@un.org", "cc", "to"],
+        ["Jacopo Damelio", "jacopo.damelio@un.org", "cc", "to"],
         # WFP
         ["Erwan Ruman", "erwan.rumen@wfp.org", "cc", None],
         ["Silvia Pieretto", "silvia.pieretto@wfp.org", "cc", "to"],
@@ -66,10 +71,14 @@ df = pd.DataFrame(
         ["Boris Matous", "bmatous@unicef.org", "cc", "to"],
         # IOM
         ["Daniele Feibei", "dfebei@iom.int", "cc", "to"],
-        # me
+        # CHD DS
         ["Tristan Downing", "tristan.downing@un.org", "cc", "cc"],
+        ["Zachary Arno", "zachary.arno@un.org", "cc", "cc"],
+        ["Pauline Ndirangu", "pauline.ndirangu@un.org", "cc", "cc"],
     ],
 )
+print("invalid emails: ")
+display(df[~df["email"].apply(is_valid_email)])
 df
 ```
 

@@ -26,6 +26,7 @@ from src.email.utils import (
     TEST_STORM,
     add_test_row_to_monitoring,
     get_distribution_list,
+    is_valid_email,
 )
 from src.monitoring import monitoring_utils
 from src.utils import blob
@@ -62,8 +63,23 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         obsv = "ACTIVÉ" if monitoring_point["obsv_trigger"] else "NON ACTIVÉ"
 
     distribution_list = get_distribution_list()
-    to_list = distribution_list[distribution_list["info"] == "to"]
-    cc_list = distribution_list[distribution_list["info"] == "cc"]
+    valid_distribution_list = distribution_list[
+        distribution_list["email"].apply(is_valid_email)
+    ]
+    invalid_distribution_list = distribution_list[
+        ~distribution_list["email"].apply(is_valid_email)
+    ]
+    if not invalid_distribution_list.empty:
+        print(
+            f"Invalid emails found in distribution list: "
+            f"{invalid_distribution_list['email'].tolist()}"
+        )
+    to_list = valid_distribution_list[
+        valid_distribution_list["trigger"] == "to"
+    ]
+    cc_list = valid_distribution_list[
+        valid_distribution_list["trigger"] == "cc"
+    ]
 
     test_subject = "TEST : " if TEST_STORM else ""
 
@@ -84,20 +100,17 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
     )
     msg["To"] = [
         Address(
-            row["name"],
-            row["email"].split("@")[0],
-            row["email"].split("@")[1],
+            row["name"], row["email"].split("@")[0], row["email"].split("@")[1]
         )
         for _, row in to_list.iterrows()
     ]
     msg["Cc"] = [
         Address(
-            row["name"],
-            row["email"].split("@")[0],
-            row["email"].split("@")[1],
+            row["name"], row["email"].split("@")[0], row["email"].split("@")[1]
         )
         for _, row in cc_list.iterrows()
     ]
+
     map_cid = make_msgid(domain="humdata.org")
     scatter_cid = make_msgid(domain="humdata.org")
     chd_banner_cid = make_msgid(domain="humdata.org")
@@ -179,8 +192,23 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
     fcast_obsv_fr = "observation" if fcast_obsv == "obsv" else "prévision"
 
     distribution_list = get_distribution_list()
-    to_list = distribution_list[distribution_list["trigger"] == "to"]
-    cc_list = distribution_list[distribution_list["trigger"] == "cc"]
+    valid_distribution_list = distribution_list[
+        distribution_list["email"].apply(is_valid_email)
+    ]
+    invalid_distribution_list = distribution_list[
+        ~distribution_list["email"].apply(is_valid_email)
+    ]
+    if not invalid_distribution_list.empty:
+        print(
+            f"Invalid emails found in distribution list: "
+            f"{invalid_distribution_list['email'].tolist()}"
+        )
+    to_list = valid_distribution_list[
+        valid_distribution_list["trigger"] == "to"
+    ]
+    cc_list = valid_distribution_list[
+        valid_distribution_list["trigger"] == "cc"
+    ]
 
     test_subject = "TEST : " if TEST_STORM else ""
 
@@ -216,6 +244,7 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
         )
         for _, row in cc_list.iterrows()
     ]
+
     chd_banner_cid = make_msgid(domain="humdata.org")
     ocha_logo_cid = make_msgid(domain="humdata.org")
 

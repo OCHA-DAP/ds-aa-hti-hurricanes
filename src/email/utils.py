@@ -1,5 +1,6 @@
 import base64
 import os
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -113,3 +114,14 @@ def load_email_record() -> pd.DataFrame:
     """Load record of emails that have been sent."""
     blob_name = f"{blob.PROJECT_PREFIX}/email/email_record.csv"
     return blob.load_csv_from_blob(blob_name)
+
+
+def is_valid_email(email):
+    # Define a regex pattern for validating an email
+    email_regex = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+
+    # Use the re.match() method to check if the email matches the pattern
+    if re.match(email_regex, email):
+        return True
+    else:
+        return False
