@@ -31,7 +31,7 @@ from src.email.utils import is_valid_email
 ## Test list
 
 ```python
-df = pd.DataFrame(
+df_test = pd.DataFrame(
     columns=["email", "name", "trigger", "info"],
     data=[
         ["tristan.downing@un.org", "TEST_NAME", "to", "to"],
@@ -39,7 +39,7 @@ df = pd.DataFrame(
     ],
 )
 print("invalid emails: ")
-display(df[~df["email"].apply(is_valid_email)])
+display(df_test[~df_test["email"].apply(is_valid_email)])
 blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
 blob.upload_csv_to_blob(blob_name, df)
 df
@@ -48,19 +48,29 @@ df
 ## Actual list
 
 ```python
-df = pd.DataFrame(
+df_actual = pd.DataFrame(
     columns=["name", "email", "trigger", "info"],
     data=[
         # HC
+        [
+            "Ingeborg Ulrika Ulfsdotter Richardson",
+            "ulrika.richardson@un.org",
+            "to",
+            None,
+        ],
         # OCHA HTI
-        ["Emmanuelle Schneider", "schneider1@un.org", "to", "to"],
-        ["Shedna Italis", "shedna.italis@un.org", "to", "to"],
+        ["Abdoulaye Sawadogo", "sawadogoa@un.org", "to", None],
+        ["Emmanuelle Schneider", "schneider1@un.org", "cc", "to"],
+        ["Shedna Italis", "shedna.italis@un.org", "cc", "to"],
         # OCHA HQ
+        ["Michael Jensen", "jensen7@un.org", "cc", None],
+        ["Daniel Pfister", "pfisterd@un.org", "cc", None],
         ["Regina Omlor", "regina.omlor@un.org", "cc", "to"],
         ["Nicolas Rost", "rostn@un.org", "cc", "to"],
         ["Julia Wittig", "wittigj@un.org", "cc", "to"],
         ["Yakubu Alhassan", "yakubu.alhassan@un.org", "cc", "to"],
         ["Jacopo Damelio", "jacopo.damelio@un.org", "cc", "to"],
+        ["OCHA-cerf", "cerf@un.org", "cc", None],
         # WFP
         ["Erwan Ruman", "erwan.rumen@wfp.org", "cc", None],
         ["Silvia Pieretto", "silvia.pieretto@wfp.org", "cc", "to"],
@@ -78,14 +88,14 @@ df = pd.DataFrame(
     ],
 )
 print("invalid emails: ")
-display(df[~df["email"].apply(is_valid_email)])
-df
+display(df_actual[~df_actual["email"].apply(is_valid_email)])
+df_actual
 ```
 
 ```python
 blob_name = f"{blob.PROJECT_PREFIX}/email/distribution_list.csv"
-blob.upload_csv_to_blob(blob_name, df)
-df
+blob.upload_csv_to_blob(blob_name, df_actual)
+df_actual
 ```
 
 ```python
