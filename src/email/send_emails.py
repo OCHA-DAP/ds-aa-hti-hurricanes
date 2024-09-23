@@ -74,12 +74,8 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
             f"Invalid emails found in distribution list: "
             f"{invalid_distribution_list['email'].tolist()}"
         )
-    to_list = valid_distribution_list[
-        valid_distribution_list["trigger"] == "to"
-    ]
-    cc_list = valid_distribution_list[
-        valid_distribution_list["trigger"] == "cc"
-    ]
+    to_list = valid_distribution_list[valid_distribution_list["info"] == "to"]
+    cc_list = valid_distribution_list[valid_distribution_list["info"] == "cc"]
 
     test_subject = "TEST : " if TEST_STORM else ""
 

@@ -41,8 +41,8 @@ df_test = pd.DataFrame(
 print("invalid emails: ")
 display(df_test[~df_test["email"].apply(is_valid_email)])
 blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
-blob.upload_csv_to_blob(blob_name, df)
-df
+blob.upload_csv_to_blob(blob_name, df_test)
+df_test
 ```
 
 ## Actual list
