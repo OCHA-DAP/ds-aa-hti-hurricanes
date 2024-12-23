@@ -64,7 +64,7 @@ df_actual = pd.DataFrame(
         ["Shedna Italis", "shedna.italis@un.org", "cc", "to"],
         # OCHA HQ
         ["Michael Jensen", "jensen7@un.org", "cc", None],
-        ["Daniel Pfister", "pfisterd@un.org", "cc", None],
+        ["Daniel Pfister", "pfisterd@un.org", "cc", "to"],
         ["Regina Omlor", "regina.omlor@un.org", "cc", "to"],
         ["Nicolas Rost", "rostn@un.org", "cc", "to"],
         ["Julia Wittig", "wittigj@un.org", "cc", "to"],
@@ -81,6 +81,21 @@ df_actual = pd.DataFrame(
         ["Boris Matous", "bmatous@unicef.org", "cc", "to"],
         # IOM
         ["Daniele Feibei", "dfebei@iom.int", "cc", "to"],
+        # UHM
+        ["Marcelin ESTERLIN", "esterlinm@yahoo.fr", "cc", "to"],
+        ["Marie Carmelle V CHERY", "vmellecar@gmail.com", "cc", "to"],
+        ["Jeantau LOUIS", "jantaulouis@yahoo.fr", " cc", "to"],
+        # DGPC
+        [
+            "Markenley NELSON",
+            "markenley.nelson@protectioncivile.gouv.ht",
+            "cc",
+            "to",
+        ],
+        # UNDRR
+        ["Thierry MESSINA", "thmessina@gmail.com", "cc", "to"],
+        # IFRC
+        ["Garibaldy SANTIAGUE", "g.santiague@croixrouge.ht", "cc", "to"],
         # CHD DS
         ["Tristan Downing", "tristan.downing@un.org", "cc", "cc"],
         ["Zachary Arno", "zachary.arno@un.org", "cc", "cc"],

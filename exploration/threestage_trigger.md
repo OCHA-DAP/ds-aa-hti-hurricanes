@@ -54,10 +54,6 @@ affected
 ```
 
 ```python
-triggers
-```
-
-```python
 blob_name = f"{blob.PROJECT_PREFIX}/processed/stats_{D_THRESH}km.csv"
 stats = blob.load_csv_from_blob(blob_name)
 ```
@@ -78,10 +74,6 @@ monitors = nhc.load_hist_fcast_monitors(lt_cutoff_hrs=48)
 
 ```python
 monitors
-```
-
-```python
-
 ```
 
 ```python
@@ -218,6 +210,24 @@ triggers = determine_triggers(lt_threshs, obsv_threshs)
 ```
 
 ```python
+df_obsv = ibtracs.load_hti_distances()
+```
+
+```python
+df_obsv
+```
+
+```python
+df_obsv.loc[df_obsv.groupby("sid")["distance (m)"].idxmin()]
+```
+
+```python
+triggers.sort_values("obsv", ascending=False).sort_values(
+    "readiness_date"
+).merge(df_obsv.loc[df_obsv.groupby("sid")["distance (m)"].idxmin()], on="sid")
+```
+
+```python
 # option 1
 lt_threshs = {
     # "readiness": {"p": 35, "s": 34, "lt_days": 5},
@@ -231,6 +241,10 @@ lt_threshs = {
 # 5yr RP
 obsv_threshs = {"p": 60, "s": 70}
 determine_triggers(lt_threshs, obsv_threshs)
+```
+
+```python
+
 ```
 
 ```python
