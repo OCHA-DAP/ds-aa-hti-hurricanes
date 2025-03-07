@@ -59,9 +59,11 @@ df_actual = pd.DataFrame(
             None,
         ],
         # OCHA HTI
-        ["Abdoulaye Sawadogo", "sawadogoa@un.org", "to", None],
+        ["Modibo Traore", "traorem@un.org", "to", None],
         ["Emmanuelle Schneider", "schneider1@un.org", "cc", "to"],
         ["Shedna Italis", "shedna.italis@un.org", "cc", "to"],
+        # OCHA LAC
+        ["Raquel PENA ALVAREZ", "raquel.pena@un.org", "cc", "to"],
         # OCHA HQ
         ["Michael Jensen", "jensen7@un.org", "cc", None],
         ["Daniel Pfister", "pfisterd@un.org", "cc", "to"],

@@ -190,6 +190,10 @@ triggers_cutoff["action_lt"].min()
 ```
 
 ```python
+triggers_cutoff["readiness_lt"].mean()
+```
+
+```python
 df_plot = triggers_cutoff.rename(columns={OBSV_TRIG_STR: "obsv"})
 df_plot["obsv"] = df_plot["obsv"].astype(bool)
 df_plot["action"] = ~df_plot["action"].isnull()
