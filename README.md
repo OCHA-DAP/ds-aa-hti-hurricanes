@@ -1,64 +1,59 @@
 # Haiti Anticipatory Action: hurricanes
-
+<!-- markdownlint-disable MD013 -->
 [![Generic badge](https://img.shields.io/badge/STATUS-ENDORSED-%231EBFB3)](https://shields.io/)
+
+This repository contains the analysis code and the monitoring pipelines for the Haiti Anticipatory Action framework for hurricanes. The framework document is available online here: [Cadre d’Action Anticipatoire : Pilote en Haïti | Tempêtes/Ouragans
+](https://www.unocha.org/publications/report/haiti/cadre-daction-anticipatoire-pilote-en-haiti-tempetesouragans).
 
 ## Directory structure
 
 The code in this repository is organized as follows:
 
 ```shell
-
-├── analysis      # Main repository of analytical work for the AA pilot
-├── docs          # .Rmd files or other relevant documentation
-├── exploration   # Experimental work not intended to be replicated
-├── src           # Code to run any relevant data acquisition/processing pipelines
-|
-├── .gitignore
-├── README.md
-└── requirements.txt
-
+.
+├── .github/
+│   └── workflows/
+│       └── ...                         # GitHub Actions workflows
+├── exploration/
+│   └── ...                             # Jupyter notebooks for analysis
+├── pipelines/
+│   ├── check_fcast_trigger.py          # Pipeline to check forecast trigger
+│   ├── check_obsv_trigger.py           # Pipeline to check observation trigger
+│   └── update_chirps_gefs.py           # Pipeline to update CHIRPS-GEFS data
+├── src/
+│   ├── datasources/
+│   │   └── ...                         # Data loading and processing
+│   ├── email/
+│   │   ├── static/
+│   │   │   └── ...                     # Static files for emails
+│   │   ├── templates/
+│   │   │   └── ...                     # Email .html templates
+│   │   ├── plotting.py                 # Generate and save plots
+│   │   ├── send_emails.py              # Send individual emails
+│   │   ├── update_emails.py            # Send emails and update sent email record
+│   │   └── utils.py                    # Email utility functions
+│   ├── monitoring/
+│   │   └── monitoring_utils.py         # Functions to update monitoring record
+│   ├── utils/
+│   │   ├── blob.py                     # Blob storage utilities
+│   │   └── raster.py                   # Raster processing utilities
+│   └── constants.py
+└── ...
 ```
 
 ## Reproducing this analysis
 
-Create a directory where you would like the data to be stored,
-and point to it using an environment variable called
-`AA_DATA_DIR`.
-
-Next create a new virtual environment
-
-Install the GloFAS branch of the toolbox with
-
-```shell
-pip install git+https://github.com/OCHA-DAP/pa-aa-toolbox.git@feature/glofas#egg=aa-toolbox
-```
-
-and install the requirements with:
+First install the required Python packages with:
 
 ```shell
 pip install -r requirements.txt
 ```
 
-Finally, install any code in `src` using the command:
+Then, install the local package in `src` using the command:
 
 ```shell
 pip install -e .
 ```
-
-To run the pipeline that downloads and processes the data, execute:
-
-```shell
-python src/main.py
-```
-
-To see runtime options, execute:
-
-```shell
-python src/main.py -h
-```
-
-If you would like to instead receive the processed data from our team, please
-[contact us](mailto:centrehumdata@un.org).
 
 ## Development
 
