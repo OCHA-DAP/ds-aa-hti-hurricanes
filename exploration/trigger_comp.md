@@ -30,22 +30,22 @@ from tqdm.notebook import tqdm
 from matplotlib.ticker import FuncFormatter
 from matplotlib.colors import ListedColormap
 
-from src.datasources import ibtracs, chirps, impact, gtcm
+from src.datasources import ibtracs, chirps, impact, gtcm, imerg
 ```
 
-```python
-24 / 5
-```
+Adjust `TARGET_ACT` to determine how many storms we want to target.
+Only needs to be done if you want to calculate accuracy metrics
+(TP, FP, etc)
 
 ```python
-24 / 8
-```
+# adjust TARGET_ACT to determine how many storms we want to target
 
-```python
 # 3yr RP
-TARGET_ACT = 8
+# TARGET_ACT = 8
+# 4yr RP
+# TARGET_ACT = 6
 # 5yr RP
-# TARGET_ACT = 5
+TARGET_ACT = 5
 MAX_DISTANCE = 500
 CAT_1 = 64
 CAT_2 = 83
@@ -57,7 +57,13 @@ JEANNE = "2004258N16300"
 IVAN = "2004247N10332"
 ```
 
+This loads the impact predictions from the impact model.
+We don't currently use the impact model so you can skip
+this cell.
+
 ```python
+# load impact predictions from impact model
+# currently, not being used, so this cell can be skipped
 impactmodel = gtcm.load_gtcm_impact()
 impactmodel["nameyear"] = (
     impactmodel["event"].str.capitalize()
@@ -74,6 +80,8 @@ impactmodel["model_trigger"] = impactmodel["prediction_adm0"] >= x
 impactmodel
 ```
 
+Load observational tracks with distance to Haiti already calculated.
+
 ```python
 tracks = ibtracs.load_hti_distances()
 ```
@@ -81,6 +89,16 @@ tracks = ibtracs.load_hti_distances()
 ```python
 MAX_SPEED = tracks["usa_wind"].max()
 ```
+
+```python
+MAX_SPEED
+```
+
+Load impact data.
+
+The `affected_population_adj` was just adjusting the impact for storms
+whose impact may have been attributed to a different storm.
+We decided to stick with the normal impact, so this can be ignored.
 
 ```python
 affected = impact.load_hti_impact()
@@ -110,6 +128,9 @@ affected["rank_adj"] = affected["affected_population_adj"].rank(
 )
 ```
 
+Join impact to storms. Again you can ignore the stuff about
+adjusted impact.
+
 ```python
 hurricanes = (
     tracks[tracks["distance (m)"] <= MAX_DISTANCE * 1000]
@@ -125,14 +146,15 @@ display(hurricanes[:20])
 TARGET_YEARS = hurricanes["year"].unique()[:TARGET_ACT]
 print(TARGET_YEARS)
 
+# select desired return period
 # 3 year RP
-MAX_RANK = 10
+# MAX_RANK = 10
 
 # 4 year RP
 # MAX_RANK = 8
 
 # 5 year RP
-# MAX_RANK = 7
+MAX_RANK = 7
 
 hurricanes["target"] = hurricanes["rank"] <= MAX_RANK
 TARGET_SIDS = hurricanes[hurricanes["target"]]["sid"]
@@ -153,6 +175,11 @@ hurricanes.sort_values("year")["year"].unique()
 ```python
 TARGET_SIDS
 ```
+
+Load the rain raster stats,
+and calculate the rolling values.
+`fw` and `bw` is just to account for the 2-day rolling
+not having a center date.
 
 ```python
 rain = chirps.load_raster_stats()
@@ -175,13 +202,38 @@ rain["roll2_sum_fw"] = rain["roll2_sum_bw"].shift(-1).fillna(0)
 rain
 ```
 
+Load IMERG rain data.
+(The previous analysis was done with CHIRPS rainfall, before
+we started using IMERG. It is also better matched to the
+CHIRPS-GEFS forecast, so we will use these figures for showing how
+bad a forecast is.)
+
 ```python
-MAX_RAIN = rain.drop(columns="T").max().max()
+rain_imerg = imerg.load_imerg_mean()
+rain_imerg["roll2"] = (
+    rain_imerg["mean"].rolling(window=2, center=True, min_periods=1).sum()
+)
+```
+
+```python
+MAX_RAIN = max(rain.drop(columns="T").max().max(), rain_imerg["mean"].max())
 ```
 
 ```python
 MAX_RAIN
 ```
+
+```python
+50 * 18 * 4 * 10 * 17
+```
+
+First cycle over distance thresholds to get stats for each
+distance cut-off. If you already have a distance threshold in mind
+you can just calculate each storms stats for that one threshold.
+
+The commented-out section at the bottom records the results for
+different ways to aggregate the rainfall. I stopped using this
+to save time after noting that `mean` seemed to work the best.
 
 ```python
 d_threshs = range(0, MAX_DISTANCE + 1, 10)
@@ -201,6 +253,7 @@ for d_thresh in d_threshs:
         end_day = pd.Timestamp(
             group["time"].max().date() + pd.Timedelta(days=1)
         )
+
         rain_f = rain[(rain["T"] >= start_day) & (rain["T"] <= end_day)]
         end_day_early = pd.Timestamp(group["time"].max().date())
         rain_f_early = rain[
@@ -210,6 +263,11 @@ for d_thresh in d_threshs:
         rain_f_short = rain[
             (rain["T"] >= start_day_late) & (rain["T"] <= end_day_early)
         ]
+        rain_imerg_f = rain_imerg[
+            (rain_imerg["date"] >= start_day_late)
+            & (rain_imerg["date"] <= end_day)
+        ]
+
         dict_out = {
             "sid": sid,
             "max_wind": group["usa_wind"].max(),
@@ -220,8 +278,10 @@ for d_thresh in d_threshs:
             "max_roll3_sum_rain": rain_f_short["roll3_sum"].max(),
             "max_roll2_sum_rain": rain_f_early["roll2_sum_fw"].max(),
             # "max_roll2_bw_sum_rain": rain_f["roll2_sum_bw"].max(),
+            "max_roll2_sum_rain_imerg": rain_imerg_f["roll2"].max(),
             "d_thresh": d_thresh,
         }
+
         # for x in range(10, 91, 10):
         #     dict_out.update(
         #         {
@@ -236,6 +296,15 @@ stats = pd.DataFrame(dicts)
 stats = stats.merge(hurricanes, on="sid")
 stats
 ```
+
+Cycle over rainfall thresholds `p_threshs` and `p_metrics`
+(the different ways to aggregate the precipitation).
+This isn't shown here, but `mean`
+seemed to be the best for Haiti, so that is the only aggregation
+that is used for IMERG.
+
+Only save the triggers that have the correct return period
+(i.e. `dfff["year"].nunique() == TARGET_ACT`)
 
 ```python
 # p_metrics = [
@@ -315,6 +384,38 @@ triggers["nameyear"] = (
 hits = hits.sort_values("affected_captured", ascending=False)
 ```
 
+See which triggers performend the best (i.e., would have triggered
+for cyclones that affected the most people, in col `affected_captured`)
+
+```python
+hits.iloc[:50]
+```
+
+Check the triggers that fit with the previously established
+230 km distance threshold.
+
+```python
+hits[hits["trig_str"].str.contains("d230")].iloc[:50]
+```
+
+Save some specific triggers.
+
+```python
+trigger_str = "d380_s70_AND_max_roll2_sum_rain_imerg40"
+# trigger_str = "d230_s50_AND_max_roll2_sum_rain_imerg60"
+cols = [
+    "sid",
+    "name",
+    "year",
+    "affected_population",
+    "rank",
+    "target",
+]
+triggers[cols + [trigger_str]].iloc[:50].sort_values(
+    "affected_population", ascending=False
+)
+```
+
 ```python
 trigger_str = "d230_s50_AND_max_roll2_sum_rain40"
 cols = [
@@ -327,16 +428,23 @@ cols = [
 ]
 
 filename = f"{trigger_str}_triggers.csv"
-triggers[cols + [trigger_str]].dropna(
-    subset="affected_population"
-).sort_values("affected_population", ascending=False).to_csv(
-    ibtracs.IBTRACS_HTI_PROC_DIR / filename, index=False
-)
+triggers[cols + [trigger_str]].sort_values(
+    "affected_population", ascending=False
+).to_csv(ibtracs.IBTRACS_HTI_PROC_DIR / filename, index=False)
 ```
 
 ```python
-hits.iloc[:20]
+triggers
 ```
+
+```python
+triggers[cols + [trigger_str]].sort_values(
+    "affected_population", ascending=False
+)
+```
+
+Different ways at looking at accuracy - can be ignored
+for now.
 
 ```python
 base_cols = [
@@ -386,8 +494,13 @@ plot_sids = triggers[triggers[all_bestcols].any(axis=1)]["sid"]
 ```
 
 ```python
-triggers["affected_population"].max()
+triggers
 ```
+
+Below is just plotting.
+First the bar chart for impact, then separately the
+red boxes to indicate which cyclones would have triggered.
+These were then just combined on a slide.
 
 ```python
 df_plot = triggers[
@@ -415,7 +528,7 @@ ax.yaxis.set_major_formatter(formatter)
 ```python
 # 3 year RP
 plot_cols = [
-    "d220_s50_AND_max_roll2_sum_rain40"
+    "d230_s50_AND_max_roll2_sum_rain40"
     # "d230_s70_AND_max_roll3_sum_rain50"
     # "d230_s50_AND_max_q90_rain50",
     # "d230_s50_AND_max_mean_rain30",
@@ -451,6 +564,21 @@ for (i, j), val in np.ndenumerate(numeric_map):
 ax.set_xlim(-linewidth, numeric_map.shape[1] - linewidth)
 ax.set_ylim(numeric_map.shape[0] - linewidth, -linewidth)
 ax.invert_xaxis()
+```
+
+```python
+trigger_str = "d230_s50_AND_max_roll2_sum_rain40"
+trigger_list = df_im.T
+trigger_list = trigger_list[trigger_list[trigger_str]]
+trigger_list
+```
+
+```python
+triggers[triggers[trigger_str]][["sid", "name", trigger_str]]
+```
+
+```python
+
 ```
 
 ```python

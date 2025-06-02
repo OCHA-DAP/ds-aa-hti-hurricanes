@@ -13,12 +13,27 @@ jupyter:
     name: ds-aa-hti-hurricanes
 ---
 
-# IMERG - Zarr
+# Historical forecast models
 
 ```python
 %load_ext jupyter_black
 %load_ext autoreload
 %autoreload 2
+```
+
+```python
+from src.datasources import nhc
+from src.utils import blob
+from src.constants import *
+```
+
+```python
+MATTHEW_ATCF_ID
+```
+
+```python
+atcf_id = MATTHEW_ATCF_ID
+raw_blob_name = f"aal"
 ```
 
 ```python

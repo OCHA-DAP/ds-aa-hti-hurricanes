@@ -27,7 +27,8 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 
-from src.datasources import ibtracs, chirps, impact
+from src.datasources import ibtracs, chirps, impact, imerg
+from src.utils import blob
 ```
 
 ```python
@@ -72,7 +73,20 @@ rain["roll2_sum_fw"] = rain["roll2_sum_bw"].shift(-1).fillna(0)
 ```
 
 ```python
-d_thresh = 230
+rain_imerg = imerg.load_imerg_mean()
+rain_imerg["roll2"] = (
+    rain_imerg["mean"]
+    .rolling(window=2, center=True, min_periods=1)
+    .sum()
+    .shift(-1)
+    .fillna(0)
+)
+```
+
+```python
+# d_thresh = 230
+# d_thresh = 380
+d_thresh = 20
 
 tracks_f = tracks[tracks["distance (m)"] < d_thresh * 1000]
 
@@ -81,9 +95,14 @@ for sid, group in tracks_f.groupby("sid"):
     start_day = pd.Timestamp(group["time"].min().date() - pd.Timedelta(days=1))
     end_day = pd.Timestamp(group["time"].max().date() + pd.Timedelta(days=1))
     rain_f = rain[(rain["T"] >= start_day) & (rain["T"] <= end_day)]
+
     end_day_early = pd.Timestamp(group["time"].max().date())
     rain_f_early = rain[
         (rain["T"] >= start_day) & (rain["T"] <= end_day_early)
+    ]
+    rain_imerg_f = rain_imerg[
+        (rain_imerg["date"] >= start_day)
+        & (rain_imerg["date"] <= end_day_early)
     ]
     dicts.append(
         {
@@ -101,6 +120,7 @@ for sid, group in tracks_f.groupby("sid"):
             "sum_q90_rain": rain_f["q90"].sum(),
             "max_roll3_sum_rain": rain_f["roll3_sum"].max(),
             "max_roll2_sum_rain": rain_f_early["roll2_sum_fw"].max(),
+            "max_roll2_sum_rain_imerg": rain_imerg_f["roll2"].max(),
             # "max_roll2_bw_sum_rain": rain_f["roll2_sum_bw"].max(),
         }
     )
@@ -110,6 +130,11 @@ stats = stats.merge(hurricanes, on="sid")
 stats = stats.merge(affected, on="sid", how="left")
 stats["rank"] = stats["affected_population"].rank()
 stats
+```
+
+```python
+blob_name = f"{blob.PROJECT_PREFIX}/processed/stats_{d_thresh}km.csv"
+blob.upload_csv_to_blob(blob_name, stats)
 ```
 
 ```python
@@ -274,6 +299,131 @@ ax.fill_between(
 
 ax.set_xlim(right=155, left=0)
 ax.set_ylim(top=100, bottom=0)
+
+ax.set_xlabel("Vitesse de vent maximum (noeuds)")
+ax.set_ylabel(
+    "Précipitations pendant deux jours consécutifs maximum, "
+    "moyenne sur toute la superficie (mm)"
+)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.set_title(
+    f"Comparaison de précipitations, vent, et impact\n"
+    f"Seuil de distance = {d_thresh} km"
+)
+```
+
+```python
+rain_col = "max_roll2_sum_rain_imerg"
+
+
+def sid_color(sid):
+    color = "blue"
+    if sid in ibtracs.CERF_SIDS:
+        color = "red"
+    # elif sid in ibtracs.IMPACT_SIDS:
+    #     color = "orange"
+    return color
+
+
+stats["marker_size"] = stats["affected_population"] / 6e2
+stats["marker_size"] = stats["marker_size"].fillna(1)
+stats["color"] = stats["sid"].apply(sid_color)
+
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+
+ax.scatter(
+    stats["max_wind"],
+    stats[rain_col],
+    s=stats["marker_size"],
+    c=stats["color"],
+    alpha=0.5,
+    edgecolors="none",
+)
+
+for j, txt in enumerate(
+    stats["name"].str.capitalize() + "\n" + stats["year"].astype(str)
+):
+    ax.annotate(
+        txt.capitalize(),
+        (stats["max_wind"][j] + 0.5, stats[rain_col][j]),
+        ha="left",
+        va="center",
+        fontsize=7,
+    )
+
+rain_thresh = 40
+s_thresh = 70
+ax.axvline(x=s_thresh, color="lightgray", linestyle="dashed")
+ax.axhline(y=rain_thresh, color="lightgray", linestyle="dashed")
+ax.fill_between(
+    np.arange(s_thresh, 200, 1), rain_thresh, 200, color="gold", alpha=0.2, zorder=-1
+)
+
+ax.set_xlim(right=155, left=0)
+ax.set_ylim(bottom=0, top=170)
+
+ax.set_xlabel("Vitesse de vent maximum (noeuds)")
+ax.set_ylabel(
+    "Précipitations pendant deux jours consécutifs maximum, "
+    "moyenne sur toute la superficie (mm)"
+)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.set_title(
+    f"Comparaison de précipitations, vent, et impact\n"
+    f"Seuil de distance = {d_thresh} km"
+)
+```
+
+```python
+rain_col = "max_roll2_sum_rain_imerg"
+
+
+def sid_color(sid):
+    color = "blue"
+    if sid in ibtracs.CERF_SIDS:
+        color = "red"
+    # elif sid in ibtracs.IMPACT_SIDS:
+    #     color = "orange"
+    return color
+
+
+stats["marker_size"] = stats["affected_population"] / 6e2
+stats["marker_size"] = stats["marker_size"].fillna(1)
+stats["color"] = stats["sid"].apply(sid_color)
+
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+
+ax.scatter(
+    stats["max_wind"],
+    stats[rain_col],
+    s=stats["marker_size"],
+    c=stats["color"],
+    alpha=0.5,
+    edgecolors="none",
+)
+
+for j, txt in enumerate(
+    stats["name"].str.capitalize() + "\n" + stats["year"].astype(str)
+):
+    ax.annotate(
+        txt.capitalize(),
+        (stats["max_wind"][j] + 0.5, stats[rain_col][j]),
+        ha="left",
+        va="center",
+        fontsize=7,
+    )
+
+rain_thresh = 60
+ax.axvline(x=50, color="lightgray", linestyle="dashed")
+ax.axhline(y=rain_thresh, color="lightgray", linestyle="dashed")
+ax.fill_between(
+    np.arange(50, 200, 1), rain_thresh, 200, color="gold", alpha=0.2, zorder=-1
+)
+
+ax.set_xlim(right=155, left=0)
+ax.set_ylim(bottom=0, top=170)
 
 ax.set_xlabel("Vitesse de vent maximum (noeuds)")
 ax.set_ylabel(
