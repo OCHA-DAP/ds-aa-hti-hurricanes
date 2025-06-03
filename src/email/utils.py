@@ -7,6 +7,9 @@ from typing import Literal
 import pandas as pd
 
 from src.utils import blob
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 EMAIL_HOST = os.getenv("DSCI_AWS_EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("DSCI_AWS_EMAIL_PORT", 465))
@@ -48,7 +51,7 @@ def add_test_row_to_monitoring(
     """Add test row to monitoring df to simulate new monitoring point.
     This new monitoring point will cause an activation of all three triggers.
     """
-    print("adding test row to monitoring data")
+    logger.info(f"adding test row to {fcast_obsv} monitoring data")
     if fcast_obsv == "fcast":
         df_monitoring_test = df_monitoring[
             df_monitoring["monitor_id"] == "al022024_fcast_2024-07-01T15:00:00"
@@ -104,8 +107,10 @@ def open_static_image(filename: str) -> str:
 def get_distribution_list() -> pd.DataFrame:
     """Load distribution list from blob storage."""
     if TEST_LIST:
+        logger.info("TEST_LIST is True, using test distribution list.")
         blob_name = f"{blob.PROJECT_PREFIX}/email/test_distribution_list.csv"
     else:
+        logger.info("TEST_LIST is False, using production distribution list.")
         blob_name = f"{blob.PROJECT_PREFIX}/email/distribution_list.csv"
     return blob.load_csv_from_blob(blob_name)
 

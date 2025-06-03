@@ -26,6 +26,9 @@ from src.email.utils import (
 )
 from src.monitoring import monitoring_utils
 from src.utils import blob
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def get_plot_blob_name(monitor_id, plot_type: Literal["map", "scatter"]):
@@ -54,6 +57,7 @@ def update_plots(
         fcast_obsv
     )
     if TEST_STORM:
+        logger.info("TEST_STORM is True, adding test row to monitoring")
         df_monitoring = add_test_row_to_monitoring(df_monitoring, fcast_obsv)
     existing_plot_blobs = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/plots/{fcast_obsv}/"
@@ -63,10 +67,12 @@ def update_plots(
         for plot_type in ["map", "scatter"]:
             blob_name = get_plot_blob_name(monitor_id, plot_type)
             if blob_name in existing_plot_blobs and plot_type not in clobber:
-                if verbose:
-                    print(f"Skipping {blob_name}, already exists")
+                logger.debug(f"Skipping {blob_name}, already exists")
                 continue
-            print(f"Creating {blob_name}")
+            logger.info(
+                f"Creating plot for {monitor_id} ({fcast_obsv}, {plot_type}) "
+                f"as {blob_name}"
+            )
             create_plot(monitor_id, plot_type, fcast_obsv)
 
 
@@ -416,7 +422,6 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
 
         # rainfall
         if lt_name in ["readiness", "obsv"]:
-            # rain_level = dff["roll2_rain_dist"].max()
             if pd.isnull(rain_level):
                 rain_level_str = ""
             else:

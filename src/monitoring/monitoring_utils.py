@@ -6,6 +6,9 @@ import pandas as pd
 from src.constants import D_THRESH, LT_CUTOFF_HRS, THRESHS
 from src.datasources import chirps_gefs, codab, imerg, nhc
 from src.utils import blob
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
@@ -132,13 +135,17 @@ def update_obsv_monitoring(clobber: bool = False, verbose: bool = False):
 
 def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
     adm0 = codab.load_codab_from_blob().to_crs(3857)
+    # logging
+    logger.info("Loading recent CHIRPS-GEFS data for Haiti.")
     df_gefs_all = chirps_gefs.load_recent_chirps_gefs_mean_daily()
     df_gefs_all["issue_time_approx"] = (
         df_gefs_all["issue_date"] + pd.Timedelta(hours=8, minutes=50)
     ).apply(lambda x: x.tz_localize("UTC"))
+    logger.info("Loading existing monitoring points.")
     df_existing_monitoring = load_existing_monitoring_points(
         fcast_obsv="fcast"
     )
+    logger.info("Loading NHC forecasts for Haiti.")
     df_tracks = nhc.load_recent_glb_forecasts()
     df_tracks = df_tracks[df_tracks["basin"] == "al"]
 
@@ -167,7 +174,7 @@ def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
                     print(f"already monitored for {monitor_id}")
                 continue
             else:
-                print(f"monitoring for {monitor_id}")
+                logger.info(f"Processing forecast monitoring for {monitor_id}")
 
             cols = ["latitude", "longitude", "maxwind"]
             df_interp = (
@@ -263,6 +270,10 @@ def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
 
     df_new_monitoring = pd.DataFrame(dicts)
 
+    if df_new_monitoring.empty:
+        logger.info("No new forecast data found.")
+    else:
+        logger.info(f"Found {len(df_new_monitoring)} new forecast points.")
     if clobber:
         df_monitoring_combined = df_new_monitoring
     else:

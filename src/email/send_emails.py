@@ -155,11 +155,11 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
 
     with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, context=context) as server:
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-        server.sendmail(
-            EMAIL_ADDRESS,
-            to_list["email"].tolist() + cc_list["email"].tolist(),
-            msg.as_string(),
-        )
+        # server.sendmail(
+        #     EMAIL_ADDRESS,
+        #     to_list["email"].tolist() + cc_list["email"].tolist(),
+        #     msg.as_string(),
+        # )
 
 
 def send_trigger_email(monitor_id: str, trigger_name: str):
@@ -272,8 +272,8 @@ def send_trigger_email(monitor_id: str, trigger_name: str):
 
     with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, context=context) as server:
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-        server.sendmail(
-            EMAIL_ADDRESS,
-            to_list["email"].tolist() + cc_list["email"].tolist(),
-            msg.as_string(),
-        )
+        # server.sendmail(
+        #     EMAIL_ADDRESS,
+        #     to_list["email"].tolist() + cc_list["email"].tolist(),
+        #     msg.as_string(),
+        # )

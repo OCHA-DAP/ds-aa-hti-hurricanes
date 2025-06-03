@@ -12,12 +12,18 @@ from src.email.utils import (
 )
 from src.monitoring import monitoring_utils
 from src.utils import blob
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def update_obsv_info_emails(verbose: bool = False):
     df_monitoring = monitoring_utils.load_existing_monitoring_points("obsv")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
+        logger.info(
+            "TEST_STORM is True, adding test row to monitoring points."
+        )
         df_monitoring = add_test_row_to_monitoring(df_monitoring, "obsv")
         df_existing_email_record = df_existing_email_record[
             ~(
@@ -29,11 +35,10 @@ def update_obsv_info_emails(verbose: bool = False):
     dicts = []
     for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
         if row["min_dist"] > MIN_EMAIL_DISTANCE:
-            if verbose:
-                print(
-                    f"min_dist is {row['min_dist']}, "
-                    f"skipping info email for {monitor_id}"
-                )
+            logger.info(
+                f"min_dist is {row['min_dist']}, "
+                f"skipping info email for {monitor_id}"
+            )
             continue
         if (
             monitor_id
@@ -41,15 +46,16 @@ def update_obsv_info_emails(verbose: bool = False):
                 df_existing_email_record["email_type"] == "info"
             ]["monitor_id"].unique()
         ):
-            if verbose:
-                print(f"already sent info email for {monitor_id}")
+            logger.info(f"already sent info email for {monitor_id}")
             continue
         if not row["rainfall_relevant"]:
-            if verbose:
-                print(f"rainfall not relevant for {monitor_id}")
+            logger.info(
+                f"rainfall not relevant for {monitor_id}, "
+                "skipping info email"
+            )
             continue
         try:
-            print(f"sending info email for {monitor_id}")
+            logger.info(f"sending info email for {monitor_id}")
             send_info_email(monitor_id=monitor_id, fcast_obsv="obsv")
             dicts.append(
                 {
@@ -59,7 +65,7 @@ def update_obsv_info_emails(verbose: bool = False):
                 }
             )
         except Exception as e:
-            print(f"could not send info email for {monitor_id}: {e}")
+            logger.error(f"could not send info email for {monitor_id}: {e}")
             traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
@@ -74,6 +80,9 @@ def update_fcast_info_emails(verbose: bool = False):
     df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
+        logger.info(
+            "TEST_STORM is True, adding test row to monitoring points."
+        )
         df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
         df_existing_email_record = df_existing_email_record[
             ~(
@@ -85,11 +94,10 @@ def update_fcast_info_emails(verbose: bool = False):
     dicts = []
     for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
         if row["min_dist"] > MIN_EMAIL_DISTANCE:
-            if verbose:
-                print(
-                    f"min_dist is {row['min_dist']}, "
-                    f"skipping info email for {monitor_id}"
-                )
+            logger.debug(
+                f"min_dist is {row['min_dist']}, "
+                f"skipping info email for {monitor_id}"
+            )
             continue
         if (
             monitor_id
@@ -97,11 +105,10 @@ def update_fcast_info_emails(verbose: bool = False):
                 df_existing_email_record["email_type"] == "info"
             ]["monitor_id"].unique()
         ):
-            if verbose:
-                print(f"already sent info email for {monitor_id}")
+            logger.debug(f"already sent info email for {monitor_id}")
         else:
             try:
-                print(f"sending info email for {monitor_id}")
+                logger.info(f"sending info email for {monitor_id}")
                 send_info_email(monitor_id=monitor_id, fcast_obsv="fcast")
                 dicts.append(
                     {
@@ -111,7 +118,9 @@ def update_fcast_info_emails(verbose: bool = False):
                     }
                 )
             except Exception as e:
-                print(f"could not send info email for {monitor_id}: {e}")
+                logger.error(
+                    f"could not send info email for {monitor_id}: {e}"
+                )
                 traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
@@ -141,7 +150,7 @@ def update_obsv_trigger_emails():
                 df_existing_email_record["email_type"] == "obsv"
             ]["atcf_id"].unique()
         ):
-            print(f"already sent obsv email for {atcf_id}")
+            logger.info(f"already sent obsv email for {atcf_id}")
         elif (
             atcf_id
             in df_existing_email_record[
@@ -149,12 +158,15 @@ def update_obsv_trigger_emails():
             ]["atcf_id"].unique()
             and not TEST_STORM
         ):
-            print(f"already sent action email for {atcf_id}")
+            logger.info(
+                f"already sent action email for {atcf_id}, "
+                "skipping obsv email"
+            )
         else:
             for monitor_id, row in group.set_index("monitor_id").iterrows():
                 if row["obsv_trigger"]:
                     try:
-                        print(f"sending obsv email for {monitor_id}")
+                        logger.info(f"sending obsv email for {monitor_id}")
                         send_trigger_email(
                             monitor_id=monitor_id, trigger_name="obsv"
                         )
@@ -166,8 +178,8 @@ def update_obsv_trigger_emails():
                             }
                         )
                     except Exception as e:
-                        print(
-                            f"could not send trigger email for {monitor_id}: "
+                        logger.error(
+                            f"could not send obsv email for {monitor_id}: "
                             f"{e}"
                         )
                         traceback.print_exc()
@@ -188,6 +200,9 @@ def update_fcast_trigger_emails():
     df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
+        logger.info(
+            "TEST_STORM is True, adding test row to monitoring points."
+        )
         df_monitoring = add_test_row_to_monitoring(df_monitoring, "fcast")
         df_existing_email_record = df_existing_email_record[
             ~(
@@ -208,7 +223,7 @@ def update_fcast_trigger_emails():
                     df_existing_email_record["email_type"] == trigger_name
                 ]["atcf_id"].unique()
             ):
-                print(f"already sent {trigger_name} email for {atcf_id}")
+                logger.info(f"already sent {trigger_name} email for {atcf_id}")
             else:
                 for (
                     monitor_id,
@@ -219,9 +234,9 @@ def update_fcast_trigger_emails():
                         and not row["past_cutoff"]
                     ):
                         try:
-                            print(
-                                f"sending {trigger_name} email for "
-                                f"{monitor_id}"
+                            logger.info(
+                                f"sending {trigger_name} email "
+                                f"for {monitor_id}"
                             )
                             send_trigger_email(
                                 monitor_id=monitor_id,
@@ -235,7 +250,7 @@ def update_fcast_trigger_emails():
                                 }
                             )
                         except Exception as e:
-                            print(
+                            logger.error(
                                 f"could not send trigger email for "
                                 f"{monitor_id}: {e}"
                             )
