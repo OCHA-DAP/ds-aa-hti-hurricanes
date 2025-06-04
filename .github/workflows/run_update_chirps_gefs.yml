@@ -27,10 +27,8 @@ jobs:
 
     - name: Run script
       env:
-        DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
-        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
+        DSCI_AZ_BLOB_DEV_SAS_WRITE: ${{ secrets.DSCI_AZ_BLOB_DEV_SAS_WRITE }}
+        DSCI_AZ_BLOB_PROD_SAS: ${{ secrets.DSCI_AZ_BLOB_PROD_SAS }}
         AA_DATA_DIR_NEW: ${{ secrets.AA_DATA_DIR_NEW }}
-        IMERG_USERNAME: ${{ secrets.IMERG_USERNAME }}
-        IMERG_PASSWORD: ${{ secrets.IMERG_PASSWORD }}
       run: |
         python pipelines/update_chirps_gefs.py

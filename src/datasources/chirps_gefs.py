@@ -1,4 +1,5 @@
 import datetime
+import sys
 import tempfile
 from io import BytesIO
 
@@ -10,6 +11,9 @@ from tqdm import tqdm
 
 from src.datasources import codab
 from src.utils import blob
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 CHIRPS_GEFS_URL = (
     "https://data.chc.ucsb.edu/products/EWX/data/forecasts/"
@@ -24,8 +28,9 @@ def download_recent_chirps_gefs():
     adm0 = codab.load_codab_from_blob(admin_level=0)
     total_bounds = adm0.total_bounds
 
+    current_year = datetime.date.today().year
     issue_date_range = pd.date_range(
-        start="2024-01-01",
+        start=f"{current_year}-01-01",
         end=datetime.date.today() + pd.DateOffset(days=1),
         freq="D",
     )
@@ -33,10 +38,27 @@ def download_recent_chirps_gefs():
     existing_files = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/"
         f"{CHIRPS_GEFS_BLOB_DIR}/"
-        f"chirps-gefs-hti_issued-2024"
+        f"chirps-gefs-hti_issued-{current_year}"
     )
 
-    for issue_date in tqdm(issue_date_range):
+    existing_issue_dates = [
+        pd.Timestamp(f.split("issued-")[1].split("_valid-")[0])
+        for f in existing_files
+    ]
+    logger.info(
+        f"Found {len(existing_issue_dates)} existing files for {current_year}"
+    )
+    download_dates = [
+        d for d in issue_date_range if d not in existing_issue_dates
+    ]
+    logger.info(
+        f"Downloading {len(download_dates)} new issue dates for {current_year}: {[str(x.date()) for x in download_dates]}"  # noqa: E501
+    )
+
+    for issue_date in tqdm(
+        download_dates,
+        disable=not sys.stdout.isatty(),
+    ):
         for leadtime in range(16):
             valid_date = issue_date + pd.Timedelta(days=leadtime)
             download_chirps_gefs(
@@ -115,11 +137,10 @@ def download_chirps_gefs(
                 with open(temp_filename, "rb") as f:
                     blob.upload_blob_data(output_path, f)
     except Exception as e:
-        if verbose:
-            print(
-                f"Failed to process the file for issue date "
-                f"{issue_date} and valid date {valid_date}: {str(e)}"
-            )
+        logger.warning(
+            f"Failed to download or process CHIRPS GEFS data for "
+            f"{issue_date.date()} valid {valid_date.date()}: {e}"
+        )
     return
 
 
@@ -189,6 +210,9 @@ def process_recent_chirps_gefs(verbose: bool = False):
     try:
         existing_df = load_recent_chirps_gefs_mean_daily()
     except ResourceNotFoundError:
+        logger.warning(
+            "No existing data found for recent CHIRPS-GEFS mean daily."
+        )
         existing_df = pd.DataFrame(
             columns=["issue_date", "valid_date", "mean"]
         )
@@ -198,8 +222,20 @@ def process_recent_chirps_gefs(verbose: bool = False):
         end=datetime.date.today() + pd.DateOffset(days=1),
         freq="D",
     )
+    unprocessed_issue_date_range = [
+        d
+        for d in issue_date_range
+        if d not in existing_df["issue_date"].unique()
+    ]
+    logger.info(
+        f"Processing {len(unprocessed_issue_date_range)} new issue dates "
+        "for recent CHIRPS-GEFS: "
+        f"{[str(x.date()) for x in unprocessed_issue_date_range]}"
+    )
     dfs = []
-    for issue_date in tqdm(issue_date_range):
+    for issue_date in tqdm(
+        unprocessed_issue_date_range, disable=not sys.stdout.isatty()
+    ):
         if issue_date in existing_df["issue_date"].unique():
             if verbose:
                 print(f"Skipping {issue_date}, already processed")
@@ -216,6 +252,9 @@ def process_recent_chirps_gefs(verbose: bool = False):
                     print(f"{e} for {issue_date} {valid_date}")
 
         if das_i:
+            logger.info(
+                f"Processing {len(das_i)} files for issue_date {issue_date}"
+            )
             da_i = xr.concat(das_i, dim="valid_date")
             da_i_clip = da_i.rio.clip(adm0.geometry, all_touched=True)
             df_in = (
@@ -226,13 +265,14 @@ def process_recent_chirps_gefs(verbose: bool = False):
             df_in["issue_date"] = issue_date
             dfs.append(df_in)
         else:
-            if verbose:
-                print(f"no files for issue_date {issue_date}")
+            logger.warning(
+                f"No files found for issue_date {issue_date.date()}, skipping."
+            )
 
     updated_df = pd.concat(dfs + [existing_df], ignore_index=True)
     blob_name = (
         f"{blob.PROJECT_PREFIX}/processed/chirps/gefs/hti/"
-        f"hti_chirps_gefs_mean_daily_2024.parquet"
+        f"hti_chirps_gefs_mean_daily_since2024.parquet"
     )
     blob.upload_parquet_to_blob(blob_name, updated_df)
 
@@ -240,7 +280,7 @@ def process_recent_chirps_gefs(verbose: bool = False):
 def load_recent_chirps_gefs_mean_daily():
     return blob.load_parquet_from_blob(
         f"{blob.PROJECT_PREFIX}/processed/chirps/gefs/hti/"
-        "hti_chirps_gefs_mean_daily_2024.parquet"
+        "hti_chirps_gefs_mean_daily_since2024.parquet"
     )
 
 

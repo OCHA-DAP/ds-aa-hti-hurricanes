@@ -6,6 +6,9 @@ import pandas as pd
 from src.constants import D_THRESH, LT_CUTOFF_HRS, THRESHS
 from src.datasources import chirps_gefs, codab, imerg, nhc
 from src.utils import blob
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
@@ -15,14 +18,17 @@ def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
     return blob.load_parquet_from_blob(blob_name)
 
 
-def update_obsv_monitoring(clobber: bool = False, verbose: bool = False):
+def update_obsv_monitoring(clobber: bool = False):
     adm0 = codab.load_codab_from_blob().to_crs(3857)
+    logger.info("Loading existing monitoring points.")
     obsv_tracks = nhc.load_recent_glb_obsv()
     obsv_tracks = obsv_tracks[obsv_tracks["basin"] == "al"]
     obsv_tracks = obsv_tracks.rename(columns={"id": "atcf_id"})
     obsv_tracks = obsv_tracks.sort_values("lastUpdate")
 
-    obsv_rain = imerg.load_imerg_mean(version=7, recent=True)
+    logger.info("Loading recent IMERG data for Haiti.")
+    # obsv_rain_old = imerg.load_imerg_mean(version=7, recent=True)
+    obsv_rain = imerg.load_imerg_from_postgres(recent=True)
     obsv_rain["roll2_sum"] = (
         obsv_rain["mean"].rolling(window=2, center=True, min_periods=1).sum()
     )
@@ -58,8 +64,7 @@ def update_obsv_monitoring(clobber: bool = False, verbose: bool = False):
                 monitor_id in df_existing_monitoring["monitor_id"].unique()
                 and not clobber
             ):
-                if verbose:
-                    print(f"already monitored for {monitor_id}")
+                logger.debug(f"Already monitored for {monitor_id}")
                 continue
             rain_recent = obsv_rain[obsv_rain["issue_time"] <= issue_time]
             gdf_recent = gdf[gdf["lastUpdate"] <= issue_time]
@@ -120,6 +125,12 @@ def update_obsv_monitoring(clobber: bool = False, verbose: bool = False):
             )
 
     df_new_monitoring = pd.DataFrame(dicts)
+    if df_new_monitoring.empty:
+        logger.info("No new observational data found.")
+    else:
+        logger.info(
+            f"Found {len(df_new_monitoring)} new obsverational points."
+        )
     if clobber:
         df_monitoring_combined = df_new_monitoring
     else:
@@ -130,15 +141,19 @@ def update_obsv_monitoring(clobber: bool = False, verbose: bool = False):
     blob.upload_parquet_to_blob(blob_name, df_monitoring_combined, index=False)
 
 
-def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
+def update_fcast_monitoring(clobber: bool = False):
     adm0 = codab.load_codab_from_blob().to_crs(3857)
+    # logging
+    logger.info("Loading recent CHIRPS-GEFS data for Haiti.")
     df_gefs_all = chirps_gefs.load_recent_chirps_gefs_mean_daily()
     df_gefs_all["issue_time_approx"] = (
         df_gefs_all["issue_date"] + pd.Timedelta(hours=8, minutes=50)
     ).apply(lambda x: x.tz_localize("UTC"))
+    logger.info("Loading existing monitoring points.")
     df_existing_monitoring = load_existing_monitoring_points(
         fcast_obsv="fcast"
     )
+    logger.info("Loading NHC forecasts for Haiti.")
     df_tracks = nhc.load_recent_glb_forecasts()
     df_tracks = df_tracks[df_tracks["basin"] == "al"]
 
@@ -163,11 +178,10 @@ def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
                 monitor_id in df_existing_monitoring["monitor_id"].unique()
                 and not clobber
             ):
-                if verbose:
-                    print(f"already monitored for {monitor_id}")
+                logger.debug(f"Already monitored for {monitor_id}")
                 continue
             else:
-                print(f"monitoring for {monitor_id}")
+                logger.info(f"Processing forecast monitoring for {monitor_id}")
 
             cols = ["latitude", "longitude", "maxwind"]
             df_interp = (
@@ -263,6 +277,10 @@ def update_fcast_monitoring(clobber: bool = False, verbose: bool = False):
 
     df_new_monitoring = pd.DataFrame(dicts)
 
+    if df_new_monitoring.empty:
+        logger.info("No new forecast data found.")
+    else:
+        logger.info(f"Found {len(df_new_monitoring)} new forecast points.")
     if clobber:
         df_monitoring_combined = df_new_monitoring
     else:
