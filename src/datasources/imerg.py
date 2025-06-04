@@ -6,6 +6,7 @@ from pathlib import Path
 from subprocess import Popen
 from typing import Literal
 
+import ocha_stratus as stratus
 import pandas as pd
 import requests
 import rioxarray as rxr
@@ -92,6 +93,21 @@ def download_imerg(
     except requests.exceptions.HTTPError as err:
         print(err)
         print("failed to download from " + url)
+
+
+def load_imerg_from_postgres(recent: bool = False):
+    query = """
+    SELECT valid_date, mean
+    FROM public.imerg
+    WHERE pcode = 'HT'
+    """
+    df = pd.read_sql(
+        query, stratus.get_engine(stage="prod"), parse_dates=["valid_date"]
+    )
+    df = df.rename(columns={"valid_date": "date"})
+    if recent:
+        df = df[df["date"] >= "2024-06-01"]
+    return df
 
 
 def load_imerg_mean(version: int = 6, recent: bool = False):

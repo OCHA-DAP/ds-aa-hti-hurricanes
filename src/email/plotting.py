@@ -49,7 +49,6 @@ def convert_datetime_to_fr_str(x: pd.Timestamp) -> str:
 def update_plots(
     fcast_obsv: Literal["fcast", "obsv"],
     clobber: list = None,
-    verbose: bool = False,
 ):
     if clobber is None:
         clobber = []

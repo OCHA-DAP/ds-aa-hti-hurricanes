@@ -17,7 +17,7 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-def update_obsv_info_emails(verbose: bool = False):
+def update_obsv_info_emails():
     df_monitoring = monitoring_utils.load_existing_monitoring_points("obsv")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
@@ -35,7 +35,7 @@ def update_obsv_info_emails(verbose: bool = False):
     dicts = []
     for monitor_id, row in df_monitoring.set_index("monitor_id").iterrows():
         if row["min_dist"] > MIN_EMAIL_DISTANCE:
-            logger.info(
+            logger.debug(
                 f"min_dist is {row['min_dist']}, "
                 f"skipping info email for {monitor_id}"
             )
@@ -46,10 +46,10 @@ def update_obsv_info_emails(verbose: bool = False):
                 df_existing_email_record["email_type"] == "info"
             ]["monitor_id"].unique()
         ):
-            logger.info(f"already sent info email for {monitor_id}")
+            logger.debug(f"already sent info email for {monitor_id}")
             continue
         if not row["rainfall_relevant"]:
-            logger.info(
+            logger.debug(
                 f"rainfall not relevant for {monitor_id}, "
                 "skipping info email"
             )
@@ -69,6 +69,8 @@ def update_obsv_info_emails(verbose: bool = False):
             traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
+    if df_new_email_record.empty:
+        logger.info("No new emails sent.")
     df_combined_email_record = pd.concat(
         [df_existing_email_record, df_new_email_record], ignore_index=True
     )
@@ -76,7 +78,7 @@ def update_obsv_info_emails(verbose: bool = False):
     blob.upload_csv_to_blob(blob_name, df_combined_email_record)
 
 
-def update_fcast_info_emails(verbose: bool = False):
+def update_fcast_info_emails():
     df_monitoring = monitoring_utils.load_existing_monitoring_points("fcast")
     df_existing_email_record = load_email_record()
     if TEST_STORM:
@@ -124,6 +126,8 @@ def update_fcast_info_emails(verbose: bool = False):
                 traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
+    if df_new_email_record.empty:
+        logger.info("No new emails sent.")
     df_combined_email_record = pd.concat(
         [df_existing_email_record, df_new_email_record], ignore_index=True
     )
@@ -185,6 +189,8 @@ def update_obsv_trigger_emails():
                         traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
+    if df_new_email_record.empty:
+        logger.info("No new emails sent.")
     df_combined_email_record = pd.concat(
         [df_existing_email_record, df_new_email_record], ignore_index=True
     )
@@ -257,6 +263,8 @@ def update_fcast_trigger_emails():
                             traceback.print_exc()
 
     df_new_email_record = pd.DataFrame(dicts)
+    if df_new_email_record.empty:
+        logger.info("No new emails sent.")
     df_combined_email_record = pd.concat(
         [df_existing_email_record, df_new_email_record], ignore_index=True
     )
