@@ -32,6 +32,7 @@ jobs:
         DSCI_AWS_EMAIL_ADDRESS: ${{ secrets.DSCI_AWS_EMAIL_ADDRESS }}
         DSCI_AZ_DB_PROD_UID: ${{ secrets.DSCI_AZ_DB_PROD_UID }}
         DSCI_AZ_DB_PROD_PW: ${{ secrets.DSCI_AZ_DB_PROD_PW }}
+        DSCI_AZ_DB_PROD_HOST: ${{ secrets.DSCI_AZ_DB_PROD_HOST }}
         TEST_LIST: ${{ vars.TEST_LIST }}
         TEST_STORM: ${{ vars.TEST_STORM }}
         EMAIL_DISCLAIMER: ${{ vars.EMAIL_DISCLAIMER }}
