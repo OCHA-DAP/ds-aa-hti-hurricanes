@@ -1,9 +1,10 @@
+import re
 from typing import Literal
 
 import geopandas as gpd
 import pandas as pd
 
-from src.constants import D_THRESH, LT_CUTOFF_HRS, THRESHS
+from src.constants import D_THRESH, LT_CUTOFF_HRS, NUMERIC_NAME_REGEX, THRESHS
 from src.datasources import chirps_gefs, codab, imerg, nhc
 from src.utils import blob
 from src.utils.logging import get_logger
@@ -16,6 +17,32 @@ def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
         f"{blob.PROJECT_PREFIX}/monitoring/hti_{fcast_obsv}_monitoring.parquet"
     )
     return blob.load_parquet_from_blob(blob_name)
+
+
+def remove_track_duplicates(
+    df: pd.DataFrame, index_col: str, atcf_id: str = None
+) -> pd.DataFrame:
+    df = df.copy()
+    if atcf_id is None:
+        atcf_id = df.iloc[0]["atcf_id"]
+    df["numeric_name"] = df["name"].apply(
+        lambda x: bool(re.compile(NUMERIC_NAME_REGEX).search(x))
+    )
+    df_duplicated = df[df.duplicated(subset=[index_col], keep=False)]
+    if not df_duplicated.empty:
+        drop_name, drop_lastupdate = df_duplicated[
+            df_duplicated["numeric_name"]
+        ].iloc[0][["name", index_col]]
+        df = (
+            df.sort_values("numeric_name", ascending=False)
+            .drop_duplicates(subset=[index_col])
+            .sort_values(index_col)
+        )
+        logger.warning(
+            f"Dropping duplicate track entry for {atcf_id} "
+            f"({drop_name} at {drop_lastupdate})"
+        )
+    return df
 
 
 def update_obsv_monitoring(clobber: bool = False):
@@ -40,12 +67,22 @@ def update_obsv_monitoring(clobber: bool = False):
 
     dicts = []
     for atcf_id, group in obsv_tracks.groupby("atcf_id"):
-        df_interp = (
-            group.set_index("lastUpdate")[cols]
-            .resample("30min")
-            .interpolate()
-            .reset_index()
-        )
+        group = remove_track_duplicates(group, "lastUpdate")
+        try:
+            df_interp = (
+                group.set_index("lastUpdate")[cols]
+                .resample("30min")
+                .interpolate()
+                .reset_index()
+            )
+        except ValueError as e:
+            logger.warning(
+                f"Skipping {atcf_id} due to interpolation error: {e}"
+            )
+            raise ValueError(
+                f"Skipping {atcf_id} due to interpolation error: {e}"
+            ) from e
+            # return group
         gdf = gpd.GeoDataFrame(
             data=df_interp,
             geometry=gpd.points_from_xy(
@@ -70,11 +107,17 @@ def update_obsv_monitoring(clobber: bool = False):
             gdf_recent = gdf[gdf["lastUpdate"] <= issue_time]
             if gdf_recent.empty:
                 # skip as storm is not active yet
+                logger.debug(
+                    f"Skipping {monitor_id} as storm is not active yet."
+                )
                 continue
             if rain_recent["date"].max().date() - gdf_recent[
                 "lastUpdate"
             ].max().date() > pd.Timedelta(days=1):
                 # skip as storm is no longer active
+                logger.debug(
+                    f"Skipping {monitor_id} as storm is no longer active."
+                )
                 continue
 
             name = group[group["lastUpdate"] <= issue_time].iloc[-1]["name"]
@@ -105,8 +148,8 @@ def update_obsv_monitoring(clobber: bool = False):
                 & (rain_recent["date"] <= end_day_late)
             ]
             max_p = obsv_rain_f["roll2_sum"].max()
-            obsv_trigger = (max_p > THRESHS["obsv"]["p"]) & (
-                max_s > THRESHS["obsv"]["s"]
+            obsv_trigger = (max_p >= THRESHS["obsv"]["p"]) & (
+                max_s >= THRESHS["obsv"]["s"]
             )
             dicts.append(
                 {
@@ -182,7 +225,9 @@ def update_fcast_monitoring(clobber: bool = False):
                 continue
             else:
                 logger.info(f"Processing forecast monitoring for {monitor_id}")
-
+            group = remove_track_duplicates(
+                group, "validTime", atcf_id=atcf_id
+            )
             cols = ["latitude", "longitude", "maxwind"]
             df_interp = (
                 group.set_index("validTime")[cols]

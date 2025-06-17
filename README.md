@@ -65,7 +65,7 @@ The basic functioning of these pipelines is outlined below.
 - Script: `pipelines/check_fcast_trigger.py`
 - Workflow: `.github/workflows/check_trigger.yml`
 
-This pipeline is triggered by the `ds-nhc-forecast` pipeline, whenever a new NHC track forecast is issued.
+This pipeline is triggered by the `ds-nhc-forecast` pipeline (repo [here](https://github.com/OCHA-DAP/ds-nhc-forecast)), whenever a new NHC track forecast is issued.
 
 Steps:
 
