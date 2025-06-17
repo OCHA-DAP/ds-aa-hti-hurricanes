@@ -12,6 +12,35 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+def _create_monitor_id(
+    atcf_id: str, monitoring_type: str, issue_time: pd.Timestamp
+) -> str:
+    """Create standardized monitoring ID"""
+    return (
+        f"{atcf_id}_{monitoring_type}_{issue_time.isoformat().split('+')[0]}"
+    )
+
+
+def _should_skip_existing(
+    monitor_id: str, existing_data: pd.DataFrame, clobber: bool
+) -> bool:
+    """Check if monitoring point already exists"""
+    exists = monitor_id in existing_data["monitor_id"].unique()
+    if exists and not clobber:
+        logger.debug(f"Already monitored for {monitor_id}")
+        return True
+    elif not exists:
+        if "obsv" in monitor_id:
+            # if obsv, don't log as info, as this is many points
+            # still need to check whether rainfall is relevant
+            logger.debug(
+                f"Processing observational monitoring for {monitor_id}"
+            )
+        else:
+            logger.info(f"Processing monitoring for {monitor_id}")
+    return False
+
+
 def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
     blob_name = (
         f"{blob.PROJECT_PREFIX}/monitoring/hti_{fcast_obsv}_monitoring.parquet"
@@ -19,12 +48,14 @@ def load_existing_monitoring_points(fcast_obsv: Literal["fcast", "obsv"]):
     return blob.load_parquet_from_blob(blob_name)
 
 
-def remove_track_duplicates(
+def _remove_track_duplicates(
     df: pd.DataFrame, index_col: str, atcf_id: str = None
 ) -> pd.DataFrame:
+    """Remove duplicate track entries based on a specified index column."""
     df = df.copy()
     if atcf_id is None:
         atcf_id = df.iloc[0]["atcf_id"]
+    # check if the name is numeric (i.e. before an actual name is assigned)
     df["numeric_name"] = df["name"].apply(
         lambda x: bool(re.compile(NUMERIC_NAME_REGEX).search(x))
     )
@@ -67,7 +98,7 @@ def update_obsv_monitoring(clobber: bool = False):
 
     dicts = []
     for atcf_id, group in obsv_tracks.groupby("atcf_id"):
-        group = remove_track_duplicates(group, "lastUpdate")
+        group = _remove_track_duplicates(group, "lastUpdate")
         try:
             df_interp = (
                 group.set_index("lastUpdate")[cols]
@@ -94,14 +125,19 @@ def update_obsv_monitoring(clobber: bool = False):
             gdf.to_crs(3857).geometry.distance(adm0.iloc[0].geometry) / 1000
         )
         for issue_time in obsv_rain["issue_time"]:
-            monitor_id = (
-                f"{atcf_id}_obsv_{issue_time.isoformat().split('+')[0]}"
-            )
-            if (
-                monitor_id in df_existing_monitoring["monitor_id"].unique()
-                and not clobber
+            # monitor_id = (
+            #     f"{atcf_id}_obsv_{issue_time.isoformat().split('+')[0]}"
+            # )
+            monitor_id = _create_monitor_id(atcf_id, "obsv", issue_time)
+            # if (
+            #     monitor_id in df_existing_monitoring["monitor_id"].unique()
+            #     and not clobber
+            # ):
+            #     logger.debug(f"Already monitored for {monitor_id}")
+            #     continue
+            if _should_skip_existing(
+                monitor_id, df_existing_monitoring, clobber
             ):
-                logger.debug(f"Already monitored for {monitor_id}")
                 continue
             rain_recent = obsv_rain[obsv_rain["issue_time"] <= issue_time]
             gdf_recent = gdf[gdf["lastUpdate"] <= issue_time]
@@ -135,6 +171,10 @@ def update_obsv_monitoring(clobber: bool = False):
 
             # obsv trigger
             gdf_dist = gdf_recent[gdf_recent["hti_distance"] < D_THRESH]
+            if gdf_dist.empty:
+                logger.info(
+                    f"{monitor_id} did not pass distance threshold {D_THRESH} km."  # noqa
+                )
             max_s = gdf_dist["intensity"].max()
             start_day = pd.Timestamp(gdf_dist["lastUpdate"].min().date())
             end_day_late = pd.Timestamp(
@@ -214,18 +254,23 @@ def update_fcast_monitoring(clobber: bool = False):
             .sum()
         )
         for atcf_id, group in issue_group.groupby("id"):
-            monitor_id = (
-                f"{atcf_id}_fcast_{issue_time.isoformat().split('+')[0]}"
-            )
-            if (
-                monitor_id in df_existing_monitoring["monitor_id"].unique()
-                and not clobber
+            # monitor_id = (
+            #     f"{atcf_id}_fcast_{issue_time.isoformat().split('+')[0]}"
+            # )
+            monitor_id = _create_monitor_id(atcf_id, "fcast", issue_time)
+            # if (
+            #     monitor_id in df_existing_monitoring["monitor_id"].unique()
+            #     and not clobber
+            # ):
+            #     logger.debug(f"Already monitored for {monitor_id}")
+            #     continue
+            # else:
+            #     logger.info(f"Processing forecast monitoring for {monitor_id}") # noqa
+            if _should_skip_existing(
+                monitor_id, df_existing_monitoring, clobber
             ):
-                logger.debug(f"Already monitored for {monitor_id}")
                 continue
-            else:
-                logger.info(f"Processing forecast monitoring for {monitor_id}")
-            group = remove_track_duplicates(
+            group = _remove_track_duplicates(
                 group, "validTime", atcf_id=atcf_id
             )
             cols = ["latitude", "longitude", "maxwind"]

@@ -23,8 +23,42 @@ jupyter:
 
 ```python
 import re
+import pandas as pd
 
 from src.monitoring.monitoring_utils import *
+```
+
+```python
+update_fcast_monitoring()
+```
+
+```python
+update_obsv_monitoring()
+```
+
+```python
+gdf_recent = pd.DataFrame(columns=["hti_distance", "intensity", "lastUpdate"])
+```
+
+```python
+gdf_recent["lastUpdate"] = pd.Timestamp(2000)
+```
+
+```python
+gdf_recent.dtypes
+```
+
+```python
+gdf_dist = gdf_recent[gdf_recent["hti_distance"] < D_THRESH]
+max_s = gdf_dist["intensity"].max()
+start_day = pd.Timestamp(gdf_dist["lastUpdate"].min().date())
+end_day_late = pd.Timestamp(
+    gdf_dist["lastUpdate"].max().date() + pd.Timedelta(days=1)
+)
+```
+
+```python
+end_day_late
 ```
 
 ```python
