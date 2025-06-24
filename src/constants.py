@@ -70,3 +70,5 @@ THRESHS = {
 }
 
 MIN_EMAIL_DISTANCE = 1000
+
+NUMERIC_NAME_REGEX = r"\b(?:One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|Sixteen|Seventeen|Eighteen|Nineteen|Twenty)\b"  # noqa: E501

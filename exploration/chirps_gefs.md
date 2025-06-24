@@ -33,7 +33,7 @@ from src.utils import blob
 ```
 
 ```python
-# chirps_gefs.process_chirps_gefs()
+chirps_gefs.process_chirps_gefs()
 ```
 
 ```python
