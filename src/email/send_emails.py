@@ -49,18 +49,21 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         pub_date = pub_date.replace(en_mo, fr_mo)
     fcast_obsv_fr = "observation" if fcast_obsv == "obsv" else "prévision"
     activation_subject = "(PAS D'ACTIVATION)"
-    if fcast_obsv == "fcast":
-        readiness = (
-            "ACTIVÉ" if monitoring_point["readiness_trigger"] else "NON ACTIVÉ"
-        )
-        action = (
-            "ACTIVÉ" if monitoring_point["action_trigger"] else "NON ACTIVÉ"
-        )
-        obsv = ""
-    else:
-        readiness = ""
-        action = ""
-        obsv = "ACTIVÉ" if monitoring_point["obsv_trigger"] else "NON ACTIVÉ"
+    # if fcast_obsv == "fcast":
+    #     readiness = (
+    #         "ACTIVÉ" if monitoring_point["readiness_trigger"]
+    #         else "NON ACTIVÉ
+    #     )
+    #     action = (
+    #         "ACTIVÉ" if monitoring_point["action_trigger"] else "NON ACTIVÉ"
+    #     )
+    #     obsv = ""
+    # else:
+    #     readiness = ""
+    #     action = ""
+    #     obsv = "ACTIVÉ" if monitoring_point["obsv_trigger"] else "NON ACTIVÉ"
+
+    readiness, action, obsv = "ACTIVÉ", "ACTIVÉ", ""
 
     if action:
         activation_subject = "(ACTIVATION D'ACTION)"
