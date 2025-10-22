@@ -62,6 +62,13 @@ def send_info_email(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
         action = ""
         obsv = "ACTIVÉ" if monitoring_point["obsv_trigger"] else "NON ACTIVÉ"
 
+    if action:
+        activation_subject = "(ACTIVATION D'ACTION)"
+    elif obsv:
+        activation_subject = "(ACTIVATION OBSERVATIONNELLE)"
+    elif readiness:
+        activation_subject = "(ACTIVATION DE MOBILISATION)"
+
     distribution_list = get_distribution_list()
     valid_distribution_list = distribution_list[
         distribution_list["email"].apply(is_valid_email)
