@@ -502,17 +502,18 @@ def create_map_plot(monitor_id: str, fcast_obsv: Literal["fcast", "obsv"]):
                 source=f"data:image/png;base64,{encoded_legend}",
                 xref="paper",
                 yref="paper",
-                x=0.01,
+                x=0.99,
                 y=0.01,
                 sizex=0.3,
                 sizey=0.3 / aspect,
-                xanchor="left",
+                xanchor="right",
                 yanchor="bottom",
                 opacity=0.7,
             )
         ],
     )
-
+    # uncomment to return fig for testing
+    # return fig
     buffer = io.BytesIO()
     # scale corresponds to 150 dpi
     fig.write_image(buffer, format="png", scale=2.08)
