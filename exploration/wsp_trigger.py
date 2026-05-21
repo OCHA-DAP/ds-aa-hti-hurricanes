@@ -762,8 +762,191 @@ def load_codab(load_codab_from_blob):
 
 
 @app.cell
+def load_nhc_alerts(pd):
+    _ALERTS = [
+        {
+            "name": "LILI",
+            "season": 2002,
+            "ts_watch": True,
+            "ts_warning": False,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "CHARLEY",
+            "season": 2004,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "IVAN",
+            "season": 2004,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": True,
+            "hur_warning": False,
+        },
+        {
+            "name": "ALPHA",
+            "season": 2005,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "ERNESTO",
+            "season": 2006,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "DEAN",
+            "season": 2007,
+            "ts_watch": True,
+            "ts_warning": False,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "NOEL",
+            "season": 2007,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "FAY",
+            "season": 2008,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "GUSTAV",
+            "season": 2008,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": True,
+            "hur_warning": True,
+        },
+        {
+            "name": "HANNA",
+            "season": 2008,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "IKE",
+            "season": 2008,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "TOMAS",
+            "season": 2010,
+            "ts_watch": False,
+            "ts_warning": False,
+            "hur_watch": False,
+            "hur_warning": True,
+        },
+        {
+            "name": "IRENE",
+            "season": 2011,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": True,
+            "hur_warning": False,
+        },
+        {
+            "name": "SANDY",
+            "season": 2012,
+            "ts_watch": True,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "MATTHEW",
+            "season": 2016,
+            "ts_watch": True,
+            "ts_warning": True,
+            "hur_watch": True,
+            "hur_warning": True,
+        },
+        {
+            "name": "IRMA",
+            "season": 2017,
+            "ts_watch": True,
+            "ts_warning": True,
+            "hur_watch": True,
+            "hur_warning": True,
+        },
+        {
+            "name": "LAURA",
+            "season": 2020,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "ELSA",
+            "season": 2021,
+            "ts_watch": False,
+            "ts_warning": True,
+            "hur_watch": False,
+            "hur_warning": True,
+        },
+        {
+            "name": "GRACE",
+            "season": 2021,
+            "ts_watch": True,
+            "ts_warning": False,
+            "hur_watch": False,
+            "hur_warning": False,
+        },
+        {
+            "name": "BERYL",
+            "season": 2024,
+            "ts_watch": True,
+            "ts_warning": False,
+            "hur_watch": True,
+            "hur_warning": False,
+        },
+        {
+            "name": "MELISSA",
+            "season": 2025,
+            "ts_watch": True,
+            "ts_warning": True,
+            "hur_watch": True,
+            "hur_warning": False,
+        },
+    ]
+    df_nhc_alerts = pd.DataFrame(_ALERTS)
+    return (df_nhc_alerts,)
+
+
+@app.cell
 def trigger_table(
-    df_action_trig, df_exp, df_impact, df_old_trig, df_total_exp, mo, pd
+    df_action_trig,
+    df_exp,
+    df_impact,
+    df_nhc_alerts,
+    df_old_trig,
+    df_total_exp,
+    mo,
+    pd,
 ):
     _n = 12
 
@@ -861,6 +1044,28 @@ def trigger_table(
             _df = _df.drop(columns=[_hcol_hist])
     _df = _df.drop(columns=["_name_key"])
 
+    # Merge NHC watch/warning alerts
+    _df["_nk"] = _df["name"].str.strip().str.upper()
+    _al = df_nhc_alerts.copy()
+    _al["_nk"] = _al["name"].str.upper()
+    _df = _df.merge(
+        _al[
+            [
+                "_nk",
+                "season",
+                "ts_watch",
+                "ts_warning",
+                "hur_watch",
+                "hur_warning",
+            ]
+        ],
+        on=["_nk", "season"],
+        how="left",
+    )
+    _df = _df.drop(columns=["_nk"])
+    for _c in ["ts_watch", "ts_warning", "hur_watch", "hur_warning"]:
+        _df[_c] = _df[_c].fillna(False).astype(bool)
+
     _df = _df.merge(
         df_action_trig[["sid", "action_trig_old"]], on="sid", how="left"
     )
@@ -920,6 +1125,10 @@ def trigger_table(
         na_position="last",
     )
 
+    # Format alert booleans as checkmarks for display
+    for _ac in ["ts_watch", "ts_warning", "hur_watch", "hur_warning"]:
+        _df[f"_{_ac}_disp"] = _df[_ac].map({True: "✓", False: "—"})
+
     _display = (
         _df[
             [
@@ -941,6 +1150,10 @@ def trigger_table(
                 "Action",
                 "Mob. trig.",
                 "Obsv. trig.",
+                "_ts_watch_disp",
+                "_ts_warning_disp",
+                "_hur_watch_disp",
+                "_hur_warning_disp",
             ]
         ]
         .rename(
@@ -951,6 +1164,10 @@ def trigger_table(
                 "total_50": "50 kt max total fcast",
                 "exp_64": "64 kt final obsv",
                 "total_64": "64 kt max total fcast",
+                "_ts_watch_disp": "TS Watch",
+                "_ts_warning_disp": "TS Warning",
+                "_hur_watch_disp": "Hur. Watch",
+                "_hur_warning_disp": "Hur. Warning",
             }
         )
         .reset_index(drop=True)
@@ -1000,15 +1217,29 @@ def trigger_table(
         if isinstance(val, str) and val.startswith("$"):
             return "background-color: crimson; color: white; font-weight: bold"
         if val == "combined":
-            return "background-color: crimson; color: white; font-weight: bold; opacity: 0.6"
+            return "background-color: crimson; color: white; font-weight: bold"
         if val == "—":
             return "background-color: #cce5ff; color: #555"
         return "color: #aaa"
+
+    def _style_alert(val):
+        if val == "✓":
+            return (
+                "background-color: #ffcccc; font-weight: bold; color: #800000"
+            )
+        return "color: #ccc"
+
+    def _style_hur_warn(val):
+        if val == "✓":
+            return "background-color: crimson; color: white; font-weight: bold"
+        return "color: #ccc"
 
     _styled = (
         _display.style.apply(_style_row, axis=1)
         .map(_style_check, subset=["Action", "Mob. trig.", "Obsv. trig."])
         .map(_style_cerf, subset=["CERF"])
+        .map(_style_alert, subset=["TS Watch", "TS Warning", "Hur. Watch"])
+        .map(_style_hur_warn, subset=["Hur. Warning"])
         .bar(subset=["Total Affected"], color="#b39ddb", vmin=0)
         .format(
             {
@@ -2323,6 +2554,637 @@ def rain_scatter(df_rain_opt, mpatches, mo, pd, plt, rain_opt_thresh):
     )
     _fig.suptitle(
         "Total exposure vs. observed rainfall — bubble size ∝ impact",
+        fontsize=11,
+        y=1.05,
+    )
+    plt.tight_layout()
+    _fig
+    return
+
+
+@app.cell
+def doc_hur_opt(mo):
+    mo.md(
+        """
+## Hurricane Warning OR trigger
+
+A variant where any storm for which NHC issued a **Hurricane Warning for Haiti**
+is automatically included in the trigger set. Our optimized conditions (total
+exposure OR forecast rainfall OR observed rainfall) then fill the remaining slots
+to reach n = 12 total.
+
+Because ~5 storms already carry a Hurricane Warning, our conditions only need to
+activate ~7 additional storms. This typically requires higher thresholds than the
+primary optimization, since the mandatory hur-warning storms take away the "easiest"
+activations (the high-impact storms that would trigger under almost any threshold).
+
+In the storm conditions table, **Hur. Warn** shows the pre-seeded storms; the
+`{wkt}+O` column shows the combined (hurricane warning OR our conditions) result.
+        """
+    )
+
+
+@app.cell
+def rain_trigger_opt_hur(
+    df_action_trig,
+    df_exp,
+    df_nhc_alerts,
+    df_obs_rain,
+    df_old_trig,
+    df_rain,
+    df_total_exp,
+    mo,
+    pd,
+):
+    _n = 12  # same target
+
+    # ── Build _opt (identical to rain_trigger_opt) ────────────────────────  # noqa: E501
+    _exp_pivot = (
+        df_exp.pivot_table(
+            index="sid",
+            columns="wind_speed_kt",
+            values="pop_exposed",
+            aggfunc="first",
+        )
+        .rename(columns={34: "exp_34", 50: "exp_50", 64: "exp_64"})
+        .reset_index()
+    )
+    for _c in ["exp_34", "exp_50", "exp_64"]:
+        if _c not in _exp_pivot.columns:
+            _exp_pivot[_c] = 0
+
+    _texp_pivot = (
+        df_total_exp.pivot_table(
+            index="sid",
+            columns="wind_speed_kt",
+            values="max_total_exposure",
+            aggfunc="max",
+        )
+        .rename(
+            columns={
+                34: "total_exp_34",
+                50: "total_exp_50",
+                64: "total_exp_64",
+            }
+        )
+        .reset_index()
+    )
+    for _c in ["total_exp_34", "total_exp_50", "total_exp_64"]:
+        if _c not in _texp_pivot.columns:
+            _texp_pivot[_c] = 0
+
+    _meta = df_exp[["sid", "season", "name"]].drop_duplicates("sid")
+    _opt = _meta.merge(_exp_pivot, on="sid", how="outer")
+    _opt = _opt.merge(_texp_pivot, on="sid", how="outer")
+
+    _opt["_name_key"] = _opt["name"].str.strip().str.upper()
+    _trig_lkp = df_old_trig.copy()
+    _trig_lkp["_name_key"] = _trig_lkp["name"].str.strip().str.upper()
+    _opt = _opt.merge(
+        _trig_lkp[
+            [
+                "_name_key",
+                "season",
+                "mob_trig",
+                "obsv_trig",
+                "Total Affected",
+                "Amount in US$",
+            ]
+        ],
+        on=["_name_key", "season"],
+        how="left",
+        suffixes=("", "_hist"),
+    )
+    for _hcol in ["Total Affected", "Amount in US$"]:
+        _hc = f"{_hcol}_hist"
+        if _hc in _opt.columns:
+            _opt[_hcol] = _opt[_hc].combine_first(_opt[_hcol])
+            _opt = _opt.drop(columns=[_hc])
+
+    # Identify Hurricane Warning storms
+    _hw = df_nhc_alerts[df_nhc_alerts["hur_warning"]].copy()
+    _hw["_name_key"] = _hw["name"].str.upper()
+    _hw_df = _opt.merge(
+        _hw[["_name_key", "season"]], on=["_name_key", "season"], how="inner"
+    )
+    _hur_sids = set(_hw_df["sid"].dropna())
+
+    _opt = _opt.drop(columns=["_name_key"])
+    _opt = _opt.merge(
+        df_action_trig[["sid", "action_trig_old"]], on="sid", how="left"
+    )
+
+    _fcast_rain = (
+        df_rain[df_rain["lt_name"] == "action"]
+        .groupby("sid")["max_rain"]
+        .max()
+        .reset_index()
+        .rename(columns={"max_rain": "max_fcast_rain"})
+    )
+    _opt = _opt.merge(_fcast_rain, on="sid", how="left")
+    _opt = _opt.merge(
+        df_obs_rain[["sid", "max_obs_rain"]], on="sid", how="left"
+    )
+
+    _opt = _opt.drop_duplicates("sid")
+    for _c in [
+        "exp_34",
+        "exp_50",
+        "exp_64",
+        "total_exp_34",
+        "total_exp_50",
+        "total_exp_64",
+    ]:
+        _opt[_c] = _opt[_c].fillna(0)
+    _opt["season"] = pd.to_numeric(
+        _opt["season"].fillna(_opt["sid"].str[:4]), errors="coerce"
+    ).astype("Int64")
+    _opt["max_obs_rain"] = _opt["max_obs_rain"].fillna(0)
+    _opt["has_cerf"] = _opt["Amount in US$"].notna() & (
+        _opt["Amount in US$"] > 0
+    )
+    _opt["mob_trig"] = (
+        _opt["mob_trig"].astype("boolean").fillna(False).astype(bool)
+    )
+    _opt["obsv_trig"] = (
+        _opt["obsv_trig"].astype("boolean").fillna(False).astype(bool)
+    )
+    _opt["action_trig_old"] = (
+        _opt["action_trig_old"].astype("boolean").fillna(False).astype(bool)
+    )
+    _opt["hur_warning"] = _opt["sid"].isin(_hur_sids)
+
+    def _slbl(row):
+        _nm = (
+            str(row["name"]).strip().title()
+            if pd.notna(row["name"])
+            else "Unnamed"
+        )
+        _yr = row["season"] if pd.notna(row["season"]) else row["sid"][:4]
+        return f"{_nm} ({_yr})"
+
+    _opt["Storm"] = _opt.apply(_slbl, axis=1)
+    _opt["old_combined"] = _opt["mob_trig"] | _opt["obsv_trig"]
+    _opt["_name_key"] = _opt["name"].str.strip().str.upper()
+
+    _cerf_lkp = dict(zip(_opt["sid"], _opt["has_cerf"]))
+    _aff_lkp = dict(zip(_opt["sid"], _opt["Total Affected"].fillna(0)))
+
+    # ── Sweep: Hurricane Warning pre-seeded ───────────────────────────────  # noqa: E501
+    _results = []
+    for _wkt, _tcol in [
+        (34, "total_exp_34"),
+        (50, "total_exp_50"),
+        (64, "total_exp_64"),
+    ]:
+        _exp_vals = sorted(_opt[_tcol].dropna().unique())
+        _fcast_vals = sorted(
+            _opt["max_fcast_rain"].dropna().unique(), reverse=True
+        )
+        for _e_thresh in _exp_vals:
+            _our_exp = set(_opt[_opt[_tcol] >= _e_thresh]["sid"]) - _hur_sids
+            for _r_fcast in _fcast_vals:
+                _our_fcast = (
+                    set(
+                        _opt[
+                            _opt["max_fcast_rain"].notna()
+                            & (_opt["max_fcast_rain"] >= _r_fcast)
+                        ]["sid"]
+                    )
+                    - _hur_sids
+                )
+                _our_new = _our_exp | _our_fcast
+                _already = _hur_sids | _our_new
+                _n_obs = _n - len(_already)
+                if _n_obs < 0:
+                    continue
+                _remaining = _opt[~_opt["sid"].isin(_already)]
+                if _n_obs == 0:
+                    _combined = frozenset(_already)
+                    _results.append(
+                        {
+                            "wkt": _wkt,
+                            "exp_thresh": _e_thresh,
+                            "r_fcast_exact": _r_fcast,
+                            "r_fcast": round(_r_fcast, 1),
+                            "r_obs_exact": None,
+                            "r_obs": None,
+                            "n_hur": len(_hur_sids),
+                            "n_exp": len(_our_exp - _our_fcast),
+                            "n_fcast": len(_our_fcast - _our_exp),
+                            "n_obs": 0,
+                            "cerf_count": sum(
+                                1
+                                for _s in _combined
+                                if _cerf_lkp.get(_s, False)
+                            ),
+                            "total_affected": sum(
+                                _aff_lkp.get(_s, 0) for _s in _combined
+                            ),
+                            "_combined_sids": _combined,
+                            "_our_sids": frozenset(_our_new),
+                        }
+                    )
+                else:
+                    _s = _remaining[
+                        _remaining["max_obs_rain"].notna()
+                    ].sort_values("max_obs_rain", ascending=False)
+                    if len(_s) < _n_obs:
+                        continue
+                    _r_obs = float(_s.iloc[_n_obs - 1]["max_obs_rain"])
+                    _obs_sids = set(
+                        _remaining[
+                            _remaining["max_obs_rain"].notna()
+                            & (_remaining["max_obs_rain"] >= _r_obs)
+                        ]["sid"]
+                    )
+                    if len(_obs_sids) != _n_obs:
+                        continue
+                    _combined = frozenset(_already | _obs_sids)
+                    if len(_combined) != _n:
+                        continue
+                    _results.append(
+                        {
+                            "wkt": _wkt,
+                            "exp_thresh": _e_thresh,
+                            "r_fcast_exact": _r_fcast,
+                            "r_fcast": round(_r_fcast, 1),
+                            "r_obs_exact": _r_obs,
+                            "r_obs": round(_r_obs, 1),
+                            "n_hur": len(_hur_sids),
+                            "n_exp": len(_our_exp - _our_fcast),
+                            "n_fcast": len(_our_fcast - _our_exp),
+                            "n_obs": _n_obs,
+                            "cerf_count": sum(
+                                1
+                                for _s in _combined
+                                if _cerf_lkp.get(_s, False)
+                            ),
+                            "total_affected": sum(
+                                _aff_lkp.get(_s, 0) for _s in _combined
+                            ),
+                            "_combined_sids": _combined,
+                            "_our_sids": frozenset(_our_new),
+                        }
+                    )
+
+    df_rain_opt_hur = _opt.copy()
+    rain_opt_thresh_hur = {}
+
+    if not _results:
+        mo.output.replace(mo.md("⚠ No valid combinations found."))
+    else:
+        _df_res = pd.DataFrame(_results)
+        _df_best = (
+            _df_res.sort_values(
+                ["wkt", "cerf_count", "total_affected", "exp_thresh"],
+                ascending=[True, False, False, True],
+            )
+            .groupby("wkt", sort=True)
+            .first()
+            .reset_index()
+        )
+
+        for _, _brow in _df_best.iterrows():
+            _wkt = int(_brow["wkt"])
+            _opt[f"our_trig_{_wkt}"] = _opt["sid"].isin(_brow["_our_sids"])
+            _opt[f"combined_{_wkt}"] = _opt["sid"].isin(
+                _brow["_combined_sids"]
+            )
+        for _wkt in [34, 50, 64]:
+            if f"our_trig_{_wkt}" not in _opt.columns:
+                _opt[f"our_trig_{_wkt}"] = False
+            if f"combined_{_wkt}" not in _opt.columns:
+                _opt[f"combined_{_wkt}"] = False
+
+        _best_thresh = {}
+        for _, _r in _df_best.iterrows():
+            _wkt = int(_r["wkt"])
+            _best_thresh[_wkt] = {
+                "exp_thresh": int(_r["exp_thresh"]),
+                "r_fcast": float(_r["r_fcast_exact"])
+                if pd.notna(_r["r_fcast_exact"])
+                else None,
+                "r_obs": float(_r["r_obs_exact"])
+                if pd.notna(_r["r_obs_exact"])
+                else None,
+            }
+        rain_opt_thresh_hur = _best_thresh
+
+        # Condition flags
+        _bool_hide = []
+        for _wkt, _tcol in [
+            (34, "total_exp_34"),
+            (50, "total_exp_50"),
+            (64, "total_exp_64"),
+        ]:
+            _t = _best_thresh.get(_wkt, {})
+            _et, _rf, _ro = (
+                _t.get("exp_thresh", float("inf")),
+                _t.get("r_fcast"),
+                _t.get("r_obs"),
+            )
+            _opt[f"_exp_flag_{_wkt}"] = _opt[_tcol] >= _et
+            _opt[f"_fcast_flag_{_wkt}"] = (
+                _opt["max_fcast_rain"].notna()
+                & (_opt["max_fcast_rain"] >= _rf)
+                if _rf is not None
+                else pd.Series(False, index=_opt.index)
+            )
+            _opt[f"_rain_flag_{_wkt}"] = (
+                _opt["max_obs_rain"] >= _ro
+                if _ro is not None
+                else pd.Series(False, index=_opt.index)
+            )
+            _opt[f"{_wkt} Hw"] = _opt["hur_warning"].map(
+                {True: "✓", False: "—"}
+            )
+            _opt[f"{_wkt} exp"] = _opt[f"_exp_flag_{_wkt}"].map(
+                {True: "✓", False: "—"}
+            )
+            _opt[f"{_wkt} fcast"] = _opt[f"_fcast_flag_{_wkt}"].map(
+                {True: "✓", False: "—"}
+            )
+            _opt[f"{_wkt} rain"] = _opt[f"_rain_flag_{_wkt}"].map(
+                {True: "✓", False: "—"}
+            )
+            _opt[f"{_wkt}+O"] = _opt[f"combined_{_wkt}"].map(
+                {True: "✓", False: "—"}
+            )
+            _bool_hide += [
+                f"_exp_flag_{_wkt}",
+                f"_fcast_flag_{_wkt}",
+                f"_rain_flag_{_wkt}",
+                f"our_trig_{_wkt}",
+                f"combined_{_wkt}",
+            ]
+
+        df_rain_opt_hur = _opt
+
+        # Summary
+        _n_yrs = int(_opt["season"].max() - _opt["season"].min() + 1)
+        _rp = (_n_yrs + 1) / _n
+        _summary_rows = []
+        for _, _r in _df_best.iterrows():
+            _wb = int(_r["wkt"])
+            _summary_rows.append(
+                {
+                    "Trigger": f"New {_wb} kt ★",
+                    "Wind kt": f"{_wb}",
+                    "Pre (Hur. Warn)": int(_r["n_hur"]),
+                    "Exp thresh": f"{int(_r['exp_thresh']):,}",
+                    "Fcast rain mm": f"{_r['r_fcast']:.1f}"
+                    if pd.notna(_r["r_fcast"])
+                    else "—",
+                    "Obs rain mm": f"{_r['r_obs']:.1f}"
+                    if pd.notna(_r["r_obs"])
+                    else "—",
+                    "# Our add": int(_r["n_exp"])
+                    + int(_r["n_fcast"])
+                    + int(_r["n_obs"]),
+                    "CERF": int(_r["cerf_count"]),
+                    "Total Affected": int(_r["total_affected"]),
+                    "RP yrs": round(_rp, 1),
+                }
+            )
+        _df_sum = pd.DataFrame(_summary_rows)
+        _styl_sum = (
+            _df_sum.style.bar(
+                subset=["Total Affected"], color="#b39ddb", vmin=0
+            )
+            .format(
+                {
+                    "Total Affected": lambda x: f"{int(x):,}"
+                    if pd.notna(x)
+                    else "—"
+                }
+            )
+            .set_properties(**{"text-align": "center"})
+            .set_properties(subset=["Trigger"], **{"text-align": "left"})
+            .set_table_styles(
+                [{"selector": "th", "props": [("text-align", "center")]}]
+            )
+            .hide(axis="index")
+        )
+
+        # Storm conditions table
+        def _cerf_s(row):
+            if pd.notna(row.get("Amount in US$")) and row["Amount in US$"] > 0:
+                return f"${row['Amount in US$']:,.0f}"
+            if pd.notna(row.get("season")) and int(row["season"]) == 2008:
+                return "combined"
+            if pd.notna(row.get("season")) and int(row["season"]) >= 2006:
+                return "—"
+            return "pre-"
+
+        _opt["CERF"] = _opt.apply(_cerf_s, axis=1)
+        _opt["Old act."] = _opt["action_trig_old"].map({True: "✓", False: "—"})
+
+        _hw_cols = [f"{w} Hw" for w in [34, 50, 64]]
+        _cond_cols = [
+            f"{w} {c}" for w in [34, 50, 64] for c in ["exp", "fcast", "rain"]
+        ]
+        _comb_cols = [f"{w}+O" for w in [34, 50, 64]]
+
+        _any_trig = _opt[[f"combined_{w}" for w in [34, 50, 64]]].any(axis=1)
+        _show = (
+            _any_trig
+            | _opt["hur_warning"]
+            | _opt["mob_trig"]
+            | _opt["obsv_trig"]
+            | _opt["action_trig_old"]
+            | (_opt["Total Affected"].fillna(0) > 0)
+            | _opt["has_cerf"]
+        )
+        _storm_tbl = (
+            _opt[_show][
+                [
+                    "Storm",
+                    "34 Hw",
+                    "34 exp",
+                    "34 fcast",
+                    "34 rain",
+                    "34+O",
+                    "50 Hw",
+                    "50 exp",
+                    "50 fcast",
+                    "50 rain",
+                    "50+O",
+                    "64 Hw",
+                    "64 exp",
+                    "64 fcast",
+                    "64 rain",
+                    "64+O",
+                    *_bool_hide,
+                    "old_combined",
+                    "Total Affected",
+                    "CERF",
+                    "Old act.",
+                ]
+            ]
+            .sort_values("Total Affected", ascending=False, na_position="last")
+            .reset_index(drop=True)
+        )
+
+        def _sc(val):
+            return (
+                "background-color: #e8f5e9; color: #2e7d32"
+                if val == "✓"
+                else "color: #ddd"
+            )
+
+        def _shw(val):
+            return (
+                "background-color: crimson; color: white; font-weight: bold"
+                if val == "✓"
+                else "color: #ccc"
+            )
+
+        def _sco(val):
+            return (
+                "background-color: #ffa040; color: white; font-weight: bold"
+                if val == "✓"
+                else "color: #ccc"
+            )
+
+        def _sch(val):
+            return (
+                "background-color: #fff0b3; color: #888; font-weight: normal"
+                if val == "✓"
+                else "color: #ccc"
+            )
+
+        def _sc_cerf(val):
+            if isinstance(val, str) and val.startswith("$"):
+                return "background-color: crimson; color: white; font-weight: bold"
+            if val == "combined":
+                return "background-color: crimson; color: white; font-weight: bold"
+            if val == "—":
+                return "background-color: #cce5ff; color: #555"
+            return "color: #aaa"
+
+        _styl_storms = (
+            _storm_tbl.style.map(_shw, subset=_hw_cols)
+            .map(_sc, subset=_cond_cols)
+            .map(_sco, subset=_comb_cols)
+            .map(_sch, subset=["Old act."])
+            .map(_sc_cerf, subset=["CERF"])
+            .bar(subset=["Total Affected"], color="#b39ddb", vmin=0)
+            .format(
+                {
+                    "Total Affected": lambda x: f"{x:,.0f}"
+                    if pd.notna(x)
+                    else "—"
+                }
+            )
+            .hide(axis="columns", subset=_bool_hide + ["old_combined"])
+            .hide(axis="index")
+        )
+
+        _rp_note = mo.md(
+            f"**n = {_n} storms** — {len(_hur_sids)} pre-seeded (Hur. Warning) + "
+            f"up to {_n - len(_hur_sids)} from our trigger. "
+            f"Return period {_rp:.1f} yrs ({_n_yrs} seasons 2002–{int(_opt['season'].max())})"
+        )
+        mo.output.replace(
+            mo.vstack(
+                [
+                    _rp_note,
+                    mo.md("### Summary"),
+                    mo.Html(_styl_sum.to_html()),
+                    mo.md("### Storm conditions"),
+                    mo.Html(_styl_storms.to_html()),
+                ]
+            )
+        )
+
+    return df_rain_opt_hur, rain_opt_thresh_hur
+
+
+@app.cell
+def rain_scatter_hur(
+    df_rain_opt_hur, mpatches, mo, pd, plt, rain_opt_thresh_hur
+):
+    mo.stop(not len(df_rain_opt_hur) or not rain_opt_thresh_hur)
+    _fig, _axes = plt.subplots(1, 3, figsize=(15, 5), dpi=120)
+
+    for _col_idx, _wkt in enumerate([34, 50, 64]):
+        _t = rain_opt_thresh_hur.get(_wkt, {})
+        _e_thresh = _t.get("exp_thresh", 0)
+        _ro = _t.get("r_obs")
+        _ax = _axes[_col_idx]
+        _xcol = f"total_exp_{_wkt}"
+        _sub = df_rain_opt_hur[
+            (df_rain_opt_hur[_xcol].fillna(0) > 0)
+            & df_rain_opt_hur["max_obs_rain"].notna()
+        ].copy()
+
+        _colors = [
+            "crimson" if r["has_cerf"] else "#aaaaaa"
+            for _, r in _sub.iterrows()
+        ]
+        _max_aff = df_rain_opt_hur["Total Affected"].max()
+        _sizes = [
+            (
+                max(20, (float(v) ** 0.5) * 500 / (_max_aff**0.5))
+                if pd.notna(v) and v > 0
+                else 20
+            )
+            for v in _sub["Total Affected"]
+        ]
+
+        _ax.scatter(
+            _sub[_xcol],
+            _sub["max_obs_rain"],
+            c=_colors,
+            s=_sizes,
+            alpha=0.7,
+            edgecolors="none",
+            zorder=2,
+        )
+        for _, _row in _sub.iterrows():
+            _trig = bool(_row.get(f"combined_{_wkt}", False))
+            _ax.annotate(
+                _row["Storm"],
+                xy=(_row[_xcol], _row["max_obs_rain"]),
+                ha="center",
+                va="center",
+                fontsize=6,
+                fontweight="bold" if _trig else "normal",
+                zorder=3,
+            )
+        if _e_thresh:
+            _ax.axvline(
+                _e_thresh,
+                color="steelblue",
+                linewidth=1,
+                linestyle="--",
+                alpha=0.7,
+            )
+        if _ro is not None:
+            _ax.axhline(
+                _ro, color="darkorange", linewidth=1, linestyle="--", alpha=0.7
+            )
+        _ax.set_xlabel(f"Total exposure ({_wkt} kt)")
+        _ax.set_ylabel("Obs rain 2d (mm)" if _col_idx == 0 else "")
+        _ax.set_title(f"{_wkt} kt — Hur. Warn pre-seeded")
+        _ax.grid(True, alpha=0.25, linestyle="--")
+        _ax.set_xlim(left=0)
+        _ax.set_ylim(bottom=0)
+
+    _legend_patches = [
+        mpatches.Patch(color="crimson", label="CERF"),
+        mpatches.Patch(color="#aaaaaa", label="No CERF"),
+    ]
+    _fig.legend(
+        handles=_legend_patches,
+        loc="upper center",
+        ncol=2,
+        fontsize=9,
+        bbox_to_anchor=(0.5, 1.02),
+    )
+    _fig.suptitle(
+        "Total exposure vs. obs rainfall — Hurricane Warning pre-seeded",
         fontsize=11,
         y=1.05,
     )
