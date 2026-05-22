@@ -2354,6 +2354,7 @@ def rain_trigger_opt(
             _opt[_show][
                 [
                     "Storm",
+                    "sid",
                     "34 exp",
                     "34 fcast",
                     "34 rain",
