@@ -107,6 +107,18 @@ def load_impact(PROJECT_PREFIX, pd, stratus):
         df_impact = pd.DataFrame(
             columns=["sid", "Total Affected", "Amount in US$"]
         )
+    # Lili 2002 not in EM-DAT for Haiti
+    _LILI_SID = "2002265N10315"
+    if _LILI_SID not in df_impact["sid"].values:
+        df_impact = pd.concat(
+            [
+                df_impact,
+                pd.DataFrame([{"sid": _LILI_SID, "Total Affected": 250}]),
+            ],
+            ignore_index=True,
+        )
+    else:
+        df_impact.loc[df_impact["sid"] == _LILI_SID, "Total Affected"] = 250
     return (df_impact,)
 
 
@@ -116,6 +128,14 @@ def load_old_trigger(pd):
     # Sandy = $4M (Nov 2012); 2008 season treated as one combined CERF event
     # (no per-storm breakdown available); Melissa imputed.
     _HIST = [
+        {
+            "name": "LILI",
+            "season": 2002,
+            "mob_trig": True,
+            "obsv_trig": True,
+            "Total Affected": 250,
+            "Amount in US$": None,
+        },
         {
             "name": "MATTHEW",
             "season": 2016,
@@ -1013,7 +1033,9 @@ def trigger_table(
     # Merge CERF/impact data by sid
     _df = _df.merge(df_impact, on="sid", how="outer")
     _df = _df.drop_duplicates(subset=["sid"])
-    _df["season"] = _df["season"].fillna(_df["sid"].str[:4]).astype("Int64")
+    _df["season"] = pd.to_numeric(
+        _df["season"].fillna(_df["sid"].str[:4]), errors="coerce"
+    ).astype("Int64")
     if "Event Name" in _df.columns:
         _df["name"] = _df["name"].fillna(_df["Event Name"])
 
