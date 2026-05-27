@@ -566,7 +566,7 @@ def load_total_exposure(df_exp, df_mon_all, pd, stratus, text):
                 """
                 SELECT atcf_id, issued_time, wind_speed_kt,
                        pop_exposed AS fcast_exp
-                FROM storms.nhc_tracks_fcast_exposure
+                FROM storms.nhc_tracks_fcastonly_exposure
                 WHERE iso3 = 'HTI' AND admin_level = 0
             """
             ),
@@ -687,7 +687,7 @@ def exposure_check(df_exp, mo, pd, stratus, text):
             text(
                 """
                 SELECT e.atcf_id, e.wind_speed_kt, MAX(e.pop_exposed) AS pop_exposed
-                FROM storms.nhc_tracks_fcast_exposure e
+                FROM storms.nhc_tracks_fcastonly_exposure e
                 WHERE e.iso3 = 'HTI' AND e.admin_level = 0
                 GROUP BY e.atcf_id, e.wind_speed_kt
             """
@@ -1389,7 +1389,7 @@ def storm_map(
                 text(
                     """
                     SELECT issued_time, wind_speed_kt, pop_exposed
-                    FROM storms.nhc_tracks_fcast_exposure
+                    FROM storms.nhc_tracks_fcastonly_exposure
                     WHERE atcf_id = :atcf_id AND iso3 = 'HTI' AND admin_level = 0
                     ORDER BY issued_time
                 """
@@ -1822,7 +1822,7 @@ Tests a simplified **OR trigger** with three indicators:
 
 1. **Total exposure** — max(pre-cutoff forecast exposure + cumulative observed
    exposure) across all forecast issuances issued more than 48 h before the
-   storm's closest approach. Data from `nhc_tracks_fcast_exposure` and
+   storm's closest approach. Data from `nhc_tracks_fcastonly_exposure` and
    `nhc_tracks_obsv_exposure` (iso3 = HTI, admin_level = 0), aligned in time
    via `pd.merge_asof`. Pre-cutoff filter uses the same 48-hour window as the
    existing Haiti action trigger.
@@ -3252,7 +3252,7 @@ def trigger_leadtime(
                     f"""
                     SELECT atcf_id, issued_time, wind_speed_kt,
                            pop_exposed AS fcast_exp
-                    FROM storms.nhc_tracks_fcast_exposure
+                    FROM storms.nhc_tracks_fcastonly_exposure
                     WHERE atcf_id IN ({_atcf_ph})
                       AND iso3 = 'HTI' AND admin_level = 0
                     ORDER BY atcf_id, issued_time
