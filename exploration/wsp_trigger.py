@@ -1820,12 +1820,16 @@ def doc_optimization(mo):
 
 Tests a simplified **OR trigger** with three indicators:
 
-1. **Total exposure** — max(pre-cutoff forecast exposure + cumulative observed
-   exposure) across all forecast issuances issued more than 48 h before the
-   storm's closest approach. Data from `nhc_tracks_fcastonly_exposure` and
-   `nhc_tracks_obsv_exposure` (iso3 = HTI, admin_level = 0), aligned in time
-   via `pd.merge_asof`. Pre-cutoff filter uses the same 48-hour window as the
-   existing Haiti action trigger.
+1. **Total exposure** — max(fcastonly exposure + cumulative observed exposure)
+   across all pre-cutoff forecast issuances. **Fcastonly** is the *future-only*
+   forecast: the NHC wind-buffer geometry minus the observed swath already
+   accumulated up to that issuance, so the two components are non-overlapping
+   and sum to total storm exposure without double-counting. Source tables:
+   `nhc_tracks_fcastonly_exposure` (future cone only) and
+   `nhc_tracks_obsv_exposure` (already-swept area), both iso3 = HTI,
+   admin_level = 0, aligned via `pd.merge_asof`. Only issuances more than 48 h
+   before closest approach are included (same window as the existing Haiti
+   action trigger).
 
 2. **Forecast rainfall** — max 2-day rolling rainfall from NHC monitors at
    action lead time (pre-cutoff only), from `nhc.load_hist_fcast_monitors`.
