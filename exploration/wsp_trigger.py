@@ -33,6 +33,305 @@ def imports():
 
 
 @app.cell
+def doc_activation_summary(mo):
+    mo.md(
+        r"""
+# Activation summary
+
+Summary of the **selected trigger** and its historical performance. This is the
+top-level results view; the full optimization that produces it lives further
+down (the *Hurricane Warning OR trigger* section — see `rain_trigger_opt_hur`).
+
+## Selected trigger (Hurricane Warning OR, 64 kt ★)
+
+A storm **activates** if *any* of these fire:
+
+**Forecast**
+- **Exposure** — fcastonly + cumulative-observed population exposed to ≥ 64 kt
+  winds > 0 (the optimised exposure threshold is the smallest non-zero historical
+  value, i.e. operationally ">0 people exposed"). Source: `df_total_exp`, built
+  from `nhc_tracks_fcastonly_exposure` + `nhc_tracks_obsv_exposure`.
+- **Rainfall** — forecast 2-day rolling rainfall ≥ the optimised threshold,
+  from NHC action-leadtime monitors.
+- **DGPC Rouge + Hur. Warning** — storm carried an NHC Hurricane Warning for
+  Haiti. These flags are **hardcoded** in the `load_nhc_alerts` cell
+  (`df_nhc_alerts`), keyed on (name, season), not read from a live feed.
+
+**Observed**
+- **Exposure** — observed-only ≥ 64 kt exposure ≥ the same exposure threshold.
+- **Rainfall** — observed 2-day rolling rainfall ≥ the optimised threshold.
+
+The exposure/rainfall thresholds and the n = 12 target are set by the
+optimization described in the *Trigger optimization* doc cell below.
+
+## Metric definitions
+
+All return periods are computed **per season** over the historical record
+(2002–present); `total_seasons` = span of seasons in the data.
+
+| Metric | Formula |
+|---|---|
+| **Overall return period** | `total_seasons / seasons_with_activation` |
+| **Overall probability of activation** | `seasons_with_activation / total_seasons` (= 1 / overall RP) |
+| **Average total spending per year** | `n_activations × $4M / total_seasons` |
+| **Effective RP** (avg period for a full budget spend) | `total_seasons / n_activations` — counts each activation, so seasons with multiple activations shorten it relative to the overall RP |
+| **Probability of total budget spend** | `avg_spend_per_year / $4M` = `n_activations / total_seasons` |
+| **Average spending per year with activation** | `n_activations × $4M / seasons_with_activation` |
+
+Each activation costs a flat **$4M** (`_BUDGET`).
+
+**Per-indicator return periods** use the same per-season definition:
+`total_seasons / (seasons in which that indicator fired ≥ once)`. The "overall"
+forecast / observed rows are the union of their components; "exposure OR
+rainfall (no DGPC)" drops the Hurricane Warning condition so its marginal
+contribution is visible. Note these section-level RPs are unions *within* a
+section and do **not** equal the trigger-wide Overall RP (which unions every
+forecast + observed + hur-warning condition).
+        """
+    )
+
+
+@app.cell
+def activation_summary(df_rain_opt_hur, mo, pd, rain_opt_thresh_hur):
+    mo.stop(not rain_opt_thresh_hur)
+
+    _BUDGET = 4_000_000
+    _WKT = 64
+    _et = rain_opt_thresh_hur[_WKT]["exp_thresh"]
+
+    # ── Derived flags (on full frame) ─────────────────────────────────────
+    _full = df_rain_opt_hur.copy()
+    _full["_obs_exp_flag"] = _full["exp_64"].fillna(0) >= _et
+    _full["_fcast_no_dgpc"] = (
+        _full[f"_exp_flag_{_WKT}"] | _full[f"_fcast_flag_{_WKT}"]
+    )
+    _full["_overall_fcast"] = _full["_fcast_no_dgpc"] | _full["hur_warning"]
+    _full["_overall_obs"] = (
+        _full["_obs_exp_flag"] | _full[f"_rain_flag_{_WKT}"]
+    )
+
+    # Filter: triggered OR has impact OR has CERF
+    _show = (
+        _full[f"combined_{_WKT}"]
+        | (_full["Total Affected"].fillna(0) > 0)
+        | _full["has_cerf"]
+    )
+    _df = (
+        _full[_show]
+        .sort_values("Total Affected", ascending=False, na_position="last")
+        .reset_index(drop=True)
+    )
+
+    # ── Metrics inputs ────────────────────────────────────────────────────
+    # Use full frame for season counts (not the filtered display slice)
+    _total_seasons = int(
+        _full["season"].dropna().max() - _full["season"].dropna().min() + 1
+    )
+    _n_act = int(_full[f"combined_{_WKT}"].sum())
+    _seasons_with_act = int(
+        _full[_full[f"combined_{_WKT}"]]["season"]
+        .dropna()
+        .astype(int)
+        .nunique()
+    )
+    _overall_rp = _total_seasons / _seasons_with_act
+    _prob_act = _seasons_with_act / _total_seasons
+    _avg_spend = _n_act * _BUDGET / _total_seasons
+    _eff_rp = _total_seasons / _n_act
+    _prob_budget = _n_act / _total_seasons
+    _avg_spend_with_act = _n_act * _BUDGET / _seasons_with_act
+
+    def _fmt_usd(x):
+        return f"${x / 1_000_000:.2f}M"
+
+    # ── Per-indicator return periods ──────────────────────────────────────
+    # RP = total seasons / number of seasons with at least one firing
+    def _seasons_with(_flag_col):
+        return int(
+            _full[_full[_flag_col]]["season"].dropna().astype(int).nunique()
+        )
+
+    _indicators = [
+        ("Forecast — exposure", f"_exp_flag_{_WKT}"),
+        ("Forecast — rainfall", f"_fcast_flag_{_WKT}"),
+        ("Forecast — DGPC Rouge + Hur. Warning", "hur_warning"),
+        ("Forecast — exposure OR rainfall (no DGPC)", "_fcast_no_dgpc"),
+        ("Forecast — overall", "_overall_fcast"),
+        ("Observed — exposure", "_obs_exp_flag"),
+        ("Observed — rainfall", f"_rain_flag_{_WKT}"),
+        ("Observed — overall", "_overall_obs"),
+    ]
+    _rp_rows = []
+    for _label, _col in _indicators:
+        _ns = _seasons_with(_col)
+        _rp_str = f"{_total_seasons / _ns:.1f} yrs" if _ns else "—"
+        _calc = (
+            f"{_total_seasons} seasons / {_ns} seasons triggered"
+            if _ns
+            else "never triggered"
+        )
+        _rp_rows.append(f"| {_label} | {_rp_str} | {_calc} |")
+    _rp_md = (
+        "| Indicator | Return period | Calculation |\n"
+        "|:---|---:|:---|\n" + "\n".join(_rp_rows)
+    )
+
+    _metrics_md = f"""
+| Metric | Value | Calculation |
+|:---|---:|:---|
+| Overall return period | {_overall_rp:.1f} yrs | {_total_seasons} seasons / {_seasons_with_act} seasons with activation |
+| Overall probability of activation | {_prob_act:.1%} | {_seasons_with_act} / {_total_seasons} seasons |
+| Average total spending per year | {_fmt_usd(_avg_spend)} | {_n_act} activations × $4M / {_total_seasons} seasons |
+| Avg period for total budget spend / Effective RP | {_eff_rp:.1f} yrs | {_total_seasons} seasons / {_n_act} activations |
+| Probability of total budget spend | {_prob_budget:.1%} | {_n_act} / {_total_seasons} seasons |
+| Average total spending per year with activation | {_fmt_usd(_avg_spend_with_act)} | {_n_act} activations × $4M / {_seasons_with_act} seasons with activation |
+"""
+
+    # ── Table HTML ────────────────────────────────────────────────────────
+    def _cerf_fmt(row):
+        if pd.notna(row.get("Amount in US$")) and row["Amount in US$"] > 0:
+            return f"${row['Amount in US$']:,.0f}"
+        if pd.notna(row.get("season")) and int(row["season"]) == 2008:
+            return "combined"
+        if pd.notna(row.get("season")) and int(row["season"]) >= 2006:
+            return "—"
+        return "pre-"
+
+    def _fmt_exp(x):
+        return f"{int(x):,}" if pd.notna(x) and x > 0 else "—"
+
+    def _fmt_rain(x):
+        return f"{x:.0f} mm" if pd.notna(x) and x > 0 else "—"
+
+    def _tick(val):
+        return "✓" if val else "—"
+
+    def _fmt_aff(x):
+        return f"{int(x):,}" if pd.notna(x) and x > 0 else "—"
+
+    _max_aff = _df["Total Affected"].fillna(0).max()
+
+    _ORG = "background-color:#f57c00;color:white;font-weight:bold"
+    _RED_CELL = "background-color:#c62828;color:white;font-weight:bold"
+
+    def _td(content, flag=False, cerf_cell=False, cls="", bar_val=None):
+        if flag:
+            _s = _ORG
+        elif cerf_cell:
+            _s = _RED_CELL
+        elif (
+            bar_val is not None
+            and pd.notna(bar_val)
+            and bar_val > 0
+            and _max_aff > 0
+        ):
+            _pct = min(100, bar_val / _max_aff * 100)
+            _s = f"background-image:linear-gradient(to right,#b39ddb {_pct:.0f}%,transparent {_pct:.0f}%)"
+        else:
+            _s = ""
+        _ca = f' class="{cls}"' if cls else ""
+        _sa = f' style="{_s}"' if _s else ""
+        return f"<td{_ca}{_sa}>{content}</td>"
+
+    _rows_html = []
+    for _, _r in _df.iterrows():
+        _cells = [
+            f'<td class="lc">{_r["Storm"]}</td>',
+            _td(
+                _fmt_exp(_r["total_exp_64"]),
+                flag=bool(_r[f"_exp_flag_{_WKT}"]),
+                cls="bl-f",
+            ),
+            _td(
+                _fmt_rain(_r["max_fcast_rain"]),
+                flag=bool(_r[f"_fcast_flag_{_WKT}"]),
+            ),
+            _td(
+                _tick(_r["hur_warning"]),
+                flag=bool(_r["hur_warning"]),
+                cls="br-f",
+            ),
+            _td(
+                _fmt_exp(_r["exp_64"]),
+                flag=bool(_r["_obs_exp_flag"]),
+                cls="bl-o",
+            ),
+            _td(
+                _fmt_rain(_r["max_obs_rain"]),
+                flag=bool(_r[f"_rain_flag_{_WKT}"]),
+                cls="br-o",
+            ),
+            _td(
+                _tick(_r[f"combined_{_WKT}"]),
+                flag=bool(_r[f"combined_{_WKT}"]),
+            ),
+            _td(
+                _cerf_disp := _cerf_fmt(_r),
+                cerf_cell=_cerf_disp not in ("—", "pre-"),
+            ),
+            _td(_fmt_aff(_r["Total Affected"]), bar_val=_r["Total Affected"]),
+        ]
+        _rows_html.append(f"<tr>{''.join(_cells)}</tr>")
+
+    _css = """<style>
+  .act-tbl{border-collapse:collapse;font-size:13px;font-family:sans-serif}
+  .act-tbl th,.act-tbl td{padding:5px 10px;text-align:center;border-bottom:1px solid #e0e0e0}
+  .act-tbl th{background:#f5f5f5;border-bottom:2px solid #ccc;white-space:nowrap}
+  .act-tbl .lc{text-align:left}
+  .act-tbl tbody tr:hover td{box-shadow:inset 0 0 0 9999px rgba(0,0,0,0.10);cursor:default}
+  .act-tbl .fcast-grp{background:#dde8f8}
+  .act-tbl .obs-grp{background:#ddf0e8}
+  .act-tbl .bl-f{border-left:2px solid #7baed6}
+  .act-tbl .br-f{border-right:2px solid #7baed6}
+  .act-tbl .bl-o{border-left:2px solid #6bbf8e}
+  .act-tbl .br-o{border-right:2px solid #6bbf8e}
+</style>"""
+
+    _thead = (
+        "<thead>"
+        "<tr>"
+        '<th rowspan="2" class="lc">Système</th>'
+        '<th colspan="3" class="fcast-grp bl-f br-f" style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#444">Prévision</th>'
+        '<th colspan="2" class="obs-grp bl-o br-o" style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#444">Observationnel</th>'
+        '<th rowspan="2">Déclenchement<br>global</th>'
+        '<th rowspan="2">CERF</th>'
+        '<th rowspan="2">Pop. affectée<br>totale</th>'
+        "</tr>"
+        "<tr>"
+        '<th class="fcast-grp bl-f">Exp. prév.</th>'
+        '<th class="fcast-grp">Précip. prév.</th>'
+        '<th class="fcast-grp br-f">DGPC Rouge +<br>Hur. Warning</th>'
+        '<th class="obs-grp bl-o">Exp. obs.</th>'
+        '<th class="obs-grp br-o">Précip. obs.</th>'
+        "</tr>"
+        "</thead>"
+    )
+
+    _table_html = (
+        f"{_css}\n"
+        f'<table class="act-tbl">\n'
+        f"{_thead}\n"
+        f"<tbody>{''.join(_rows_html)}</tbody>\n"
+        f"</table>"
+    )
+
+    mo.output.replace(
+        mo.vstack(
+            [
+                mo.md(
+                    "## Résumé des activations — déclencheur OR alerte ouragan, 64 kt ★"
+                ),
+                mo.Html(_table_html),
+                mo.md("### Return periods by indicator"),
+                mo.md(_rp_md),
+                mo.md("### Overall metrics"),
+                mo.md(_metrics_md),
+            ]
+        )
+    )
+
+
+@app.cell
 def load_wind_exposure(pd, stratus, text):
     _engine = stratus.get_engine(stage="dev")
     with _engine.connect() as _conn:
