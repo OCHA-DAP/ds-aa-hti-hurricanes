@@ -61,6 +61,16 @@ def fr_datetime(ts: pd.Timestamp) -> str:
     return out
 
 
+def fr_datetime_short(ts: pd.Timestamp) -> str:
+    """'27 oct. 14h' in Haiti local time (for map labels)."""
+    ts_hti = ts.tz_localize("UTC") if ts.tzinfo is None else ts
+    ts_hti = ts_hti.tz_convert("America/Port-au-Prince")
+    out = ts_hti.strftime("%-d %b %Hh")
+    for en, fr in FRENCH_MONTHS.items():
+        out = out.replace(en, fr)
+    return out
+
+
 def fmt_pop(x: float) -> str:
     if x >= 1_000_000:
         return f"{x / 1_000_000:.1f}M".replace(".", ",")
@@ -401,8 +411,9 @@ def det_map_img(
     issued_time: pd.Timestamp,
 ) -> str:
     """Deterministic map: forecast wind-radii buffers (34/50/64 kt) +
-    already-observed swath + tracks + Haiti. This is the forecast the
-    exposure trigger condition is computed from."""
+    already-observed swath + tracks + Haiti, with the forecast position
+    labelled at each 24 h leadtime. This is the forecast the exposure
+    trigger condition is computed from."""
     import geopandas as gpd
 
     fig, ax = _start_map()
@@ -444,4 +455,49 @@ def det_map_img(
         handles,
         "Vents prévus (déterministe)",
     )
+
+    # timestamp the forecast position at each 24 h leadtime
+    if (
+        tracks_fcast is not None
+        and not tracks_fcast.empty
+        and "leadtime" in tracks_fcast.columns
+    ):
+        marks = tracks_fcast[tracks_fcast["leadtime"] % 24 == 0]
+        # alternate label offsets so marks on a slow-moving track
+        # don't overprint each other
+        offsets = [(7, 6), (7, -16)]
+        x_lo, x_hi = ax.get_xlim()
+        for i, (_, row) in enumerate(marks.iterrows()):
+            x, y = row.geometry.x, row.geometry.y
+            ax.plot(
+                x,
+                y,
+                marker="o",
+                ms=5,
+                mfc="white",
+                mec=INK,
+                mew=1.2,
+                zorder=6,
+            )
+            dx, dy = offsets[i % len(offsets)]
+            # keep labels inside the frame near the right edge
+            near_right = (x - x_lo) / (x_hi - x_lo) > 0.72
+            ax.annotate(
+                f"+{int(row['leadtime'])} h · "
+                f"{fr_datetime_short(row['valid_time'])}",
+                xy=(x, y),
+                xytext=(-dx, dy) if near_right else (dx, dy),
+                ha="right" if near_right else "left",
+                textcoords="offset points",
+                fontsize=8,
+                color=INK,
+                zorder=7,
+                clip_on=True,
+                bbox={
+                    "facecolor": "white",
+                    "alpha": 0.8,
+                    "edgecolor": "none",
+                    "pad": 1.5,
+                },
+            )
     return fig_to_img_tag(fig, alt=f"Carte déterministe {storm_name}", dpi=200)

@@ -114,10 +114,106 @@ def build_email_plots(
                 name,
                 issue_time,
             )
+            timing = _compute_timing(tracks_fcast, adm0.to_crs(3857))
+            det_img += _timing_html(timing, issue_time)
     except Exception as e:
         logger.error(f"Could not build map for {atcf_id}: {e}")
         traceback.print_exc()
     return wsp_img, map_img, det_img
+
+
+def _compute_timing(tracks_fcast, adm0_3857) -> dict:
+    """Timing estimates from the deterministic forecast: closest-pass
+    time and the earliest time each wind level could reach Haiti.
+
+    Arrival is estimated per interpolated track point as the first time
+    the distance to Haiti drops below that point's largest quadrant
+    wind radius — an approximation (radii are asymmetric and the swath
+    is what actually matters), so present as an estimate.
+    """
+    import geopandas as gpd
+    from ocha_lens.utils.storm import expand_quad_col
+
+    if tracks_fcast is None or tracks_fcast.empty:
+        return {}
+    gdf = tracks_fcast.copy()
+    for kt in (34, 64):
+        gdf = expand_quad_col(gdf, f"quadrant_radius_{kt}")
+        quad_cols = [
+            f"quadrant_radius_{kt}_{q}" for q in ("ne", "se", "sw", "nw")
+        ]
+        gdf[f"r{kt}_km"] = gdf[quad_cols].max(axis=1).fillna(0) * 1.852
+    df = (
+        pd.DataFrame(
+            {
+                "valid_time": gdf["valid_time"],
+                "lon": gdf.geometry.x,
+                "lat": gdf.geometry.y,
+                "r34_km": gdf["r34_km"],
+                "r64_km": gdf["r64_km"],
+            }
+        )
+        .drop_duplicates(subset=["valid_time"])
+        .set_index("valid_time")
+        .resample("30min")
+        .interpolate()
+        .reset_index()
+    )
+    pts = gpd.GeoDataFrame(
+        df,
+        geometry=gpd.points_from_xy(df["lon"], df["lat"]),
+        crs="EPSG:4326",
+    ).to_crs(3857)
+    dist_km = pts.geometry.distance(adm0_3857.iloc[0].geometry) / 1000
+
+    timing = {}
+    idx = dist_km.idxmin()
+    timing["closest_time"] = df.loc[idx, "valid_time"]
+    timing["closest_dist_km"] = float(dist_km[idx])
+    for kt in (34, 64):
+        hit = df.loc[dist_km <= df[f"r{kt}_km"], "valid_time"]
+        timing[f"arrival{kt}"] = hit.min() if not hit.empty else None
+    return timing
+
+
+def _timing_html(timing: dict, issue_time) -> str:
+    """'Earliest time to impact' panel shown under the deterministic
+    map."""
+    if not timing:
+        return ""
+    t0 = storms_db.naive_utc(issue_time)
+
+    def _lead(ts) -> str:
+        hrs = (storms_db.naive_utc(ts) - t0).total_seconds() / 3600
+        return f"≈ {max(0, int(round(hrs)))} h"
+
+    rows = []
+    for kt in (34, 64):
+        arr = timing.get(f"arrival{kt}")
+        label = f"Arrivée la plus tôt possible des vents ≥ {kt} kt sur Haïti"
+        if arr is None:
+            value = "non prévue sur cet horizon"
+        elif storms_db.naive_utc(arr) <= t0:
+            value = "conditions possibles dès maintenant"
+        else:
+            value = f"{fr_datetime(arr)} ({_lead(arr)})"
+        rows.append(f"<li>{label} : <b>{value}</b></li>")
+    closest = timing.get("closest_time")
+    if closest is not None:
+        rows.append(
+            "<li>Passage au plus près d'Haïti "
+            f"({timing['closest_dist_km']:.0f} km) : "
+            f"<b>{fr_datetime(closest)} ({_lead(closest)})</b></li>"
+        )
+    return (
+        "<div style='background:#e8effb;border-left:3px solid #1862d8;"
+        "padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0'>"
+        "<b>Délais estimés</b> (d'après la trajectoire et les rayons de "
+        "vent prévus ; estimation indicative)"
+        "<ul style='margin:6px 0 0;padding-left:20px'>"
+        + "".join(rows)
+        + "</ul></div>"
+    )
 
 
 def _fcast_info_status(row: pd.Series) -> str:
