@@ -142,6 +142,19 @@ def fetch_wsp_polygons(
         )
 
 
+def fetch_hti_population() -> int:
+    """HTI total population denominator (WorldPop, storms pipeline)."""
+    query = text(
+        """
+        SELECT total_pop FROM storms.admin_population
+        WHERE iso3 = 'HTI' AND admin_level = 0
+        """
+    )
+    with get_engine().connect() as conn:
+        df = pd.read_sql(query, conn)
+    return int(df.iloc[0]["total_pop"]) if not df.empty else 11_757_597
+
+
 def fetch_fcast_buffers(atcf_id: str, issued_time) -> gpd.GeoDataFrame:
     """Deterministic forecast wind buffers (34/50/64 kt) at one issuance."""
     query = text(

@@ -31,7 +31,7 @@ FONTS = ["Roboto", "Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"]
 
 plt.rcParams["font.family"] = FONTS
 
-_EMAIL_CONTENT_WIDTH_PX = 680
+_EMAIL_CONTENT_WIDTH_PX = 900
 
 _DATA_DIR = Path(__file__).parents[2] / "data"
 
@@ -92,101 +92,146 @@ def fig_to_img_tag(fig, alt: str = "", dpi: int = 200) -> str:
     )
 
 
-def _exceedance_curve(bands: list[tuple[int, int]], floor: float):
-    """Exceedance function of total exposure under the comonotone
+def _pdf_atoms(
+    bands: list[tuple[int, int]], floor: float, upper: float
+) -> list[tuple[float, float]]:
+    """Discrete pmf of total exposure under the comonotone
     one-severity-draw model (ds-storms-alerts WspPdf).
 
-    bands: (percentage lower-edge, pop_exposed) per band.
-    floor: already-observed exposure (P=1 up to the floor).
-    Returns (xs, ps) step-curve vertices: P(exposure >= x).
+    One severity draw U~Uniform(0,1); a location is exposed iff its WSP
+    probability >= U. So exposure equals the cumulative band population
+    C_k with probability p_k - p_{k+1} (band midpoints descending), and
+    stays at the already-observed floor with probability 1 - p_max.
+    Values are clamped at the country population; clamped atoms merge.
     """
     probs = sorted(
-        (WSP_BAND_MIDPOINT.get(int(p), 0.025), int(pop)) for p, pop in bands
+        (
+            (WSP_BAND_MIDPOINT.get(int(p), 0.025), int(pop))
+            for p, pop in bands
+            if pop > 0
+        ),
+        reverse=True,
     )
-    # cumulative population from most-probable band down
-    xs, ps = [0.0, float(floor)], [1.0, 1.0]
+    p_list = [p for p, _ in probs] + [0.0]
+    atoms = [(min(float(floor), upper), 1.0 - (p_list[0] if probs else 0.0))]
     cum = float(floor)
-    for p_mid, pop in sorted(probs, reverse=True):
-        if pop <= 0:
-            continue
+    for i, (_, pop) in enumerate(probs):
         cum += pop
-        xs.append(cum)
-        ps.append(p_mid)
-    return np.array(xs), np.array(ps)
+        atoms.append((min(cum, upper), p_list[i] - p_list[i + 1]))
+    # merge atoms clamped onto the same value
+    merged: dict[float, float] = {}
+    for v, w in atoms:
+        merged[v] = merged.get(v, 0.0) + w
+    return sorted(merged.items())
 
 
-def wsp_exceedance_img(
+def _kernel_density(
+    atoms: list[tuple[float, float]],
+    upper: float,
+    x_win: float,
+    n: int = 600,
+):
+    """Gaussian-kernel smoothing of the pmf atoms, reflected at 0 and at
+    the population cap so mass piles at the bounds instead of leaking.
+    Grid and bandwidth scale to the display window x_win."""
+    xs = np.linspace(0, x_win, n)
+    h = max(x_win * 0.025, 1.0)
+    dens = np.zeros_like(xs)
+
+    def _phi(z):
+        return np.exp(-0.5 * z**2)
+
+    for v, w in atoms:
+        if w <= 0:
+            continue
+        dens += w * (
+            _phi((xs - v) / h)
+            + _phi((xs + v) / h)
+            + _phi((2 * upper - xs - v) / h)
+        )
+    return xs, dens
+
+
+def wsp_density_img(
     df_wsp: pd.DataFrame,
     storm_name: str,
     issued_time: pd.Timestamp,
     obsv_floor_by_kt: dict | None = None,
+    total_pop: float | None = None,
 ) -> str:
-    """One panel: P(population exposée >= x) for each wind level.
+    """Stacked panels (34/50/64 kt): smoothed probability density of the
+    population exposed, from the NHC WSP bands.
 
     df_wsp: [wind_threshold_kt, percentage, pop_exposed] for one issuance
     (see storms_db.fetch_wsp_exposure).
     """
     obsv_floor_by_kt = obsv_floor_by_kt or {}
-    fig, ax = plt.subplots(figsize=(6.8, 3.4), dpi=200)
+    total_pop = float(total_pop or 11_757_597)
 
+    levels = (34, 50, 64)
+    curves = {}
     x_max = 0.0
-    for kt in (34, 50, 64):
+    for kt in levels:
         sub = df_wsp[df_wsp["wind_threshold_kt"] == kt]
         floor = float(obsv_floor_by_kt.get(kt, 0))
         bands = list(zip(sub["percentage"], sub["pop_exposed"]))
-        if not bands and floor == 0:
-            # still draw the zero line so the level shows in the legend
-            bands = []
-        xs, ps = _exceedance_curve(bands, floor)
-        x_max = max(x_max, xs[-1] if len(xs) else 0)
-        ax.step(
-            xs,
-            ps * 100,
-            where="post",
-            color=WIND_COLORS[kt],
-            lw=2.0,
-            label=f"vents ≥ {kt} kt",
-            zorder=3,
+        atoms = _pdf_atoms(bands, floor, total_pop)
+        x_max = max(x_max, max(v for v, _ in atoms))
+        curves[kt] = atoms
+    x_max = min(max(x_max * 1.08, 1000.0), total_pop)
+
+    fig, axes = plt.subplots(
+        len(levels),
+        1,
+        figsize=(9.0, 4.6),
+        dpi=200,
+        sharex=True,
+        gridspec_kw={"hspace": 0.35},
+    )
+    for ax, kt in zip(axes, levels):
+        color = WIND_COLORS[kt]
+        xs, dens = _kernel_density(curves[kt], total_pop, x_max)
+        peak = dens.max()
+        if peak > 0:
+            dens = dens / peak
+        ax.fill_between(xs, 0, dens, color=color, alpha=0.35, zorder=2)
+        ax.plot(xs, dens, color=color, lw=1.8, zorder=3)
+        ax.set_xlim(0, x_max)
+        ax.set_ylim(0, 1.12)
+        ax.set_yticks([])
+        for spine in ("top", "right", "left"):
+            ax.spines[spine].set_visible(False)
+        ax.spines["bottom"].set_color(LINE)
+        ax.spines["bottom"].set_linewidth(1.2)
+        ax.text(
+            0.995,
+            0.86,
+            f"vents ≥ {kt} kt",
+            transform=ax.transAxes,
+            ha="right",
+            va="top",
+            fontsize=10,
+            fontweight="bold",
+            color=color,
+            bbox={
+                "facecolor": "white",
+                "alpha": 0.75,
+                "edgecolor": "none",
+                "pad": 2,
+            },
         )
+        if ax is axes[-1]:
+            ax.xaxis.set_major_formatter(lambda x, _: fmt_pop(x))
+            ax.tick_params(colors=INK_2, labelsize=9)
+            ax.set_xlabel("Population exposée", color=INK_2, fontsize=10)
+        else:
+            ax.tick_params(bottom=False, labelbottom=False)
 
-    if x_max == 0:
-        x_max = 1000
-    ax.set_xlim(0, x_max * 1.06)
-    ax.set_ylim(0, 104)
-    ax.axhline(50, color=GREY_EDGE, lw=0.8, ls=(0, (2, 3)), zorder=1)
-    ax.text(
-        x_max * 1.05,
-        52,
-        "50 %",
-        color=INK_3,
-        fontsize=8,
-        ha="right",
-        va="bottom",
-    )
-
-    ax.set_xlabel("Population exposée", color=INK_2, fontsize=9)
-    ax.set_ylabel(
-        "Probabilité d'atteindre\nou dépasser (%)", color=INK_2, fontsize=9
-    )
-    ax.xaxis.set_major_formatter(lambda x, _: fmt_pop(x))
-    ax.tick_params(colors=INK_2, labelsize=8)
-    for spine in ("top", "right"):
-        ax.spines[spine].set_visible(False)
-    for spine in ("left", "bottom"):
-        ax.spines[spine].set_color(LINE)
-        ax.spines[spine].set_linewidth(1.2)
-    ax.legend(
-        frameon=False,
-        fontsize=8.5,
-        labelcolor=INK,
-        loc="upper right",
-        bbox_to_anchor=(1.0, 0.95),
-    )
-    ax.set_title(
-        "Probabilité que la population exposée atteigne un niveau donné\n"
+    axes[0].set_title(
+        "Distribution de probabilité de la population exposée\n"
         f"(NHC Wind Speed Probabilities, prévision du "
         f"{fr_datetime(issued_time)})",
-        fontsize=9.5,
+        fontsize=11,
         color=INK,
         loc="left",
         pad=10,
@@ -202,7 +247,7 @@ def _start_map():
     import geopandas as gpd
 
     ne = gpd.read_parquet(_DATA_DIR / "ne110m_countries.parquet")
-    fig, ax = plt.subplots(figsize=(6.8, 4.6), dpi=200)
+    fig, ax = plt.subplots(figsize=(9.0, 6.2), dpi=200)
     ax.set_aspect("equal")
     ne.plot(ax=ax, color="#f4f6f6", edgecolor=GREY_EDGE, lw=0.5, zorder=1)
     return fig, ax
@@ -273,7 +318,7 @@ def _finish_map(
         frameon=True,
         framealpha=0.9,
         edgecolor=LINE,
-        fontsize=8,
+        fontsize=9,
         labelcolor=INK,
     )
     ax.add_artist(leg1)
@@ -284,11 +329,11 @@ def _finish_map(
             loc="upper left",
             bbox_to_anchor=(1.01, 1.0),
             frameon=False,
-            fontsize=7.5,
-            title_fontsize=8,
+            fontsize=8.5,
+            title_fontsize=9,
             labelcolor=INK,
         )
-    ax.set_title(title, fontsize=10, color=INK, loc="left", pad=8)
+    ax.set_title(title, fontsize=11.5, color=INK, loc="left", pad=8)
 
 
 def storm_map_img(
@@ -343,7 +388,7 @@ def storm_map_img(
         handles,
         f"Probabilité de vents ≥ {wind_threshold_kt} kt",
     )
-    return fig_to_img_tag(fig, alt=f"Carte probabiliste {storm_name}", dpi=150)
+    return fig_to_img_tag(fig, alt=f"Carte probabiliste {storm_name}", dpi=200)
 
 
 def det_map_img(
@@ -399,4 +444,4 @@ def det_map_img(
         handles,
         "Vents prévus (déterministe)",
     )
-    return fig_to_img_tag(fig, alt=f"Carte déterministe {storm_name}", dpi=150)
+    return fig_to_img_tag(fig, alt=f"Carte déterministe {storm_name}", dpi=200)

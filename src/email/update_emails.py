@@ -67,8 +67,12 @@ def build_email_plots(
                 .last()
                 .to_dict()
             )
-            wsp_img = plots.wsp_exceedance_img(
-                df_wsp, name, issue_time, obsv_floor_by_kt=floors
+            wsp_img = plots.wsp_density_img(
+                df_wsp,
+                name,
+                issue_time,
+                obsv_floor_by_kt=floors,
+                total_pop=storms_db.fetch_hti_population(),
             )
     except Exception as e:
         logger.error(f"Could not build WSP plot for {atcf_id}: {e}")

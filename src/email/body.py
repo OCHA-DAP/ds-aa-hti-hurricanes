@@ -232,13 +232,13 @@ def build_fcast_info_body(
     )
     plots = (
         f"<h2 style='{_H2}'>Prévisions probabilistes</h2>"
-        "<p style='color:#5e6a6b;font-size:0.9em'>Probabilité que la "
-        "population d'Haïti exposée à chaque niveau de vent atteigne "
-        "une valeur donnée, selon les Wind Speed Probabilities du NHC "
-        "(l'exposition prévue par la trajectoire déterministe utilisée "
-        "pour le déclencheur figure dans le tableau ci-dessus).</p>"
-        + wsp_img
-        + (map_img or "")
+        "<p style='color:#5e6a6b;font-size:0.9em'>Distribution de "
+        "probabilité de la population d'Haïti exposée à chaque niveau "
+        "de vent, selon les Wind Speed Probabilities du NHC — un pic "
+        "près de zéro signifie que le scénario le plus probable est une "
+        "exposition faible ou nulle (l'exposition prévue par la "
+        "trajectoire déterministe utilisée pour le déclencheur figure "
+        "dans le tableau ci-dessus).</p>" + wsp_img + (map_img or "")
     )
     return (
         DISCLAIMER_HTML
