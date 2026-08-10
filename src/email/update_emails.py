@@ -51,10 +51,11 @@ def _already_sent(record: pd.DataFrame, email_type: str, key: str, by: str):
 
 def build_email_plots(
     atcf_id: str, issue_time, name: str
-) -> tuple[str, str | None]:
-    """(wsp_img_html, map_img_html_or_None) for one advisory."""
+) -> tuple[str, str | None, str | None]:
+    """(wsp_img, wsp_map_img, det_map_img) HTML for one advisory."""
     wsp_img = WSP_UNAVAILABLE_HTML
     map_img = None
+    det_img = None
     try:
         df_wsp = storms_db.fetch_wsp_exposure(atcf_id, issue_time)
         if not df_wsp.empty:
@@ -98,10 +99,21 @@ def build_email_plots(
                 name,
                 issue_time,
             )
+            fcast_buffers = storms_db.fetch_fcast_buffers(atcf_id, issue_time)
+            _, obsv_geom = storms_db.fetch_obsv_buffer_at(atcf_id, issue_time)
+            det_img = plots.det_map_img(
+                tracks_obsv,
+                tracks_fcast,
+                fcast_buffers,
+                obsv_geom,
+                adm0,
+                name,
+                issue_time,
+            )
     except Exception as e:
         logger.error(f"Could not build map for {atcf_id}: {e}")
         traceback.print_exc()
-    return wsp_img, map_img
+    return wsp_img, map_img, det_img
 
 
 def _fcast_info_status(row: pd.Series) -> str:
@@ -115,10 +127,10 @@ def _fcast_info_status(row: pd.Series) -> str:
 
 
 def send_fcast_info_email(monitor_id: str, row: pd.Series):
-    wsp_img, map_img = build_email_plots(
+    wsp_img, map_img, det_img = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_fcast_info_body(row, wsp_img, map_img)
+    html = body.build_fcast_info_body(row, wsp_img, map_img, det_img)
     subject = (
         f"Action anticipatoire Haïti – {row['name']} : prévisions NHC du "
         f"{fr_datetime(row['issue_time'])} ({_fcast_info_status(row)})"
@@ -127,10 +139,10 @@ def send_fcast_info_email(monitor_id: str, row: pd.Series):
 
 
 def send_obsv_info_email(monitor_id: str, row: pd.Series):
-    _, map_img = build_email_plots(
+    _, map_img, det_img = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_obsv_info_body(row, map_img)
+    html = body.build_obsv_info_body(row, map_img or det_img)
     status = (
         "ACTIVATION : RÉPONSE PRÉCOCE"
         if row["obsv_trigger"]
@@ -144,12 +156,14 @@ def send_obsv_info_email(monitor_id: str, row: pd.Series):
 
 
 def send_trigger_email(monitor_id: str, row: pd.Series, stage: str):
-    wsp_img, map_img = build_email_plots(
+    wsp_img, map_img, det_img = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
     if stage == "obsv":
         wsp_img = None
-    html = body.build_trigger_body(row, stage, wsp_img, map_img)
+    html = body.build_trigger_body(
+        row, stage, wsp_img, (det_img or "") + (map_img or "")
+    )
     subject = (
         f"Action anticipatoire Haïti – déclencheur "
         f"{STAGE_NAMES_FR[stage].upper()} ATTEINT pour {row['name']}"

@@ -52,6 +52,10 @@ def send_campaign(
     campaign_name: str, subject: str, body: str, email_type: str
 ) -> int | None:
     """Upload images, create the campaign, send. Returns campaign id."""
+    # "[fr]" in the campaign name selects the French translation of the
+    # Listmonk template chrome (header/footer strings); "[test]" selects
+    # the test banner. See KB infrastructure/comms-listmonk.md.
+    campaign_name = f"[fr] {campaign_name}"
     if TEST_EMAIL:
         subject = f"[TEST] {subject}"
         campaign_name = f"[test] {campaign_name}"

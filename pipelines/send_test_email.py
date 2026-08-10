@@ -82,10 +82,10 @@ if __name__ == "__main__":
         raise SystemExit("No usable Melissa advisory found in the DB.")
 
     logger.info("Building plots and body...")
-    wsp_img, map_img = update_emails.build_email_plots(
+    wsp_img, map_img, det_img = update_emails.build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_fcast_info_body(row, wsp_img, map_img)
+    html = body.build_fcast_info_body(row, wsp_img, map_img, det_img)
     subject = (
         f"[TEST] Action anticipatoire Haïti – {row['name']} : "
         f"prévisions NHC du {fr_datetime(row['issue_time'])} "

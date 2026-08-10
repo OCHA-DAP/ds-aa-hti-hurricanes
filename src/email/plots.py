@@ -197,57 +197,31 @@ def wsp_exceedance_img(
     )
 
 
-def storm_map_img(
-    tracks_obsv,
-    tracks_fcast,
-    wsp_polygons,
-    adm0,
-    storm_name: str,
-    issued_time: pd.Timestamp,
-    wind_threshold_kt: int = 64,
-) -> str:
-    """Map: WSP probability polygons + observed/forecast track + Haiti."""
+def _start_map():
+    """Figure with the Natural Earth background."""
     import geopandas as gpd
 
     ne = gpd.read_parquet(_DATA_DIR / "ne110m_countries.parquet")
-
     fig, ax = plt.subplots(figsize=(6.8, 4.6), dpi=200)
     ax.set_aspect("equal")
-
-    # background countries
     ne.plot(ax=ax, color="#f4f6f6", edgecolor=GREY_EDGE, lw=0.5, zorder=1)
+    return fig, ax
 
-    # WSP probability bands (percentage = lower band edge). The 0 band
-    # ("<5%") would flood the whole map — draw it as a faint outline
-    # only, and fill the informative bands light→dark blue.
-    handles = []
-    if wsp_polygons is not None and not wsp_polygons.empty:
-        polys = wsp_polygons.sort_values("percentage")
-        cmap = plt.cm.Blues
-        for _, row in polys.iterrows():
-            pct = row["percentage"]
-            if pct == 0:
-                gpd.GeoSeries([row["geometry"]]).plot(
-                    ax=ax,
-                    facecolor="none",
-                    edgecolor=GREY_EDGE,
-                    lw=0.6,
-                    zorder=2,
-                )
-                continue
-            frac = 0.2 + 0.75 * (pct / 90)
-            color = cmap(frac)
-            gpd.GeoSeries([row["geometry"]]).plot(
-                ax=ax, color=color, alpha=0.72, zorder=2
-            )
-            handles.append(
-                Patch(facecolor=color, alpha=0.72, label=f"≥ {pct} %")
-            )
 
+def _finish_map(
+    fig,
+    ax,
+    tracks_obsv,
+    tracks_fcast,
+    adm0,
+    title: str,
+    layer_handles: list,
+    layer_legend_title: str,
+):
+    """Haiti outline, tracks, framing, legends, title (shared by maps)."""
     # Haiti (thin muted outline so the black track stays unambiguous)
     adm0.boundary.plot(ax=ax, color=INK_2, lw=0.9, zorder=4)
 
-    # tracks
     if tracks_obsv is not None and not tracks_obsv.empty:
         ax.plot(
             tracks_obsv.geometry.x,
@@ -255,7 +229,6 @@ def storm_map_img(
             color=INK,
             lw=1.7,
             zorder=5,
-            label="trajectoire observée",
         )
     if tracks_fcast is not None and not tracks_fcast.empty:
         ax.plot(
@@ -265,7 +238,6 @@ def storm_map_img(
             lw=1.7,
             ls=(0, (3, 2)),
             zorder=5,
-            label="trajectoire prévue",
         )
 
     # frame on Haiti + forecast extent (don't let the full observed
@@ -305,10 +277,10 @@ def storm_map_img(
         labelcolor=INK,
     )
     ax.add_artist(leg1)
-    if handles:
+    if layer_handles:
         ax.legend(
-            handles=handles,
-            title=f"Probabilité de vents ≥ {wind_threshold_kt} kt",
+            handles=layer_handles,
+            title=layer_legend_title,
             loc="upper left",
             bbox_to_anchor=(1.01, 1.0),
             frameon=False,
@@ -316,12 +288,115 @@ def storm_map_img(
             title_fontsize=8,
             labelcolor=INK,
         )
+    ax.set_title(title, fontsize=10, color=INK, loc="left", pad=8)
 
-    ax.set_title(
-        f"{storm_name} — prévision NHC du {fr_datetime(issued_time)}",
-        fontsize=10,
-        color=INK,
-        loc="left",
-        pad=8,
+
+def storm_map_img(
+    tracks_obsv,
+    tracks_fcast,
+    wsp_polygons,
+    adm0,
+    storm_name: str,
+    issued_time: pd.Timestamp,
+    wind_threshold_kt: int = 64,
+) -> str:
+    """Probabilistic map: WSP probability polygons + tracks + Haiti."""
+    import geopandas as gpd
+
+    fig, ax = _start_map()
+
+    # WSP probability bands (percentage = lower band edge). The 0 band
+    # ("<5%") would flood the whole map — draw it as a faint outline
+    # only, and fill the informative bands light→dark blue.
+    handles = []
+    if wsp_polygons is not None and not wsp_polygons.empty:
+        polys = wsp_polygons.sort_values("percentage")
+        cmap = plt.cm.Blues
+        for _, row in polys.iterrows():
+            pct = row["percentage"]
+            if pct == 0:
+                gpd.GeoSeries([row["geometry"]]).plot(
+                    ax=ax,
+                    facecolor="none",
+                    edgecolor=GREY_EDGE,
+                    lw=0.6,
+                    zorder=2,
+                )
+                continue
+            frac = 0.2 + 0.75 * (pct / 90)
+            color = cmap(frac)
+            gpd.GeoSeries([row["geometry"]]).plot(
+                ax=ax, color=color, alpha=0.72, zorder=2
+            )
+            handles.append(
+                Patch(facecolor=color, alpha=0.72, label=f"≥ {pct} %")
+            )
+
+    _finish_map(
+        fig,
+        ax,
+        tracks_obsv,
+        tracks_fcast,
+        adm0,
+        f"{storm_name} — probabilités de vents "
+        f"(prévision NHC du {fr_datetime(issued_time)})",
+        handles,
+        f"Probabilité de vents ≥ {wind_threshold_kt} kt",
     )
-    return fig_to_img_tag(fig, alt=f"Carte {storm_name}", dpi=150)
+    return fig_to_img_tag(fig, alt=f"Carte probabiliste {storm_name}", dpi=150)
+
+
+def det_map_img(
+    tracks_obsv,
+    tracks_fcast,
+    fcast_buffers,
+    obsv_buffer_geom,
+    adm0,
+    storm_name: str,
+    issued_time: pd.Timestamp,
+) -> str:
+    """Deterministic map: forecast wind-radii buffers (34/50/64 kt) +
+    already-observed swath + tracks + Haiti. This is the forecast the
+    exposure trigger condition is computed from."""
+    import geopandas as gpd
+
+    fig, ax = _start_map()
+
+    handles = []
+    if obsv_buffer_geom is not None and not obsv_buffer_geom.is_empty:
+        gpd.GeoSeries([obsv_buffer_geom]).plot(
+            ax=ax, color=GREY_FILL, alpha=0.75, zorder=2
+        )
+        handles.append(
+            Patch(
+                facecolor=GREY_FILL,
+                alpha=0.75,
+                label="zone déjà balayée (obs.)",
+            )
+        )
+    if fcast_buffers is not None and not fcast_buffers.empty:
+        # light (34 kt) under dark (64 kt)
+        for _, row in fcast_buffers.sort_values("wind_speed_kt").iterrows():
+            kt = int(row["wind_speed_kt"])
+            if row["geometry"] is None or row["geometry"].is_empty:
+                continue
+            color = WIND_COLORS.get(kt, INK_3)
+            gpd.GeoSeries([row["geometry"]]).plot(
+                ax=ax, color=color, alpha=0.55, zorder=3
+            )
+            handles.append(
+                Patch(facecolor=color, alpha=0.55, label=f"vents ≥ {kt} kt")
+            )
+
+    _finish_map(
+        fig,
+        ax,
+        tracks_obsv,
+        tracks_fcast,
+        adm0,
+        f"{storm_name} — trajectoire et vents prévus "
+        f"(prévision NHC du {fr_datetime(issued_time)})",
+        handles,
+        "Vents prévus (déterministe)",
+    )
+    return fig_to_img_tag(fig, alt=f"Carte déterministe {storm_name}", dpi=150)

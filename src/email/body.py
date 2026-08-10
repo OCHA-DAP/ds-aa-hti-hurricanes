@@ -176,7 +176,10 @@ def _obsv_stage_conditions(row: pd.Series) -> list:
 
 
 def build_fcast_info_body(
-    row: pd.Series, wsp_img: str, map_img: str | None
+    row: pd.Series,
+    wsp_img: str,
+    map_img: str | None,
+    det_img: str | None = None,
 ) -> str:
     name = row["name"]
     issue_str = fr_datetime(row["issue_time"])
@@ -217,15 +220,26 @@ def build_fcast_info_body(
             f"{str(OVERALL_RP_YEARS).replace('.', ',')} ans.</p>"
         )
     )
+    det_html = (
+        (
+            f"<h2 style='{_H2}'>Prévision déterministe</h2>"
+            "<p style='color:#5e6a6b;font-size:0.9em'>Trajectoire et "
+            "étendue des vents prévus par le NHC — c'est cette prévision "
+            "qui sert au calcul de l'exposition du déclencheur.</p>" + det_img
+        )
+        if det_img
+        else ""
+    )
     plots = (
         f"<h2 style='{_H2}'>Prévisions probabilistes</h2>"
         "<p style='color:#5e6a6b;font-size:0.9em'>Probabilité que la "
         "population d'Haïti exposée à chaque niveau de vent atteigne "
         "une valeur donnée, selon les Wind Speed Probabilities du NHC "
         "(l'exposition prévue par la trajectoire déterministe utilisée "
-        "pour le déclencheur figure dans le tableau ci-dessus).</p>" + wsp_img
+        "pour le déclencheur figure dans le tableau ci-dessus).</p>"
+        + wsp_img
+        + (map_img or "")
     )
-    map_html = (f"<h2 style='{_H2}'>Carte</h2>" + map_img) if map_img else ""
     return (
         DISCLAIMER_HTML
         + intro
@@ -233,8 +247,9 @@ def build_fcast_info_body(
         + _HR
         + panels
         + _HR
+        + det_html
+        + _HR
         + plots
-        + map_html
         + _HR
         + FOOTER_HTML
     )

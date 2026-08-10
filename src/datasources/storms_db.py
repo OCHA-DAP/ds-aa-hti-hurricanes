@@ -142,6 +142,28 @@ def fetch_wsp_polygons(
         )
 
 
+def fetch_fcast_buffers(atcf_id: str, issued_time) -> gpd.GeoDataFrame:
+    """Deterministic forecast wind buffers (34/50/64 kt) at one issuance."""
+    query = text(
+        """
+        SELECT wind_speed_kt, geometry
+        FROM storms.nhc_tracks_fcast_buffers
+        WHERE atcf_id = :atcf_id AND issued_time = :issued_time
+        ORDER BY wind_speed_kt
+        """
+    )
+    with get_engine().connect() as conn:
+        return gpd.read_postgis(
+            query,
+            conn,
+            params={
+                "atcf_id": atcf_id.upper(),
+                "issued_time": naive_utc(issued_time),
+            },
+            geom_col="geometry",
+        )
+
+
 def fetch_obsv_buffer_at(atcf_id: str, at_time, wind_speed_kt: int = 64):
     """Cumulative observed wind-swath polygon at exactly at_time.
 
