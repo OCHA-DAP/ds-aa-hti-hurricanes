@@ -35,6 +35,23 @@ _EMAIL_CONTENT_WIDTH_PX = 900
 
 _DATA_DIR = Path(__file__).parents[2] / "data"
 
+# NHC wind-speed-probability graphic palette, sampled from the official
+# product legend (nhc.noaa.gov/images/wind_probs_34.png), keyed by the
+# band's lower edge. <5% is white on NHC graphics; we draw it as an
+# outline so the basemap stays visible.
+NHC_WSP_COLORS = {
+    5: "#008b00",
+    10: "#00cd00",
+    20: "#7fff00",
+    30: "#ffff00",
+    40: "#ffd700",
+    50: "#cd8500",
+    60: "#ff7f00",
+    70: "#cd0000",
+    80: "#8b0000",
+    90: "#8b008b",
+}
+
 # WSP percentage is a band's LOWER edge; midpoints per ds-storms-alerts.
 WSP_BAND_MIDPOINT = {
     0: 0.025,
@@ -355,18 +372,18 @@ def storm_map_img(
     issued_time: pd.Timestamp,
     wind_threshold_kt: int = 64,
 ) -> str:
-    """Probabilistic map: WSP probability polygons + tracks + Haiti."""
+    """Probabilistic map: WSP probability polygons + tracks + Haiti,
+    using the official NHC wind-speed-probability palette."""
     import geopandas as gpd
 
     fig, ax = _start_map()
 
     # WSP probability bands (percentage = lower band edge). The 0 band
-    # ("<5%") would flood the whole map — draw it as a faint outline
-    # only, and fill the informative bands light→dark blue.
+    # ("<5%", white on NHC graphics) would flood the whole map — draw
+    # it as a faint outline only; fill the rest with the NHC ramp.
     handles = []
     if wsp_polygons is not None and not wsp_polygons.empty:
         polys = wsp_polygons.sort_values("percentage")
-        cmap = plt.cm.Blues
         for _, row in polys.iterrows():
             pct = row["percentage"]
             if pct == 0:
@@ -378,25 +395,26 @@ def storm_map_img(
                     zorder=2,
                 )
                 continue
-            frac = 0.2 + 0.75 * (pct / 90)
-            color = cmap(frac)
+            color = NHC_WSP_COLORS.get(int(pct), NHC_WSP_COLORS[90])
             gpd.GeoSeries([row["geometry"]]).plot(
-                ax=ax, color=color, alpha=0.72, zorder=2
+                ax=ax, color=color, alpha=0.85, zorder=2
             )
             handles.append(
-                Patch(facecolor=color, alpha=0.72, label=f"≥ {pct} %")
+                Patch(facecolor=color, alpha=0.85, label=f"≥ {pct} %")
             )
 
+    kt_qualifier = {34: " (force tempête trop.)", 64: " (force ouragan)"}
     _finish_map(
         fig,
         ax,
         tracks_obsv,
         tracks_fcast,
         adm0,
-        f"{storm_name} — probabilités de vents "
+        f"{storm_name} — probabilité de vents ≥ {wind_threshold_kt} kt"
+        f"{kt_qualifier.get(wind_threshold_kt, '')} "
         f"(prévision NHC du {fr_datetime(issued_time)})",
         handles,
-        f"Probabilité de vents ≥ {wind_threshold_kt} kt",
+        f"Probabilité de vents\n≥ {wind_threshold_kt} kt sur 120 h",
     )
     return fig_to_img_tag(fig, alt=f"Carte probabiliste {storm_name}", dpi=200)
 
