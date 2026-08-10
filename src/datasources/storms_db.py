@@ -212,7 +212,11 @@ def fetch_obsv_buffer_at(atcf_id: str, at_time, wind_speed_kt: int = 64):
 
 
 def fetch_storm_name(atcf_id: str) -> str:
-    """Storm name from nhc_storms, falling back to ibtracs_storms."""
+    """Storm name from nhc_storms, falling back to ibtracs_storms.
+
+    Some ingests store the literal string 'NaN' instead of NULL —
+    treat those as missing too.
+    """
     params = {"atcf_id": atcf_id.upper()}
     with get_engine().connect() as conn:
         for table in ("storms.nhc_storms", "storms.ibtracs_storms"):
@@ -221,8 +225,13 @@ def fetch_storm_name(atcf_id: str) -> str:
                 conn,
                 params=params,
             )
-            if not df.empty and pd.notnull(df.iloc[0]["name"]):
-                return str(df.iloc[0]["name"]).capitalize()
+            for name in df["name"]:
+                if pd.notnull(name) and str(name).lower() not in (
+                    "nan",
+                    "none",
+                    "",
+                ):
+                    return str(name).capitalize()
     return atcf_id
 
 

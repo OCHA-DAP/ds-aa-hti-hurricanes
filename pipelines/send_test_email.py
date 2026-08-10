@@ -24,7 +24,7 @@ os.environ.setdefault("DRY_RUN", "False")
 
 import pandas as pd  # noqa: E402
 
-from src.datasources import codab  # noqa: E402
+from src.datasources import codab, storms_db  # noqa: E402
 from src.email import body, send, update_emails  # noqa: E402
 from src.email.plots import fr_datetime  # noqa: E402
 from src.monitoring import monitoring_utils  # noqa: E402
@@ -32,7 +32,7 @@ from src.utils.logging import get_logger  # noqa: E402
 
 logger = get_logger(__name__)
 
-MELISSA_ATCF_ID = "al132025"
+DEFAULT_ATCF_ID = "al132025"  # Melissa
 # pre-cutoff advisories as Melissa approached Haiti
 CANDIDATE_ISSUANCES = [
     "2025-10-26T18:00",
@@ -45,6 +45,7 @@ CANDIDATE_ISSUANCES = [
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--issued-time", default=None)
+    parser.add_argument("--atcf-id", default=DEFAULT_ATCF_ID)
     parser.add_argument("--preview", action="store_true")
     args = parser.parse_args()
 
@@ -54,16 +55,17 @@ if __name__ == "__main__":
     candidates = (
         [args.issued_time] if args.issued_time else CANDIDATE_ISSUANCES
     )
+    storm_name = storms_db.fetch_storm_name(args.atcf_id)
     row = None
     for cand in candidates:
         issue_time = pd.Timestamp(cand)
-        logger.info(f"Evaluating Melissa advisory {issue_time}...")
+        logger.info(f"Evaluating {storm_name} advisory {issue_time}...")
         r = monitoring_utils.process_fcast_advisory(
-            MELISSA_ATCF_ID,
+            args.atcf_id,
             issue_time,
             df_gefs_all,
             adm0,
-            name="Melissa (TEST)",
+            name=f"{storm_name} (TEST)",
         )
         if r is None:
             continue
@@ -79,7 +81,7 @@ if __name__ == "__main__":
         if r["mobilisation_trigger"] or r["action_trigger"]:
             break
     if row is None:
-        raise SystemExit("No usable Melissa advisory found in the DB.")
+        raise SystemExit("No usable advisory found in the DB.")
 
     logger.info("Building plots and body...")
     wsp_img, map_img, det_img = update_emails.build_email_plots(
