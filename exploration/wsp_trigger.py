@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.5"
+__generated_with = "0.23.6"
 app = marimo.App(width="full")
 
 
@@ -36,59 +36,60 @@ def imports():
 def doc_activation_summary(mo):
     mo.md(
         r"""
-# Activation summary
+    # Activation summary
 
-Summary of the **selected trigger** and its historical performance. This is the
-top-level results view; the full optimization that produces it lives further
-down (the *Hurricane Warning OR trigger* section — see `rain_trigger_opt_hur`).
+    Summary of the **selected trigger** and its historical performance. This is the
+    top-level results view; the full optimization that produces it lives further
+    down (the *Hurricane Warning OR trigger* section — see `rain_trigger_opt_hur`).
 
-## Selected trigger (Hurricane Warning OR, 64 kt ★)
+    ## Selected trigger (Hurricane Warning OR, 64 kt ★)
 
-A storm **activates** if *any* of these fire:
+    A storm **activates** if *any* of these fire:
 
-**Forecast**
-- **Exposure** — fcastonly + cumulative-observed population exposed to ≥ 64 kt
-  winds > 0 (the optimised exposure threshold is the smallest non-zero historical
-  value, i.e. operationally ">0 people exposed"). Source: `df_total_exp`, built
-  from `nhc_tracks_fcastonly_exposure` + `nhc_tracks_obsv_exposure`.
-- **Rainfall** — forecast 2-day rolling rainfall ≥ the optimised threshold,
-  from NHC action-leadtime monitors.
-- **DGPC Rouge + Hur. Warning** — storm carried an NHC Hurricane Warning for
-  Haiti. These flags are **hardcoded** in the `load_nhc_alerts` cell
-  (`df_nhc_alerts`), keyed on (name, season), not read from a live feed.
+    **Forecast**
+    - **Exposure** — fcastonly + cumulative-observed population exposed to ≥ 64 kt
+      winds > 0 (the optimised exposure threshold is the smallest non-zero historical
+      value, i.e. operationally ">0 people exposed"). Source: `df_total_exp`, built
+      from `nhc_tracks_fcastonly_exposure` + `nhc_tracks_obsv_exposure`.
+    - **Rainfall** — forecast 2-day rolling rainfall ≥ the optimised threshold,
+      from NHC action-leadtime monitors.
+    - **DGPC Rouge + Hur. Warning** — storm carried an NHC Hurricane Warning for
+      Haiti. These flags are **hardcoded** in the `load_nhc_alerts` cell
+      (`df_nhc_alerts`), keyed on (name, season), not read from a live feed.
 
-**Observed**
-- **Exposure** — observed-only ≥ 64 kt exposure ≥ the same exposure threshold.
-- **Rainfall** — observed 2-day rolling rainfall ≥ the optimised threshold.
+    **Observed**
+    - **Exposure** — observed-only ≥ 64 kt exposure ≥ the same exposure threshold.
+    - **Rainfall** — observed 2-day rolling rainfall ≥ the optimised threshold.
 
-The exposure/rainfall thresholds and the n = 12 target are set by the
-optimization described in the *Trigger optimization* doc cell below.
+    The exposure/rainfall thresholds and the n = 12 target are set by the
+    optimization described in the *Trigger optimization* doc cell below.
 
-## Metric definitions
+    ## Metric definitions
 
-All return periods are computed **per season** over the historical record
-(2002–present); `total_seasons` = span of seasons in the data.
+    All return periods are computed **per season** over the historical record
+    (2002–present); `total_seasons` = span of seasons in the data.
 
-| Metric | Formula |
-|---|---|
-| **Overall return period** | `total_seasons / seasons_with_activation` |
-| **Overall probability of activation** | `seasons_with_activation / total_seasons` (= 1 / overall RP) |
-| **Average total spending per year** | `n_activations × $4M / total_seasons` |
-| **Effective RP** (avg period for a full budget spend) | `total_seasons / n_activations` — counts each activation, so seasons with multiple activations shorten it relative to the overall RP |
-| **Probability of total budget spend** | `avg_spend_per_year / $4M` = `n_activations / total_seasons` |
-| **Average spending per year with activation** | `n_activations × $4M / seasons_with_activation` |
+    | Metric | Formula |
+    |---|---|
+    | **Overall return period** | `total_seasons / seasons_with_activation` |
+    | **Overall probability of activation** | `seasons_with_activation / total_seasons` (= 1 / overall RP) |
+    | **Average total spending per year** | `n_activations × $4M / total_seasons` |
+    | **Effective RP** (avg period for a full budget spend) | `total_seasons / n_activations` — counts each activation, so seasons with multiple activations shorten it relative to the overall RP |
+    | **Probability of total budget spend** | `avg_spend_per_year / $4M` = `n_activations / total_seasons` |
+    | **Average spending per year with activation** | `n_activations × $4M / seasons_with_activation` |
 
-Each activation costs a flat **$4M** (`_BUDGET`).
+    Each activation costs a flat **$4M** (`_BUDGET`).
 
-**Per-indicator return periods** use the same per-season definition:
-`total_seasons / (seasons in which that indicator fired ≥ once)`. The "overall"
-forecast / observed rows are the union of their components; "exposure OR
-rainfall (no DGPC)" drops the Hurricane Warning condition so its marginal
-contribution is visible. Note these section-level RPs are unions *within* a
-section and do **not** equal the trigger-wide Overall RP (which unions every
-forecast + observed + hur-warning condition).
-        """
+    **Per-indicator return periods** use the same per-season definition:
+    `total_seasons / (seasons in which that indicator fired ≥ once)`. The "overall"
+    forecast / observed rows are the union of their components; "exposure OR
+    rainfall (no DGPC)" drops the Hurricane Warning condition so its marginal
+    contribution is visible. Note these section-level RPs are unions *within* a
+    section and do **not** equal the trigger-wide Overall RP (which unions every
+    forecast + observed + hur-warning condition).
+    """
     )
+    return
 
 
 @app.cell
@@ -165,27 +166,28 @@ def activation_summary(df_rain_opt_hur, mo, pd, rain_opt_thresh_hur):
     for _label, _col in _indicators:
         _ns = _seasons_with(_col)
         _rp_str = f"{_total_seasons / _ns:.1f} yrs" if _ns else "—"
+        _prob_str = f"{_ns / _total_seasons:.1%}" if _ns else "—"
         _calc = (
             f"{_total_seasons} seasons / {_ns} seasons triggered"
             if _ns
             else "never triggered"
         )
-        _rp_rows.append(f"| {_label} | {_rp_str} | {_calc} |")
+        _rp_rows.append(f"| {_label} | {_rp_str} | {_prob_str} | {_calc} |")
     _rp_md = (
-        "| Indicator | Return period | Calculation |\n"
-        "|:---|---:|:---|\n" + "\n".join(_rp_rows)
+        "| Indicator | Return period | Probability (1/RP) | Calculation |\n"
+        "|:---|---:|---:|:---|\n" + "\n".join(_rp_rows)
     )
 
     _metrics_md = f"""
-| Metric | Value | Calculation |
-|:---|---:|:---|
-| Overall return period | {_overall_rp:.1f} yrs | {_total_seasons} seasons / {_seasons_with_act} seasons with activation |
-| Overall probability of activation | {_prob_act:.1%} | {_seasons_with_act} / {_total_seasons} seasons |
-| Average total spending per year | {_fmt_usd(_avg_spend)} | {_n_act} activations × $4M / {_total_seasons} seasons |
-| Avg period for total budget spend / Effective RP | {_eff_rp:.1f} yrs | {_total_seasons} seasons / {_n_act} activations |
-| Probability of total budget spend | {_prob_budget:.1%} | {_n_act} / {_total_seasons} seasons |
-| Average total spending per year with activation | {_fmt_usd(_avg_spend_with_act)} | {_n_act} activations × $4M / {_seasons_with_act} seasons with activation |
-"""
+    | Metric | Value | Calculation |
+    |:---|---:|:---|
+    | Overall return period | {_overall_rp:.1f} yrs | {_total_seasons} seasons / {_seasons_with_act} seasons with activation |
+    | Overall probability of activation | {_prob_act:.1%} | {_seasons_with_act} / {_total_seasons} seasons |
+    | Average total spending per year | {_fmt_usd(_avg_spend)} | {_n_act} activations × $4M / {_total_seasons} seasons |
+    | Avg period for total budget spend / Effective RP | {_eff_rp:.1f} yrs | {_total_seasons} seasons / {_n_act} activations |
+    | Probability of total budget spend | {_prob_budget:.1%} | {_n_act} / {_total_seasons} seasons |
+    | Average total spending per year with activation | {_fmt_usd(_avg_spend_with_act)} | {_n_act} activations × $4M / {_seasons_with_act} seasons with activation |
+    """
 
     # ── Table HTML ────────────────────────────────────────────────────────
     def _cerf_fmt(row):
@@ -274,18 +276,18 @@ def activation_summary(df_rain_opt_hur, mo, pd, rain_opt_thresh_hur):
         _rows_html.append(f"<tr>{''.join(_cells)}</tr>")
 
     _css = """<style>
-  .act-tbl{border-collapse:collapse;font-size:13px;font-family:sans-serif}
-  .act-tbl th,.act-tbl td{padding:5px 10px;text-align:center;border-bottom:1px solid #e0e0e0}
-  .act-tbl th{background:#f5f5f5;border-bottom:2px solid #ccc;white-space:nowrap}
-  .act-tbl .lc{text-align:left}
-  .act-tbl tbody tr:hover td{box-shadow:inset 0 0 0 9999px rgba(0,0,0,0.10);cursor:default}
-  .act-tbl .fcast-grp{background:#dde8f8}
-  .act-tbl .obs-grp{background:#ddf0e8}
-  .act-tbl .bl-f{border-left:2px solid #7baed6}
-  .act-tbl .br-f{border-right:2px solid #7baed6}
-  .act-tbl .bl-o{border-left:2px solid #6bbf8e}
-  .act-tbl .br-o{border-right:2px solid #6bbf8e}
-</style>"""
+      .act-tbl{border-collapse:collapse;font-size:13px;font-family:sans-serif}
+      .act-tbl th,.act-tbl td{padding:5px 10px;text-align:center;border-bottom:1px solid #e0e0e0}
+      .act-tbl th{background:#f5f5f5;border-bottom:2px solid #ccc;white-space:nowrap}
+      .act-tbl .lc{text-align:left}
+      .act-tbl tbody tr:hover td{box-shadow:inset 0 0 0 9999px rgba(0,0,0,0.10);cursor:default}
+      .act-tbl .fcast-grp{background:#dde8f8}
+      .act-tbl .obs-grp{background:#ddf0e8}
+      .act-tbl .bl-f{border-left:2px solid #7baed6}
+      .act-tbl .br-f{border-right:2px solid #7baed6}
+      .act-tbl .bl-o{border-left:2px solid #6bbf8e}
+      .act-tbl .br-o{border-right:2px solid #6bbf8e}
+    </style>"""
 
     _thead = (
         "<thead>"
@@ -329,6 +331,7 @@ def activation_summary(df_rain_opt_hur, mo, pd, rain_opt_thresh_hur):
             ]
         )
     )
+    return
 
 
 @app.cell
@@ -363,7 +366,6 @@ def load_wind_exposure(pd, stratus, text):
         subset=["sid"]
     )
     df_exp_raw = df_exp_raw[df_exp_raw["sid"].str[:4].astype(int) >= 2002]
-
     return (df_exp_raw,)
 
 
@@ -962,7 +964,6 @@ def load_total_exposure(df_exp, df_mon_all, pd, stratus, text):
             ["sid", "wind_speed_kt", "pop_exposed"]
         ].rename(columns={"pop_exposed": "max_total_exposure"})
         df_total_exp = pd.concat([df_total_exp, _mel], ignore_index=True)
-
     return (df_total_exp,)
 
 
@@ -1072,6 +1073,7 @@ def exposure_check(df_exp, mo, pd, stratus, text):
             .to_html()
         )
     )
+    return
 
 
 @app.cell
@@ -1432,11 +1434,12 @@ def trigger_table(
     _df["Obsv. trig."] = _df["obsv_trig"].map({True: "✓", False: "—"})
 
     def _storm_label(row):
-        _nm = (
-            str(row["name"]).strip().title()
-            if pd.notna(row["name"])
-            else "Unnamed"
-        )
+        if pd.notna(row["name"]):
+            _nm = str(row["name"]).strip().title()
+        elif str(row.get("sid", "")) == "2002265N10315":
+            _nm = "Lili"  # 2002 hurricane, missing from EM-DAT for Haiti
+        else:
+            _nm = "Unnamed"
         return f"{_nm} ({row['season']})"
 
     _df["Storm"] = _df.apply(_storm_label, axis=1)
@@ -2061,7 +2064,7 @@ def corr_plots(df_triggers, plt, thresh):
 
 
 @app.cell
-def trigger_corr_table(df_rain_opt, mo, pd, plt):
+def trigger_corr_table(df_rain_opt, plt):
     _cols = {
         "total_exp_34": "Total exp 34",
         "total_exp_50": "Total exp 50",
@@ -2109,54 +2112,56 @@ def trigger_corr_table(df_rain_opt, mo, pd, plt):
     )
     plt.tight_layout()
     _fig
+    return
 
 
 @app.cell
 def doc_optimization(mo):
     mo.md(
         """
-## Trigger optimization
+    ## Trigger optimization
 
-Tests a simplified **OR trigger** with three indicators:
+    Tests a simplified **OR trigger** with three indicators:
 
-1. **Total exposure** — max(fcastonly exposure + cumulative observed exposure)
-   across all pre-cutoff forecast issuances. **Fcastonly** is the *future-only*
-   forecast: the NHC wind-buffer geometry minus the observed swath already
-   accumulated up to that issuance, so the two components are non-overlapping
-   and sum to total storm exposure without double-counting. Source tables:
-   `nhc_tracks_fcastonly_exposure` (future cone only) and
-   `nhc_tracks_obsv_exposure` (already-swept area), both iso3 = HTI,
-   admin_level = 0, aligned via `pd.merge_asof`. Only issuances more than 48 h
-   before closest approach are included (same window as the existing Haiti
-   action trigger).
+    1. **Total exposure** — max(fcastonly exposure + cumulative observed exposure)
+       across all pre-cutoff forecast issuances. **Fcastonly** is the *future-only*
+       forecast: the NHC wind-buffer geometry minus the observed swath already
+       accumulated up to that issuance, so the two components are non-overlapping
+       and sum to total storm exposure without double-counting. Source tables:
+       `nhc_tracks_fcastonly_exposure` (future cone only) and
+       `nhc_tracks_obsv_exposure` (already-swept area), both iso3 = HTI,
+       admin_level = 0, aligned via `pd.merge_asof`. Only issuances more than 48 h
+       before closest approach are included (same window as the existing Haiti
+       action trigger).
 
-2. **Forecast rainfall** — max 2-day rolling rainfall from NHC monitors at
-   action lead time (pre-cutoff only), from `nhc.load_hist_fcast_monitors`.
+    2. **Forecast rainfall** — max 2-day rolling rainfall from NHC monitors at
+       action lead time (pre-cutoff only), from `nhc.load_hist_fcast_monitors`.
 
-3. **Observed rainfall** — max 2-day rolling rainfall from the 0-day hindcast
-   rows of the same monitor archive.
+    3. **Observed rainfall** — max 2-day rolling rainfall from the 0-day hindcast
+       rows of the same monitor archive.
 
-A storm **triggers** if *any* of the three indicators meets its threshold. Three
-wind levels are tested (34 / 50 / 64 kt) as separate options.
+    A storm **triggers** if *any* of the three indicators meets its threshold. Three
+    wind levels are tested (34 / 50 / 64 kt) as separate options.
 
-**How thresholds are determined:** a 2D sweep over exposure threshold and
-forecast-rainfall threshold. For each combination, the observed-rainfall
-threshold is set *deterministically* as the (n − n_exp − n_fcast)-th largest
-observed rainfall among storms not already triggered by exposure or forecast
-rainfall. This guarantees exactly n = 12 storms trigger overall (RP ≈ 2.1 yrs
-over 2002–2025). The best option per wind level maximises CERF storm count,
-then Total Affected, then minimises the exposure threshold.
+    **How thresholds are determined:** a 2D sweep over exposure threshold and
+    forecast-rainfall threshold. For each combination, the observed-rainfall
+    threshold is set *deterministically* as the (n − n_exp − n_fcast)-th largest
+    observed rainfall among storms not already triggered by exposure or forecast
+    rainfall. This guarantees exactly n = 12 storms trigger overall (RP ≈ 2.1 yrs
+    over 2002–2025). The best option per wind level maximises CERF storm count,
+    then Total Affected, then minimises the exposure threshold.
 
-**Condition columns in the storm table:**
+    **Condition columns in the storm table:**
 
-| Column | Meaning |
-|--------|---------|
-| **X kt exp** | Total exposure ≥ optimised exposure threshold at this wind level |
-| **X kt fcast** | Forecast rainfall ≥ optimised forecast-rainfall threshold |
-| **X kt rain** | Observed rainfall ≥ optimised observed-rainfall threshold |
-| **X kt+O** | Combined: any condition met (the actual trigger) |
-        """
+    | Column | Meaning |
+    |--------|---------|
+    | **X kt exp** | Total exposure ≥ optimised exposure threshold at this wind level |
+    | **X kt fcast** | Forecast rainfall ≥ optimised forecast-rainfall threshold |
+    | **X kt rain** | Observed rainfall ≥ optimised observed-rainfall threshold |
+    | **X kt+O** | Combined: any condition met (the actual trigger) |
+    """
     )
+    return
 
 
 @app.cell
@@ -2281,11 +2286,12 @@ def rain_trigger_opt(
     )
 
     def _slbl(row):
-        _nm = (
-            str(row["name"]).strip().title()
-            if pd.notna(row["name"])
-            else "Unnamed"
-        )
+        if pd.notna(row["name"]):
+            _nm = str(row["name"]).strip().title()
+        elif str(row.get("sid", "")) == "2002265N10315":
+            _nm = "Lili"  # 2002 hurricane, missing from EM-DAT for Haiti
+        else:
+            _nm = "Unnamed"
         _yr = row["season"] if pd.notna(row["season"]) else row["sid"][:4]
         return f"{_nm} ({_yr})"
 
@@ -2794,12 +2800,11 @@ def rain_trigger_opt(
         | df_rain_opt["mob_trig"]
         | df_rain_opt["obsv_trig"]
     ).map({True: "✓", False: "—"})
-
     return df_rain_opt, rain_opt_thresh
 
 
 @app.cell
-def rain_scatter(df_rain_opt, mpatches, mo, pd, plt, rain_opt_thresh):
+def rain_scatter(df_rain_opt, mo, mpatches, pd, plt, rain_opt_thresh):
     mo.stop(not len(df_rain_opt) or not rain_opt_thresh)
     _fig, _axes = plt.subplots(1, 3, figsize=(15, 5), dpi=120)
 
@@ -2892,22 +2897,23 @@ def rain_scatter(df_rain_opt, mpatches, mo, pd, plt, rain_opt_thresh):
 def doc_hur_opt(mo):
     mo.md(
         """
-## Hurricane Warning OR trigger
+    ## Hurricane Warning OR trigger
 
-A variant where any storm for which NHC issued a **Hurricane Warning for Haiti**
-is automatically included in the trigger set. Our optimized conditions (total
-exposure OR forecast rainfall OR observed rainfall) then fill the remaining slots
-to reach n = 12 total.
+    A variant where any storm for which NHC issued a **Hurricane Warning for Haiti**
+    is automatically included in the trigger set. Our optimized conditions (total
+    exposure OR forecast rainfall OR observed rainfall) then fill the remaining slots
+    to reach n = 12 total.
 
-Because ~5 storms already carry a Hurricane Warning, our conditions only need to
-activate ~7 additional storms. This typically requires higher thresholds than the
-primary optimization, since the mandatory hur-warning storms take away the "easiest"
-activations (the high-impact storms that would trigger under almost any threshold).
+    Because ~5 storms already carry a Hurricane Warning, our conditions only need to
+    activate ~7 additional storms. This typically requires higher thresholds than the
+    primary optimization, since the mandatory hur-warning storms take away the "easiest"
+    activations (the high-impact storms that would trigger under almost any threshold).
 
-In the storm conditions table, **Hur. Warn** shows the pre-seeded storms; the
-`{wkt}+O` column shows the combined (hurricane warning OR our conditions) result.
-        """
+    In the storm conditions table, **Hur. Warn** shows the pre-seeded storms; the
+    `{wkt}+O` column shows the combined (hurricane warning OR our conditions) result.
+    """
     )
+    return
 
 
 @app.cell
@@ -3041,11 +3047,12 @@ def rain_trigger_opt_hur(
     _opt["hur_warning"] = _opt["sid"].isin(_hur_sids)
 
     def _slbl(row):
-        _nm = (
-            str(row["name"]).strip().title()
-            if pd.notna(row["name"])
-            else "Unnamed"
-        )
+        if pd.notna(row["name"]):
+            _nm = str(row["name"]).strip().title()
+        elif str(row.get("sid", "")) == "2002265N10315":
+            _nm = "Lili"  # 2002 hurricane, missing from EM-DAT for Haiti
+        else:
+            _nm = "Unnamed"
         _yr = row["season"] if pd.notna(row["season"]) else row["sid"][:4]
         return f"{_nm} ({_yr})"
 
@@ -3423,13 +3430,17 @@ def rain_trigger_opt_hur(
                 ]
             )
         )
-
     return df_rain_opt_hur, rain_opt_thresh_hur
 
 
 @app.cell
 def rain_scatter_hur(
-    df_rain_opt_hur, mpatches, mo, pd, plt, rain_opt_thresh_hur
+    df_rain_opt_hur,
+    mo,
+    mpatches,
+    pd,
+    plt,
+    rain_opt_thresh_hur,
 ):
     mo.stop(not len(df_rain_opt_hur) or not rain_opt_thresh_hur)
     _fig, _axes = plt.subplots(1, 3, figsize=(15, 5), dpi=120)
@@ -3521,7 +3532,13 @@ def rain_scatter_hur(
 
 @app.cell
 def trigger_leadtime(
-    df_mon_all, df_rain_opt, mo, pd, rain_opt_thresh, stratus, text
+    df_mon_all,
+    df_rain_opt,
+    mo,
+    pd,
+    rain_opt_thresh,
+    stratus,
+    text,
 ):
     mo.stop(not len(df_rain_opt) or not rain_opt_thresh)
 
@@ -3713,20 +3730,22 @@ def trigger_leadtime(
             ]
         )
     )
+    return
 
 
 @app.cell
 def doc_appendix(mo):
     mo.md(
         """
----
-## Appendix — additional trigger variants
+    ---
+    ## Appendix — additional trigger variants
 
-The following cells preserve the previous optimization variants for reference
-and comparison. They use the same `df_rain_opt` base data from the primary
-optimization above.
-        """
+    The following cells preserve the previous optimization variants for reference
+    and comparison. They use the same `df_rain_opt` base data from the primary
+    optimization above.
+    """
     )
+    return
 
 
 @app.cell
@@ -4214,7 +4233,11 @@ def rain_trigger_opt_or_shared(df_rain_opt, mo, pd):
 
 @app.cell
 def rain_scatter_or_shared(
-    df_rain_opt_or_s, rain_opt_thresh_or_s, mo, pd, plt
+    df_rain_opt_or_s,
+    mo,
+    pd,
+    plt,
+    rain_opt_thresh_or_s,
 ):
     mo.stop(not rain_opt_thresh_or_s)
 
@@ -4339,16 +4362,17 @@ def rain_scatter_or_shared(
 
     plt.tight_layout()
     _fig
+    return
 
 
 @app.cell
 def rain_trigger_opt_and(
     df_action_trig,
     df_exp,
-    df_total_exp,
     df_obs_rain,
     df_old_trig,
     df_rain,
+    df_total_exp,
     mo,
     pd,
 ):
@@ -5097,6 +5121,7 @@ def rain_scatter_and(df_rain_opt_and, mo, pd, plt, rain_opt_thresh_and):
 
     plt.tight_layout()
     _fig
+    return
 
 
 @app.cell
@@ -5603,7 +5628,7 @@ def rain_trigger_opt_or(df_rain_opt, mo, pd):
 
 
 @app.cell
-def rain_scatter_or(df_rain_opt_or, rain_opt_thresh_or, mo, pd, plt):
+def rain_scatter_or(df_rain_opt_or, mo, pd, plt, rain_opt_thresh_or):
     mo.stop(not rain_opt_thresh_or)
 
     _WKTS = [34, 50, 64]
@@ -5732,6 +5757,7 @@ def rain_scatter_or(df_rain_opt_or, rain_opt_thresh_or, mo, pd, plt):
 
     plt.tight_layout()
     _fig
+    return
 
 
 if __name__ == "__main__":
