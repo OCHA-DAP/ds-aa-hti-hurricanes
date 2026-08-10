@@ -10,6 +10,9 @@ HANNA_ATCF_ID = "al082008"
 GUSTAV_ATCF_ID = "al072008"
 IKE_ATCF_ID = "al092008"
 
+# v1 (2024) trigger distance gate; kept for historical analysis only.
+# Also still used to attribute rainfall date-windows to a storm (the same
+# attribution used when calibrating the rainfall thresholds).
 D_THRESH = 230
 
 CERF_SIDS = [
@@ -62,12 +65,45 @@ LON_ZOOM_RANGE = np.array(
         360.0,
     ]
 )
+
+# No trigger may fire once the storm is forecast to make landfall or pass
+# closest to Haiti within this many hours (informational emails still go out,
+# flagged as past-cutoff).
 LT_CUTOFF_HRS = 48
-THRESHS = {
-    "readiness": {"p": 42, "s": 64, "lt_days": 5},
-    "action": {"p": 42, "s": 64, "lt_days": 3},
-    "obsv": {"p": 70, "s": 50},
+
+# Wind level whose population exposure drives the exposure conditions.
+EXPOSURE_WIND_KT = 64
+
+# 2026 framework trigger definition. Each forecast stage fires (pre-cutoff
+# issuances only) on:
+#   forecast 2-day rolling rainfall >= rain_mm
+#   OR forecast population exposed to >= EXPOSURE_WIND_KT winds > 0
+#   (fcastonly exposure capped at lt_max_hrs leadtime + cumulative observed)
+# The observational stage fires on:
+#   observed 2-day rolling rainfall >= rain_mm
+#   OR observed population exposed to >= EXPOSURE_WIND_KT winds > 0
+# The Action stage's third condition (DGPC red alert confirmed by an NHC
+# Hurricane Warning) is not yet implemented in this monitoring system.
+TRIGGERS = {
+    "mobilisation": {"rain_mm": 68, "lt_max_hrs": 120, "rp_years": 3.0},
+    "action": {"rain_mm": 68, "lt_max_hrs": 72, "rp_years": 3.0},
+    "obsv": {"rain_mm": 57, "lt_max_hrs": None, "rp_years": 3.4},
 }
+OVERALL_RP_YEARS = 2.4
+
+# French display names for the trigger stages.
+STAGE_NAMES_FR = {
+    "mobilisation": "Mobilisation",
+    "action": "Action",
+    "obsv": "Réponse précoce",
+}
+
+# Listmonk lists (see pipelines/setup_listmonk_lists.py).
+LISTMONK_PROJECT_TAG = "ds-aa-hti-hurricanes"
+LISTMONK_INFO_LIST_ID = 116  # AA Haïti ouragans - informations
+LISTMONK_TRIGGER_LIST_ID = 117  # AA Haïti ouragans - déclencheurs
+# "[TEST] Storm Alerts - Internal Test" (private; DS team members).
+LISTMONK_TEST_LIST_ID = 110
 
 MIN_EMAIL_DISTANCE = 1000
 
