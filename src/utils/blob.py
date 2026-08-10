@@ -115,13 +115,15 @@ def load_gdf_from_blob(
     blob_name, shapefile: str = None, prod_dev: Literal["prod", "dev"] = "dev"
 ):
     blob_data = load_blob_data(blob_name, prod_dev=prod_dev)
-    with zipfile.ZipFile(io.BytesIO(blob_data), "r") as zip_ref:
-        zip_ref.extractall("temp")
-        if shapefile is None:
-            shapefile = [f for f in zip_ref.namelist() if f.endswith(".shp")][
-                0
-            ]
-        gdf = gpd.read_file(f"temp/{shapefile}")
+    # use a system temp dir: the repo dir is read-only on Databricks
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with zipfile.ZipFile(io.BytesIO(blob_data), "r") as zip_ref:
+            zip_ref.extractall(temp_dir)
+            if shapefile is None:
+                shapefile = [
+                    f for f in zip_ref.namelist() if f.endswith(".shp")
+                ][0]
+            gdf = gpd.read_file(os.path.join(temp_dir, shapefile))
     return gdf
 
 
