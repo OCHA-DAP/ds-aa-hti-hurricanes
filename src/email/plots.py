@@ -204,11 +204,11 @@ def wsp_density_img(
     total_pop = float(total_pop or 11_757_597)
 
     # A wind level with no population inside any >=5% NHC probability
-    # zone gets a text line instead of a (degenerate) density panel.
+    # zone keeps its panel (axes only) with an unlikely-exposure notice.
+    levels = (34, 50, 64)
     curves = {}
-    skipped = []
     x_max = 0.0
-    for kt in (34, 50, 64):
+    for kt in levels:
         sub = df_wsp[df_wsp["wind_threshold_kt"] == kt]
         floor = float(obsv_floor_by_kt.get(kt, 0))
         bands = [
@@ -217,29 +217,17 @@ def wsp_density_img(
             if p >= 5 and pop > 0
         ]
         if not bands and floor == 0:
-            skipped.append(kt)
             continue
         atoms = _pdf_atoms(bands, floor, total_pop)
         x_max = max(x_max, max(v for v, _ in atoms))
         curves[kt] = atoms
 
-    skipped_html = "".join(
-        "<p style='color:#5e6a6b;font-size:0.9em;margin:4px 0'>"
-        f"<b style='color:{WIND_COLORS[kt]}'>Vents ≥ {kt} kt</b> : "
-        "probabilité NHC inférieure à 5 % partout en Haïti — "
-        "distribution non tracée.</p>"
-        for kt in skipped
-    )
-    if not curves:
-        return skipped_html
-
-    levels = sorted(curves)
-    x_max = min(max(x_max * 1.08, 1000.0), total_pop)
+    x_max = min(max(x_max * 1.08, 1000.0), total_pop) if curves else total_pop
 
     fig, axes = plt.subplots(
         len(levels),
         1,
-        figsize=(9.0, 1.6 * len(levels) + 0.6),
+        figsize=(9.0, 4.6),
         dpi=200,
         sharex=True,
         squeeze=False,
@@ -248,12 +236,26 @@ def wsp_density_img(
     axes = axes.ravel()
     for ax, kt in zip(axes, levels):
         color = WIND_COLORS[kt]
-        xs, dens = _kernel_density(curves[kt], total_pop, x_max)
-        peak = dens.max()
-        if peak > 0:
-            dens = dens / peak
-        ax.fill_between(xs, 0, dens, color=color, alpha=0.35, zorder=2)
-        ax.plot(xs, dens, color=color, lw=1.8, zorder=3)
+        if kt in curves:
+            xs, dens = _kernel_density(curves[kt], total_pop, x_max)
+            peak = dens.max()
+            if peak > 0:
+                dens = dens / peak
+            ax.fill_between(xs, 0, dens, color=color, alpha=0.35, zorder=2)
+            ax.plot(xs, dens, color=color, lw=1.8, zorder=3)
+        else:
+            ax.text(
+                0.5,
+                0.4,
+                "Probabilité NHC < 5 % partout en Haïti — "
+                "exposition improbable",
+                transform=ax.transAxes,
+                ha="center",
+                va="center",
+                fontsize=9.5,
+                color=INK_3,
+                style="italic",
+            )
         ax.set_xlim(0, x_max)
         ax.set_ylim(0, 1.12)
         ax.set_yticks([])
@@ -294,12 +296,9 @@ def wsp_density_img(
         loc="left",
         pad=10,
     )
-    return (
-        fig_to_img_tag(
-            fig,
-            alt=f"Distribution probabiliste de l'exposition, {storm_name}",
-        )
-        + skipped_html
+    return fig_to_img_tag(
+        fig,
+        alt=f"Distribution probabiliste de l'exposition, {storm_name}",
     )
 
 
