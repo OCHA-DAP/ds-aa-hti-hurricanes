@@ -156,13 +156,16 @@ def _kernel_density(
     atoms: list[tuple[float, float]],
     upper: float,
     x_win: float,
-    n: int = 600,
+    n: int = 800,
 ):
     """Gaussian-kernel smoothing of the pmf atoms, reflected at 0 and at
     the population cap so mass piles at the bounds instead of leaking.
-    Grid and bandwidth scale to the display window x_win."""
+    Grid and bandwidth scale to the display window x_win; the floor
+    (lowest) atom gets a tighter kernel so the no-exposure spike hugs
+    zero instead of smearing rightward."""
     xs = np.linspace(0, x_win, n)
-    h = max(x_win * 0.025, 1.0)
+    h_base = max(x_win * 0.012, 1.0)
+    floor_v = atoms[0][0] if atoms else 0.0
     dens = np.zeros_like(xs)
 
     def _phi(z):
@@ -171,10 +174,15 @@ def _kernel_density(
     for v, w in atoms:
         if w <= 0:
             continue
-        dens += w * (
-            _phi((xs - v) / h)
-            + _phi((xs + v) / h)
-            + _phi((2 * upper - xs - v) / h)
+        h = h_base * (0.45 if v <= floor_v else 1.0)
+        dens += (
+            w
+            * (h_base / h)
+            * (
+                _phi((xs - v) / h)
+                + _phi((xs + v) / h)
+                + _phi((2 * upper - xs - v) / h)
+            )
         )
     return xs, dens
 
@@ -195,26 +203,49 @@ def wsp_density_img(
     obsv_floor_by_kt = obsv_floor_by_kt or {}
     total_pop = float(total_pop or 11_757_597)
 
-    levels = (34, 50, 64)
+    # A wind level with no population inside any >=5% NHC probability
+    # zone gets a text line instead of a (degenerate) density panel.
     curves = {}
+    skipped = []
     x_max = 0.0
-    for kt in levels:
+    for kt in (34, 50, 64):
         sub = df_wsp[df_wsp["wind_threshold_kt"] == kt]
         floor = float(obsv_floor_by_kt.get(kt, 0))
-        bands = list(zip(sub["percentage"], sub["pop_exposed"]))
+        bands = [
+            (p, pop)
+            for p, pop in zip(sub["percentage"], sub["pop_exposed"])
+            if p >= 5 and pop > 0
+        ]
+        if not bands and floor == 0:
+            skipped.append(kt)
+            continue
         atoms = _pdf_atoms(bands, floor, total_pop)
         x_max = max(x_max, max(v for v, _ in atoms))
         curves[kt] = atoms
+
+    skipped_html = "".join(
+        "<p style='color:#5e6a6b;font-size:0.9em;margin:4px 0'>"
+        f"<b style='color:{WIND_COLORS[kt]}'>Vents ≥ {kt} kt</b> : "
+        "probabilité NHC inférieure à 5 % partout en Haïti — "
+        "distribution non tracée.</p>"
+        for kt in skipped
+    )
+    if not curves:
+        return skipped_html
+
+    levels = sorted(curves)
     x_max = min(max(x_max * 1.08, 1000.0), total_pop)
 
     fig, axes = plt.subplots(
         len(levels),
         1,
-        figsize=(9.0, 4.6),
+        figsize=(9.0, 1.6 * len(levels) + 0.6),
         dpi=200,
         sharex=True,
+        squeeze=False,
         gridspec_kw={"hspace": 0.35},
     )
+    axes = axes.ravel()
     for ax, kt in zip(axes, levels):
         color = WIND_COLORS[kt]
         xs, dens = _kernel_density(curves[kt], total_pop, x_max)
@@ -263,9 +294,12 @@ def wsp_density_img(
         loc="left",
         pad=10,
     )
-    return fig_to_img_tag(
-        fig,
-        alt=f"Distribution probabiliste de l'exposition, {storm_name}",
+    return (
+        fig_to_img_tag(
+            fig,
+            alt=f"Distribution probabiliste de l'exposition, {storm_name}",
+        )
+        + skipped_html
     )
 
 

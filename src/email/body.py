@@ -236,9 +236,10 @@ def build_fcast_info_body(
         "probabilité de la population d'Haïti exposée à chaque niveau "
         "de vent, selon les Wind Speed Probabilities du NHC — un pic "
         "près de zéro signifie que le scénario le plus probable est une "
-        "exposition faible ou nulle (l'exposition prévue par la "
-        "trajectoire déterministe utilisée pour le déclencheur figure "
-        "dans le tableau ci-dessus).</p>" + wsp_img + (map_img or "")
+        "exposition faible ou nulle. Les zones où la probabilité NHC "
+        "est inférieure à 5 % ne sont pas comptées (l'exposition prévue "
+        "par la trajectoire déterministe utilisée pour le déclencheur "
+        "figure dans le tableau ci-dessus).</p>" + wsp_img + (map_img or "")
     )
     return (
         DISCLAIMER_HTML
