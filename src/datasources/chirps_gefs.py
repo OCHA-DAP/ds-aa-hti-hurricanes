@@ -15,12 +15,20 @@ from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+# CHIRPS2-GEFS (v12) was discontinued 2026-07-01; issue dates from then
+# on come from the CHIRPS3-calibrated datastream (c3g).
 CHIRPS_GEFS_URL = (
     "https://data.chc.ucsb.edu/products/EWX/data/forecasts/"
     "CHIRPS-GEFS_precip_v12/daily_16day/"
     "{iss_year}/{iss_month:02d}/{iss_day:02d}/"
     "data.{valid_year}.{valid_month:02d}{valid_day:02d}.tif"
 )
+CHIRPS3_GEFS_URL = (
+    "https://data.chc.ucsb.edu/products/CHIRPS-GEFS/v3/daily/global/"
+    "{iss_year}/{iss_month:02d}/{iss_day:02d}/"
+    "c3g_{valid_year}.{valid_month:02d}.{valid_day:02d}.tif"
+)
+CHIRPS3_START = pd.Timestamp("2026-07-01")
 CHIRPS_GEFS_BLOB_DIR = "raw/chirps/gefs/hti"
 
 
@@ -104,7 +112,10 @@ def download_chirps_gefs(
     verbose: bool = False,
 ):
     """Download CHIRPS GEFS data for a specific issue and valid date."""
-    url = CHIRPS_GEFS_URL.format(
+    url_template = (
+        CHIRPS3_GEFS_URL if issue_date >= CHIRPS3_START else CHIRPS_GEFS_URL
+    )
+    url = url_template.format(
         iss_year=issue_date.year,
         iss_month=issue_date.month,
         iss_day=issue_date.day,
