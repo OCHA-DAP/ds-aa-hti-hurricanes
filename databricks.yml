@@ -50,6 +50,11 @@ targets:
     workspace:
       profile: default
       root_path: /Workspace/Users/adm.tdowning@global.un.org/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      # Live since 2026-08-11: send to the AA Haïti Listmonk lists
+      # (116 info / 117 déclencheurs). Subscribers are managed in
+      # Listmonk; see pipelines/setup_listmonk_lists.py.
+      test_email: "False"
   dev:
     mode: development
     workspace:
