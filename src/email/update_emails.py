@@ -51,11 +51,12 @@ def _already_sent(record: pd.DataFrame, email_type: str, key: str, by: str):
 
 def build_email_plots(
     atcf_id: str, issue_time, name: str
-) -> tuple[str, str | None, str | None]:
-    """(wsp_img, wsp_map_img, det_map_img) HTML for one advisory."""
+) -> tuple[str, str | None, str | None, str | None]:
+    """(wsp_img, wsp_map_img, det_map_img, rain_img) for one advisory."""
     wsp_img = WSP_UNAVAILABLE_HTML
     map_img = None
     det_img = None
+    rain_img = None
     try:
         df_wsp = storms_db.fetch_wsp_exposure(atcf_id, issue_time)
         if not df_wsp.empty:
@@ -116,10 +117,57 @@ def build_email_plots(
             )
             timing = _compute_timing(tracks_fcast, adm0.to_crs(3857))
             det_img += _timing_html(timing, issue_time)
+            rain_img = build_rain_forecast_img(issue_time, name, adm0)
     except Exception as e:
         logger.error(f"Could not build map for {atcf_id}: {e}")
         traceback.print_exc()
-    return wsp_img, map_img, det_img
+    return wsp_img, map_img, det_img, rain_img
+
+
+def build_rain_forecast_img(issue_time, name: str, adm0) -> str | None:
+    """Map of per-pixel max 2-day rolling CHIRPS-GEFS rainfall over the
+    120 h horizon, from the issuance most recent before the advisory
+    (the same issuance the trigger evaluation uses)."""
+    import xarray as xr
+
+    from src.constants import FRENCH_MONTHS, TRIGGERS
+    from src.datasources import chirps_gefs
+    from src.monitoring import monitoring_utils
+
+    try:
+        df_gefs = monitoring_utils.load_gefs_with_issue_times()
+        t = storms_db.naive_utc(issue_time)
+        issue_date = df_gefs[df_gefs["issue_time_approx"] < t][
+            "issue_date"
+        ].max()
+        if pd.isnull(issue_date):
+            return None
+        # 6 daily rasters cover the five 2-day windows within 120 h
+        das = []
+        for lead in range(6):
+            valid_date = issue_date + pd.Timedelta(days=lead)
+            das.append(
+                chirps_gefs.load_chirps_gefs_raster(issue_date, valid_date)
+            )
+        da = xr.concat(das, dim="leadtime")
+        roll2 = da.rolling(leadtime=2).sum().max(dim="leadtime")
+        roll2 = roll2.rio.write_crs(das[0].rio.crs)
+
+        label = issue_date.strftime("%-d %b %Y")
+        for en, fr in FRENCH_MONTHS.items():
+            label = label.replace(en, fr)
+        return plots.rain_forecast_map_img(
+            roll2,
+            adm0,
+            name,
+            issue_time,
+            label,
+            rain_thresh_mm=TRIGGERS["mobilisation"]["rain_mm"],
+        )
+    except Exception as e:
+        logger.error(f"Could not build rain forecast map: {e}")
+        traceback.print_exc()
+        return None
 
 
 def _compute_timing(tracks_fcast, adm0_3857) -> dict:
@@ -227,10 +275,10 @@ def _fcast_info_status(row: pd.Series) -> str:
 
 
 def send_fcast_info_email(monitor_id: str, row: pd.Series):
-    wsp_img, map_img, det_img = build_email_plots(
+    wsp_img, map_img, det_img, rain_img = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_fcast_info_body(row, wsp_img, map_img, det_img)
+    html = body.build_fcast_info_body(row, wsp_img, map_img, det_img, rain_img)
     subject = (
         f"Action anticipatoire Haïti – {row['name']} : prévisions NHC du "
         f"{fr_datetime(row['issue_time'])} ({_fcast_info_status(row)})"
@@ -239,7 +287,7 @@ def send_fcast_info_email(monitor_id: str, row: pd.Series):
 
 
 def send_obsv_info_email(monitor_id: str, row: pd.Series):
-    _, map_img, det_img = build_email_plots(
+    _, map_img, det_img, _ = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
     html = body.build_obsv_info_body(row, map_img or det_img)
@@ -256,13 +304,16 @@ def send_obsv_info_email(monitor_id: str, row: pd.Series):
 
 
 def send_trigger_email(monitor_id: str, row: pd.Series, stage: str):
-    wsp_img, map_img, det_img = build_email_plots(
+    wsp_img, map_img, det_img, rain_img = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
     if stage == "obsv":
         wsp_img = None
     html = body.build_trigger_body(
-        row, stage, wsp_img, (det_img or "") + (map_img or "")
+        row,
+        stage,
+        wsp_img,
+        (det_img or "") + (rain_img or "") + (map_img or ""),
     )
     subject = (
         f"Action anticipatoire Haïti – déclencheur "

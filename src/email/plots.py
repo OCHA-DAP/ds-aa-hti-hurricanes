@@ -302,6 +302,89 @@ def wsp_density_img(
     )
 
 
+def rain_forecast_map_img(
+    da_roll2_max,
+    adm0,
+    storm_name: str,
+    issued_time: pd.Timestamp,
+    gefs_issue_label: str,
+    rain_thresh_mm: float = 68,
+) -> str:
+    """Map of the maximum forecast 2-day rolling rainfall per pixel over
+    the 120 h horizon (CHIRPS-GEFS), clipped to Haiti. The trigger keys
+    on the national mean of the same quantity; the map shows where the
+    rain is expected to concentrate."""
+    import numpy as np
+
+    da = da_roll2_max.rio.clip(adm0.geometry, adm0.crs, drop=True)
+    vals = da.values.astype(float)
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.4), dpi=200)
+    ax.set_aspect("equal")
+    vmax = max(float(np.nanmax(vals)), rain_thresh_mm * 1.3)
+    mesh = ax.pcolormesh(
+        da["x"].values,
+        da["y"].values,
+        vals,
+        cmap="YlGnBu",
+        vmin=0,
+        vmax=vmax,
+        shading="auto",
+        zorder=2,
+    )
+    # highlight where the pixel-level rain exceeds the trigger threshold
+    if np.nanmax(vals) >= rain_thresh_mm:
+        ax.contour(
+            da["x"].values,
+            da["y"].values,
+            np.nan_to_num(vals),
+            levels=[rain_thresh_mm],
+            colors=["#9d372b"],
+            linewidths=1.4,
+            zorder=4,
+        )
+        ax.plot(
+            [],
+            [],
+            color="#9d372b",
+            lw=1.4,
+            label=(
+                f"{rain_thresh_mm:.0f} mm — seuil du déclencheur "
+                "(appliqué à la moyenne nationale)"
+            ),
+        )
+        ax.legend(
+            loc="upper left",
+            frameon=True,
+            framealpha=0.9,
+            edgecolor=LINE,
+            fontsize=8.5,
+            labelcolor=INK,
+        )
+    adm0.boundary.plot(ax=ax, color=INK, lw=1.0, zorder=5)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_color(LINE)
+    cbar = fig.colorbar(mesh, ax=ax, shrink=0.75, pad=0.02)
+    cbar.set_label("Précipitations sur 2 jours (mm)", color=INK_2, fontsize=9)
+    cbar.ax.tick_params(colors=INK_2, labelsize=8)
+    cbar.outline.set_edgecolor(LINE)
+    ax.set_title(
+        f"{storm_name} — précipitations prévues sur 2 jours "
+        "(maximum glissant, 120 h)\n"
+        f"CHIRPS-GEFS émis le {gefs_issue_label} · "
+        f"prévision NHC du {fr_datetime(issued_time)}",
+        fontsize=10.5,
+        color=INK,
+        loc="left",
+        pad=8,
+    )
+    return fig_to_img_tag(
+        fig, alt=f"Précipitations prévues {storm_name}", dpi=200
+    )
+
+
 def _start_map():
     """Figure with the Natural Earth background."""
     import geopandas as gpd

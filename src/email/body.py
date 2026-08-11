@@ -180,6 +180,7 @@ def build_fcast_info_body(
     wsp_img: str,
     map_img: str | None,
     det_img: str | None = None,
+    rain_img: str | None = None,
 ) -> str:
     name = row["name"]
     issue_str = fr_datetime(row["issue_time"])
@@ -230,6 +231,19 @@ def build_fcast_info_body(
         if det_img
         else ""
     )
+    rain_html = (
+        (
+            f"<h2 style='{_H2}'>Précipitations prévues</h2>"
+            "<p style='color:#5e6a6b;font-size:0.9em'>Maximum glissant "
+            "des précipitations prévues sur 2 jours (CHIRPS-GEFS) sur "
+            "l'horizon de 120 h. Le déclencheur porte sur la moyenne "
+            "nationale de cette quantité (valeurs dans le tableau "
+            "ci-dessus) ; la carte montre où la pluie devrait se "
+            "concentrer.</p>" + rain_img
+        )
+        if rain_img
+        else ""
+    )
     plots = (
         f"<h2 style='{_H2}'>Prévisions probabilistes</h2>"
         "<p style='color:#5e6a6b;font-size:0.9em'>Distribution de "
@@ -250,6 +264,8 @@ def build_fcast_info_body(
         + _HR
         + det_html
         + _HR
+        + rain_html
+        + (_HR if rain_html else "")
         + plots
         + _HR
         + FOOTER_HTML
