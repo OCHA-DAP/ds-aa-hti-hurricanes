@@ -24,6 +24,7 @@ os.environ.setdefault("DRY_RUN", "False")
 
 import pandas as pd  # noqa: E402
 
+from src.constants import STAGE_NAMES_FR  # noqa: E402
 from src.datasources import codab, storms_db  # noqa: E402
 from src.email import body, send, update_emails  # noqa: E402
 from src.email.plots import fr_datetime  # noqa: E402
@@ -84,14 +85,24 @@ if __name__ == "__main__":
         raise SystemExit("No usable advisory found in the DB.")
 
     logger.info("Building plots and body...")
+    # Replayed storms are not in the v2 monitoring records, so derive
+    # the activated stages from the replayed advisory itself.
+    activated = [s for s in ("mobilisation", "action") if row[f"{s}_trigger"]]
     wsp_img, map_img, det_img, rain_img = update_emails.build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_fcast_info_body(row, wsp_img, map_img, det_img, rain_img)
+    html = body.build_fcast_info_body(
+        row,
+        wsp_img,
+        map_img,
+        det_img,
+        rain_img,
+        activated_fr=[STAGE_NAMES_FR[s] for s in activated],
+    )
     subject = (
         f"[TEST] Action anticipatoire Haïti – {row['name']} : "
         f"prévisions NHC du {fr_datetime(row['issue_time'])} "
-        f"({update_emails._fcast_info_status(row)})"
+        f"({update_emails._info_status(row, activated)})"
     )
 
     if args.preview:

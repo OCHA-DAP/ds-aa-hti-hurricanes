@@ -64,6 +64,12 @@ resources:
   jobs:
     hti_monitoring:
       name: HTI Hurricane Monitoring
+      permissions:
+        # Zack covers monitoring operations during Tristan's leave
+        # (Aug 2026). Job-level, not bundle-level: this workspace tier
+        # has no directory ACLs, so bundle permissions fail to apply.
+        - user_name: adm.zarno1@global.un.org
+          level: CAN_MANAGE
       git_source:
         git_url: https://github.com/OCHA-DAP/ds-aa-hti-hurricanes.git
         git_provider: gitHub
@@ -81,6 +87,7 @@ resources:
       email_notifications:
         on_failure:
           - tristan.downing@un.org
+          - zachary.arno@un.org
         no_alert_for_skipped_runs: true
 
       parameters:

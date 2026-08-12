@@ -66,6 +66,27 @@ FOOTER_HTML = (
 )
 
 
+def activation_callout(stages_fr: list[str], name: str) -> str:
+    """Banner shown once the framework has activated for this storm.
+
+    An activation is permanent for the storm's duration, but the status
+    panels below only evaluate the current advisory — without this
+    banner a later email could read as a de-activation, which the
+    framework does not have.
+    """
+    stages_txt = ", ".join(f"<b>{s.upper()}</b>" for s in stages_fr)
+    return (
+        "<div style='background:#f6e8e6;border-left:3px solid #9d372b;"
+        "padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0'>"
+        f"Le cadre d'action anticipatoire est <b>ACTIVÉ</b> pour {name} "
+        f"(stade{'s' if len(stages_fr) > 1 else ''} atteint"
+        f"{'s' if len(stages_fr) > 1 else ''} : {stages_txt}). "
+        "L'activation reste en vigueur pour toute la durée de la "
+        "tempête ; les statuts ci-dessous reflètent uniquement la "
+        "présente analyse.</div>"
+    )
+
+
 def past_cutoff_callout(time_to_closest: pd.Timedelta) -> str:
     hrs = max(0, int(time_to_closest.total_seconds() // 3600))
     return (
@@ -181,10 +202,14 @@ def build_fcast_info_body(
     map_img: str | None,
     det_img: str | None = None,
     rain_img: str | None = None,
+    activated_fr: list[str] | None = None,
 ) -> str:
     name = row["name"]
     issue_str = fr_datetime(row["issue_time"])
     past_cutoff = bool(row["past_cutoff"])
+    activation_html = (
+        activation_callout(activated_fr, name) if activated_fr else ""
+    )
 
     intro = (
         "<p>Chers collègues,</p>"
@@ -258,6 +283,7 @@ def build_fcast_info_body(
     return (
         DISCLAIMER_HTML
         + intro
+        + activation_html
         + cutoff_html
         + _HR
         + panels
@@ -272,7 +298,11 @@ def build_fcast_info_body(
     )
 
 
-def build_obsv_info_body(row: pd.Series, map_img: str | None) -> str:
+def build_obsv_info_body(
+    row: pd.Series,
+    map_img: str | None,
+    activated_fr: list[str] | None = None,
+) -> str:
     name = row["name"]
     issue_str = fr_datetime(row["issue_time"])
     intro = (
@@ -281,6 +311,9 @@ def build_obsv_info_body(row: pd.Series, map_img: str | None) -> str:
         "locale Haïti) viennent d'être analysées : précipitations "
         "observées IMERG (NASA) et trajectoire observée du NHC.</p>"
     )
+    activation_html = (
+        activation_callout(activated_fr, name) if activated_fr else ""
+    )
     panels = f"<h2 style='{_H2}'>Statut du déclencheur</h2>" + stage_panel(
         "obsv",
         _obsv_stage_conditions(row),
@@ -288,7 +321,14 @@ def build_obsv_info_body(row: pd.Series, map_img: str | None) -> str:
     )
     map_html = (f"<h2 style='{_H2}'>Carte</h2>" + map_img) if map_img else ""
     return (
-        DISCLAIMER_HTML + intro + _HR + panels + map_html + _HR + FOOTER_HTML
+        DISCLAIMER_HTML
+        + intro
+        + activation_html
+        + _HR
+        + panels
+        + map_html
+        + _HR
+        + FOOTER_HTML
     )
 
 

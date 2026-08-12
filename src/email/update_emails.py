@@ -9,6 +9,11 @@ Email types (email_record_v2.csv in blob dedups):
 
 The obsv trigger email is suppressed when the Action stage already
 fired for that storm (carried over from the v1 system).
+
+Activations are permanent for a storm's duration: once a stage has
+fired, every later info email keeps the ACTIVATION subject status and
+carries an activation banner, even if the latest advisory no longer
+meets the thresholds (or is past cutoff).
 """
 
 import traceback
@@ -264,41 +269,72 @@ def _timing_html(timing: dict, issue_time) -> str:
     )
 
 
-def _fcast_info_status(row: pd.Series) -> str:
-    if row["past_cutoff"]:
+def _activated_stages(atcf_id: str, issue_time) -> list[str]:
+    """Stages that have fired for this storm at or before issue_time,
+    across both monitoring sides, in stage order.
+
+    An activation is permanent for the storm's duration, so info-email
+    subjects/banners must not revert to "PAS D'ACTIVATION" when a later
+    advisory no longer meets the thresholds.
+    """
+    t = storms_db.naive_utc(issue_time)
+    activated = []
+    for fcast_obsv, stages in (
+        ("fcast", ("mobilisation", "action")),
+        ("obsv", ("obsv",)),
+    ):
+        df = monitoring_utils.load_existing_monitoring_points(fcast_obsv)
+        if df.empty:
+            continue
+        df = df[df["atcf_id"] == atcf_id]
+        df = df[df["issue_time"].apply(storms_db.naive_utc) <= t]
+        for stage in stages:
+            if bool(df[f"{stage}_trigger"].any()):
+                activated.append(stage)
+    return activated
+
+
+def _info_status(row: pd.Series, activated: list[str]) -> str:
+    if activated:
+        return f"ACTIVATION : {STAGE_NAMES_FR[activated[-1]].upper()}"
+    if bool(row.get("past_cutoff", False)):
         return "DÉLAI DÉPASSÉ"
-    if row["action_trigger"]:
-        return "ACTIVATION : ACTION"
-    if row["mobilisation_trigger"]:
-        return "ACTIVATION : MOBILISATION"
     return "PAS D'ACTIVATION"
 
 
 def send_fcast_info_email(monitor_id: str, row: pd.Series):
+    activated = _activated_stages(row["atcf_id"], row["issue_time"])
     wsp_img, map_img, det_img, rain_img = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_fcast_info_body(row, wsp_img, map_img, det_img, rain_img)
+    html = body.build_fcast_info_body(
+        row,
+        wsp_img,
+        map_img,
+        det_img,
+        rain_img,
+        activated_fr=[STAGE_NAMES_FR[s] for s in activated],
+    )
     subject = (
         f"Action anticipatoire Haïti – {row['name']} : prévisions NHC du "
-        f"{fr_datetime(row['issue_time'])} ({_fcast_info_status(row)})"
+        f"{fr_datetime(row['issue_time'])} ({_info_status(row, activated)})"
     )
     send.send_campaign(f"aa-hti-info-{monitor_id}", subject, html, "info")
 
 
 def send_obsv_info_email(monitor_id: str, row: pd.Series):
+    activated = _activated_stages(row["atcf_id"], row["issue_time"])
     _, map_img, det_img, _ = build_email_plots(
         row["atcf_id"], row["issue_time"], row["name"]
     )
-    html = body.build_obsv_info_body(row, map_img or det_img)
-    status = (
-        "ACTIVATION : RÉPONSE PRÉCOCE"
-        if row["obsv_trigger"]
-        else "PAS D'ACTIVATION"
+    html = body.build_obsv_info_body(
+        row,
+        map_img or det_img,
+        activated_fr=[STAGE_NAMES_FR[s] for s in activated],
     )
     subject = (
         f"Action anticipatoire Haïti – {row['name']} : observations du "
-        f"{fr_datetime(row['issue_time'])} ({status})"
+        f"{fr_datetime(row['issue_time'])} ({_info_status(row, activated)})"
     )
     send.send_campaign(f"aa-hti-info-{monitor_id}", subject, html, "info")
 
