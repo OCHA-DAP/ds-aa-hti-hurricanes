@@ -412,8 +412,69 @@
 
   
   
-  <!-- 10 · Activations historiques -->
+  <!-- 8 · Le calendrier / garde-fou 48 h -->
   <section class="slide" id="s8">
+    <div class="inner">
+      <div class="kicker">Le calendrier</div>
+      <h2>Aucune activation à moins de 48 h de l'impact</h2>
+      <svg viewBox="0 0 1000 400" style="width:100%;max-width:980px;height:auto"
+           role="img" aria-label="Chronologie des fenêtres d'activation par rapport au passage de la tempête">
+        <!-- bands -->
+        <rect x="60" y="90" width="270" height="46" rx="8" fill="#fdf3d0" stroke="#c9962a" stroke-width="1"/>
+        <text x="195" y="118" text-anchor="middle" font-size="14.5" fill="#1e2a2b">Mobilisation possible</text>
+        <rect x="240" y="146" width="90" height="46" rx="8" fill="#e2efdf" stroke="#5c9660" stroke-width="1"/>
+        <text x="285" y="169" text-anchor="middle" font-size="13" fill="#1e2a2b">Action</text>
+        <text x="285" y="185" text-anchor="middle" font-size="13" fill="#1e2a2b">possible</text>
+        <rect x="336" y="90" width="168" height="102" rx="8" fill="#e9edee" stroke="#c3ced3" stroke-width="1"/>
+        <text x="420" y="132" text-anchor="middle" font-size="14.5" font-weight="700" fill="#9d372b">Pas d'activation</text>
+        <text x="420" y="152" text-anchor="middle" font-size="13" fill="#5e6a6b">possible</text>
+        <rect x="516" y="90" width="84" height="102" rx="8" fill="#e9edee" stroke="#c3ced3" stroke-width="1"/>
+        <text x="558" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#9d372b">Pas</text>
+        <text x="558" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#9d372b">d'activation</text>
+        <rect x="606" y="90" width="290" height="102" rx="8" fill="#e3ecf8" stroke="#1862d8" stroke-width="1"/>
+        <text x="751" y="124" text-anchor="middle" font-size="14.5" fill="#1e2a2b">Réponse précoce possible</text>
+        <text x="751" y="144" text-anchor="middle" font-size="12.5" fill="#5e6a6b">sur observations</text>
+        <text x="751" y="162" text-anchor="middle" font-size="12.5" fill="#5e6a6b">(si l'Action n'a pas activé)</text>
+        <!-- axis -->
+        <line x1="40" y1="230" x2="950" y2="230" stroke="#1e2a2b" stroke-width="2.5"/>
+        <polygon points="950,230 936,223 936,237" fill="#1e2a2b"/>
+        <!-- passage marker -->
+        <line x1="510" y1="52" x2="510" y2="300" stroke="#c62828" stroke-width="2.5"/>
+        <polygon points="510,30 494,58 526,58" fill="#c62828"/>
+        <text x="510" y="52" text-anchor="middle" font-size="13" font-weight="800" fill="#ffffff">!</text>
+        <text x="510" y="320" text-anchor="middle" font-size="13.5" font-weight="700" fill="#c62828">Passage au plus près d'Haïti</text>
+        <text x="510" y="337" text-anchor="middle" font-size="13.5" font-weight="700" fill="#c62828">(ou toucher terre)</text>
+        <!-- duration arrows -->
+        <g stroke="#5e6a6b" stroke-width="1.4" fill="#5e6a6b">
+          <line x1="64" y1="252" x2="326" y2="252"/><polygon points="60,252 70,248 70,256"/><polygon points="330,252 320,248 320,256"/>
+          <line x1="244" y1="278" x2="326" y2="278"/><polygon points="240,278 250,274 250,282"/><polygon points="330,278 320,274 320,282"/>
+          <line x1="340" y1="252" x2="506" y2="252"/><polygon points="336,252 346,248 346,256"/><polygon points="510,252 500,248 500,256"/>
+          <line x1="520" y1="252" x2="596" y2="252"/><polygon points="516,252 526,248 526,256"/><polygon points="600,252 590,248 590,256"/>
+        </g>
+        <text x="195" y="270" text-anchor="middle" font-size="13" fill="#5e6a6b">48 heures</text>
+        <text x="285" y="296" text-anchor="middle" font-size="13" fill="#5e6a6b">24 h</text>
+        <text x="420" y="270" text-anchor="middle" font-size="13" fill="#5e6a6b">48 heures</text>
+        <text x="558" y="270" text-anchor="middle" font-size="13" fill="#5e6a6b">24 h</text>
+        <!-- 3 jours / 5 jours spans -->
+        <g stroke="#8a949a" stroke-width="1.2" fill="#8a949a">
+          <line x1="244" y1="356" x2="506" y2="356"/><polygon points="240,356 250,352 250,360"/><polygon points="510,356 500,352 500,360"/>
+          <line x1="64" y1="384" x2="506" y2="384"/><polygon points="60,384 70,380 70,388"/><polygon points="510,384 500,380 500,388"/>
+        </g>
+        <text x="375" y="350" text-anchor="middle" font-size="13.5" fill="#5e6a6b">3 jours</text>
+        <text x="285" y="378" text-anchor="middle" font-size="13.5" fill="#5e6a6b">5 jours</text>
+      </svg>
+      <p class="note">
+        À moins de <b>48 h</b> du passage prévu, il est trop tard pour agir
+        avant l'impact : les déclencheurs «&nbsp;prévisions&nbsp;» ne peuvent plus
+        s'activer, quelles que soient la pluie ou l'exposition prévues. Après
+        le passage, seule la Réponse précoce (observations) reste possible.
+        Délais approximatifs, en raison de l'incertitude des prévisions.
+      </p>
+    </div>
+  </section>
+
+  <!-- 10 · Activations historiques -->
+  <section class="slide" id="s9">
     <div class="inner">
       <div class="kicker">Validation</div>
       <h2>Activations historiques, 2002–2025</h2>
@@ -468,7 +529,7 @@
   </section>
 
   <!-- 11 · Calibration & fonctionnement -->
-  <section class="slide" id="s9">
+  <section class="slide" id="s10">
     <div class="inner">
       <div class="kicker">Calibration &amp; fonctionnement</div>
       <h2>Périodes de retour et garde-fous</h2>
@@ -500,7 +561,7 @@
 <div class="controls">
   <button id="prev" aria-label="Diapositive précédente">‹</button>
   <div class="dots" id="dots"></div>
-  <span class="pageno" id="pageno">1 / 9</span>
+  <span class="pageno" id="pageno">1 / 10</span>
   <button id="next" aria-label="Diapositive suivante">›</button>
 </div>
 
