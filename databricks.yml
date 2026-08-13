@@ -28,9 +28,6 @@ sync:
     - "temp/**"
 
 variables:
-  existing_cluster_id:
-    description: Interactive cluster the job runs on (carries the DSCI_AZ_* env vars)
-    default: "0515-161935-i2w5mxhc"
   git_branch:
     description: Branch the job pulls the pipeline from
     default: main
@@ -96,9 +93,31 @@ resources:
         - name: dry_run
           default: ${var.dry_run}
 
+      # Ephemeral Job Compute under the team policy (000C79D951EAF0D6),
+      # not a standing interactive cluster: the policy injects the
+      # DSCI_AZ_*/IMERG_* creds, and anyone with CAN_MANAGE on the job
+      # can operate it without permissions on someone's personal
+      # cluster. Listmonk creds come from databricks/run_monitor_job.py
+      # (dbutils.secrets), not the cluster env. The policy forbids
+      # single-node and fixes num_workers=1; the monitor is plain
+      # Python on the driver, so the worker just idles.
+      job_clusters:
+        - job_cluster_key: monitor_cluster
+          new_cluster:
+            policy_id: "000C79D951EAF0D6"
+            spark_version: "18.2.x-scala2.13"
+            node_type_id: "Standard_DS4_v2"
+            num_workers: 1
+            data_security_mode: SINGLE_USER
+            azure_attributes:
+              # The policy fixes spot_bid_max_price=100; set explicitly
+              # because the provider's -1 default is rejected.
+              availability: SPOT_WITH_FALLBACK_AZURE
+              spot_bid_max_price: 100
+
       tasks:
         - task_key: run_monitoring
-          existing_cluster_id: ${var.existing_cluster_id}
+          job_cluster_key: monitor_cluster
           spark_python_task:
             python_file: databricks/run_monitor_job.py
             source: GIT
