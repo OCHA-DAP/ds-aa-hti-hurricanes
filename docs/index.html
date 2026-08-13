@@ -450,8 +450,12 @@
     touchX = null;
   });
 
-  const h = parseInt(location.hash.slice(1), 10);
-  if (h >= 1 && h <= slides.length) go(h - 1);
+  function goFromHash() {
+    const h = parseInt(location.hash.slice(1), 10);
+    if (h >= 1 && h <= slides.length && h - 1 !== current) go(h - 1);
+  }
+  window.addEventListener("hashchange", goFromHash);
+  goFromHash();
 </script>
 </body>
 </html>
