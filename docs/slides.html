@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Action anticipatoire Haïti — le mécanisme de déclenchement</title>
+<style>
+  :root {
+    --blue: #1862d8;
+    --orange: #d48f2a;
+    --red: #9d372b;
+    --ink: #1e2a2b;
+    --muted: #5e6a6b;
+    --bg: #f4f7f9;
+    --card: #ffffff;
+    --line: #dde5e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    overflow: hidden;
+  }
+  #deck { height: 100%; position: relative; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3vh 4vw 9vh;
+    text-align: center;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .slide .inner { max-width: 1040px; width: 100%; }
+  .kicker {
+    text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem;
+    font-weight: 700; color: var(--blue); margin-bottom: 12px;
+  }
+  h1 { font-size: clamp(1.7rem, 4.5vw, 2.8rem); line-height: 1.15; margin-bottom: 18px; }
+  h2 { font-size: clamp(1.3rem, 3vw, 1.9rem); line-height: 1.2; margin-bottom: 16px; }
+  p.lead { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--ink); line-height: 1.5; }
+  p.note { font-size: 0.9rem; color: var(--muted); margin-top: 16px; line-height: 1.45; }
+
+  table.def {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    font-size: 0.92rem; box-shadow: 0 2px 10px rgba(20,40,60,0.06);
+  }
+  table.def th {
+    background: #eef3f8; color: var(--muted); font-size: 0.72rem;
+    text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 12px;
+    border-bottom: 2px solid var(--line); text-align: left;
+  }
+  table.def td {
+    padding: 12px; border-bottom: 1px solid var(--line);
+    text-align: left; vertical-align: middle; line-height: 1.4;
+  }
+  table.def tr:last-child td { border-bottom: none; }
+  .stage { font-weight: 700; white-space: nowrap; }
+  .stage small { display: block; font-weight: 400; color: var(--muted); }
+  .ou {
+    display: inline-block; background: var(--blue); color: #fff;
+    font-weight: 800; border-radius: 999px; padding: 1px 10px;
+    font-size: 0.78rem; margin: 0 6px; vertical-align: middle;
+  }
+  .et {
+    display: inline-block; background: var(--red); color: #fff;
+    font-weight: 800; border-radius: 999px; padding: 1px 10px;
+    font-size: 0.78rem; margin: 0 6px; vertical-align: middle;
+  }
+  .overall {
+    background: #eef3f8; font-weight: 600;
+  }
+  td.logic { text-align: center; white-space: nowrap; width: 1%; }
+  table.def tr.sub td { background: #fbfcfd; font-size: 0.88rem; }
+  table.def tr.sub td:first-child { border-right: none; }
+
+  .tablewrap { overflow-x: auto; }
+  table.hist {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    border: 1px solid var(--line); font-size: 0.8rem;
+    box-shadow: 0 2px 10px rgba(20,40,60,0.06);
+  }
+  table.hist th {
+    padding: 6px 8px; font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted);
+    border-bottom: 2px solid var(--line); text-align: center;
+  }
+  table.hist th.grp-f { background: #e3ecf8; }
+  table.hist th.grp-o { background: #e4f1e8; }
+  table.hist td {
+    padding: 5px 9px; border-bottom: 1px solid var(--line);
+    text-align: center; white-space: nowrap;
+  }
+  table.hist td.storm { text-align: left; font-weight: 600; }
+  table.hist td.hit { background: #f57c00; color: #fff; font-weight: 700; }
+  table.hist td.cerfy { background: #c62828; color: #fff; font-weight: 700; }
+  table.hist td.sep-f { border-left: 2px solid #9dbce4; }
+  table.hist td.sep-o { border-left: 2px solid #9dc9ab; }
+  table.hist td.sep-g { border-left: 2px solid var(--line); }
+
+  .cols { display: flex; gap: 26px; align-items: center; text-align: left; }
+  .cols .txt { flex: 1 1 34%; min-width: 240px; }
+  .cols .fig { flex: 1 1 66%; }
+  .cols img { width: 100%; height: auto; border: 1px solid var(--line);
+              border-radius: 10px; background: #fff; }
+  .txt ul { padding-left: 18px; }
+  .txt li { margin-bottom: 10px; font-size: 0.98rem; line-height: 1.45; }
+  .txt li b.blue { color: var(--blue); }
+  .txt li b.red { color: var(--red); }
+
+  .callout {
+    margin-top: 16px; background: #f6e8e6; border-left: 4px solid var(--red);
+    border-radius: 0 10px 10px 0; padding: 12px 16px; text-align: left;
+    font-size: 0.95rem; line-height: 1.5;
+  }
+  .callout.amber { background: #fbf4ea; border-left-color: #c9962a; }
+
+  ul.plain { list-style: none; text-align: left; max-width: 760px; margin: 0 auto; }
+  ul.plain li {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 13px 18px; margin-bottom: 11px; font-size: 0.98rem; line-height: 1.5;
+    box-shadow: 0 2px 10px rgba(20,40,60,0.05);
+  }
+
+  .controls {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    padding: 12px; background: linear-gradient(transparent, rgba(244,247,249,0.95) 40%);
+    z-index: 10;
+  }
+  .controls button {
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 999px; width: 42px; height: 42px; font-size: 1.2rem;
+    cursor: pointer; box-shadow: 0 2px 8px rgba(20,40,60,0.08);
+  }
+  .controls button:hover { border-color: var(--blue); color: var(--blue); }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #c3ced3; cursor: pointer; }
+  .dot.active { background: var(--blue); }
+  .pageno { font-size: 0.85rem; color: var(--muted); min-width: 3em; }
+  footer.tag { position: fixed; top: 10px; right: 16px; font-size: 0.75rem; color: var(--muted); z-index: 10; }
+
+  @media (max-width: 760px) {
+    .cols { flex-direction: column; }
+    body { overflow: auto; }
+  }
+  @page { size: 380mm 214mm; margin: 0; }
+  @media print {
+    body { overflow: visible; background: #fff; }
+    #deck { height: auto; }
+    .slide {
+      position: static; display: flex !important;
+      height: 100vh; padding: 3vh 4vw;
+      page-break-after: always; break-inside: avoid; overflow: hidden;
+    }
+    .slide:last-child { page-break-after: avoid; }
+    .controls, footer.tag { display: none; }
+    .cols img {
+      width: auto; max-width: 100%; max-height: 62vh;
+      display: block; margin: 0 auto;
+    }
+  }
+</style>
+</head>
+<body>
+<footer class="tag">OCHA · Centre de données humanitaires — cadre 2026</footer>
+<div id="deck">
+
+  <!-- 1 · Titre -->
+  <section class="slide active" id="s1">
+    <div class="inner">
+      <div class="kicker">Action anticipatoire · Ouragans · Haïti · Cadre 2026</div>
+      <h1>Le mécanisme de déclenchement</h1>
+      <p class="lead">
+        Trois déclencheurs spécifiques — <b>Mobilisation</b>, <b>Action</b>,
+        <b>Réponse précoce</b> — évalués automatiquement à chaque avis du
+        National Hurricane Center (4×/jour), à partir des prévisions
+        déterministes NHC (trajectoire + rayons de vent), des prévisions de
+        précipitations CHIRPS-GEFS et des observations IMERG.
+      </p>
+      <p class="note">
+        Les pages qui suivent donnent la définition exacte, puis montrent le
+        calcul des deux conditions en rejouant l'ouragan Matthew (2016) dans
+        le code de production du système de suivi.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 · Définition -->
+  <section class="slide" id="s2">
+    <div class="inner">
+      <div class="kicker">Définition</div>
+      <h2>Le mécanisme, tel qu'implémenté</h2>
+      <table class="def">
+        <tr>
+          <th>Déclencheur</th><th>Période de retour</th>
+          <th>Délai maximum des prévisions</th>
+          <th colspan="3" style="text-align:center">Conditions de déclenchement</th>
+        </tr>
+        <tr>
+          <td class="stage">Prévisions :<br>Mobilisation</td>
+          <td>environ 3,0 ans</td><td>120 heures</td>
+          <td>≥ 68 mm de précipitations prévues</td>
+          <td class="logic"><span class="ou">OU</span></td>
+          <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
+        </tr>
+        <tr>
+          <td class="stage" rowspan="3">Prévisions :<br>Action</td>
+          <td rowspan="3">3,0 ans</td><td rowspan="3">72 heures</td>
+          <td>≥ 68 mm de précipitations prévues</td>
+          <td class="logic"><span class="ou">OU</span></td>
+          <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
+        </tr>
+        <tr class="sub">
+          <td colspan="3" class="logic"><span class="ou">OU</span></td>
+        </tr>
+        <tr class="sub">
+          <td>La DGPC lance une alerte rouge</td>
+          <td class="logic"><span class="et">ET</span></td>
+          <td>L'alerte est confirmée par le NOAA NHC avec un
+              «&nbsp;Hurricane Warning&nbsp;»</td>
+        </tr>
+        <tr>
+          <td class="stage">Observations :<br>Réponse précoce</td>
+          <td>3,4 ans</td><td>—</td>
+          <td>≥ 57 mm de précipitations observées</td>
+          <td class="logic"><span class="ou">OU</span></td>
+          <td>&gt; 0 personnes observées d'être exposées aux vents de 64 nœuds</td>
+        </tr>
+        <tr class="overall">
+          <td class="stage">Période de retour globale</td>
+          <td>2,4 ans</td><td colspan="4"></td>
+        </tr>
+      </table>
+      <p class="note">
+        Pluie : maximum glissant sur 2 jours de la moyenne nationale, dans la
+        fenêtre où la trajectoire prévue est proche d'Haïti, capée au délai du
+        stade. Exposition : population dans la zone de vents ≥ 64 kt prévus.
+        Garde-fou : aucun déclencheur «&nbsp;prévisions&nbsp;» ne peut s'activer si le
+        passage au plus près est prévu à moins de 48 h. Chaque stade s'active
+        au plus une fois par tempête ; une activation est acquise pour toute
+        la durée de la tempête.
+      </p>
+    </div>
+  </section>
+
+  <!-- 3 · Condition pluie -->
+  <section class="slide" id="s3">
+    <div class="inner">
+      <div class="kicker">Le calcul · 1/3</div>
+      <h2>Condition pluie — Matthew (2016) rejoué</h2>
+      <div class="cols">
+        <div class="txt">
+          <ul>
+            <li>À chaque avis NHC, le système prend la prévision CHIRPS-GEFS la
+                plus récente et calcule le <b>maximum glissant sur 2 jours de la
+                pluie moyenne nationale</b>, dans la fenêtre où la trajectoire
+                prévue est à proximité d'Haïti (capée à
+                <b class="blue">120 h</b> / <b style="color:var(--orange)">72 h</b>).</li>
+            <li>Seuil : <b class="red">≥ 68 mm</b> — atteint dès le
+                <b>29 septembre</b>, soit <b>≈ 5 jours avant le landfall</b> :
+                Mobilisation et Action s'activent.</li>
+            <li>Les points creux sont à moins de 48 h du passage prévu : ils ne
+                peuvent plus rien activer.</li>
+          </ul>
+        </div>
+        <div class="fig"><img src="assets/matthew_rain.png"
+          alt="Pluie prévue sur 2 jours par avis NHC pour Matthew 2016, seuil 68 mm, activation le 29 septembre"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Condition vent : le calcul -->
+  <section class="slide" id="s4">
+    <div class="inner">
+      <div class="kicker">Le calcul · 2/3</div>
+      <h2>Condition vent — l'exposition prévue aux vents ≥ 64 kt</h2>
+      <div class="cols">
+        <div class="txt">
+          <ul>
+            <li>La prévision déterministe NHC fournit la <b>trajectoire</b> et
+                les <b>rayons de vent par quadrant</b> à chaque échéance.</li>
+            <li>Les rayons ≥ 64 kt sont assemblés en une <b>zone de vents
+                d'ouragan prévus</b>, capée au délai du stade (72 h / 120 h),
+                moins la bande déjà observée.</li>
+            <li>La <b>population</b> (WorldPop, 1 km) dans l'intersection de
+                cette zone avec Haïti = l'exposition prévue.
+                Condition remplie dès que <b class="red">&gt; 0 personne</b>
+                est exposée.</li>
+          </ul>
+        </div>
+        <div class="fig"><img src="assets/matthew_swath.png"
+          alt="Carte de la prévision NHC du 3 octobre 2016 : trajectoire, zone de vents ≥ 64 kt et intersection avec Haïti"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Condition vent dans le temps -->
+  <section class="slide" id="s5">
+    <div class="inner">
+      <div class="kicker">Le calcul · 3/3</div>
+      <h2>Pourquoi un «&nbsp;OU&nbsp;» — le vent seul aurait été trop tard</h2>
+      <div class="cols">
+        <div class="txt">
+          <ul>
+            <li>Pour Matthew, la zone de vents ≥ 64 kt prévue ne touche Haïti
+                qu'à partir du 2 octobre au soir — <b>déjà à moins de 48 h du
+                passage</b> (points creux).</li>
+            <li>La condition vent seule n'aurait donc <b>pas activé</b> le
+                cadre pour Matthew.</li>
+            <li>D'où la structure du mécanisme : la <b>pluie prévue</b> active
+                5 jours avant ; l'<b>alerte rouge DGPC confirmée par le
+                Hurricane Warning</b> (émis pour Matthew) offre une voie
+                institutionnelle ; la <b>Réponse précoce</b> sur observations
+                est le filet de sécurité.</li>
+          </ul>
+        </div>
+        <div class="fig"><img src="assets/matthew_exposure.png"
+          alt="Exposition prévue aux vents de 64 nœuds par avis NHC pour Matthew 2016 ; elle ne devient positive qu'à moins de 48 heures du passage"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Activations historiques -->
+  <section class="slide" id="s6">
+    <div class="inner">
+      <div class="kicker">Validation</div>
+      <h2>Activations historiques, 2002–2025</h2>
+      <div class="tablewrap">
+      <table class="hist">
+        <tr>
+          <th rowspan="2" style="text-align:left">Système</th>
+          <th colspan="3" class="grp-f">Prévision</th>
+          <th colspan="2" class="grp-o">Observé</th>
+          <th rowspan="2">Déclenchement<br>global</th>
+          <th rowspan="2">CERF</th>
+          <th rowspan="2">Pop. affectée<br>totale</th>
+        </tr>
+        <tr>
+          <th class="grp-f">Exp. prév.</th><th class="grp-f">Précip. prév.</th>
+          <th class="grp-f">DGPC Rouge +<br>Hur. Warning</th>
+          <th class="grp-o">Exp. obs.</th><th class="grp-o">Précip. obs.</th>
+        </tr>
+        <tr><td class="storm">Melissa (2025)</td><td class="sep-f">—</td><td class="hit">82 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">80 mm</td><td class="hit sep-g">✓</td><td class="cerfy">$4,000,000</td><td style="background-image:linear-gradient(to right,#d5c8ee 100.0%,transparent 100.0%)">2,300,021</td></tr>
+        <tr><td class="storm">Matthew (2016)</td><td class="sep-f">—</td><td class="hit">139 mm</td><td class="hit">✓</td><td class="hit sep-o">1,202,447</td><td class="hit">125 mm</td><td class="hit sep-g">✓</td><td class="cerfy">$10,100,000</td><td style="background-image:linear-gradient(to right,#d5c8ee 91.3%,transparent 91.3%)">2,100,439</td></tr>
+        <tr><td class="storm">Jeanne (2004)</td><td class="sep-f">—</td><td>30 mm</td><td>—</td><td class="sep-o">—</td><td>25 mm</td><td class="sep-g">—</td><td>pre-</td><td style="background-image:linear-gradient(to right,#d5c8ee 13.7%,transparent 13.7%)">315,594</td></tr>
+        <tr><td class="storm">Sandy (2012)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td class="hit">85 mm</td><td class="hit sep-g">✓</td><td class="cerfy">$4,000,000</td><td style="background-image:linear-gradient(to right,#d5c8ee 8.8%,transparent 8.8%)">201,850</td></tr>
+        <tr><td class="storm">Ike (2008)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>36 mm</td><td class="sep-g">—</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 5.4%,transparent 5.4%)">125,050</td></tr>
+        <tr><td class="storm">Noel (2007)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>53 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 4.7%,transparent 4.7%)">108,763</td></tr>
+        <tr><td class="storm">Gustav (2008)</td><td class="hit sep-f">931,571</td><td>—</td><td class="hit">✓</td><td class="hit sep-o">931,571</td><td class="hit">93 mm</td><td class="hit sep-g">✓</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 3.2%,transparent 3.2%)">73,006</td></tr>
+        <tr><td class="storm">Hanna (2008)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td class="hit">57 mm</td><td class="hit sep-g">✓</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 2.1%,transparent 2.1%)">48,000</td></tr>
+        <tr><td class="storm">Laura (2020)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>—</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 1.9%,transparent 1.9%)">44,175</td></tr>
+        <tr><td class="storm">Irma (2017)</td><td class="sep-f">—</td><td>34 mm</td><td class="hit">✓</td><td class="sep-o">—</td><td>37 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 1.7%,transparent 1.7%)">40,092</td></tr>
+        <tr><td class="storm">Dennis (2005)</td><td class="sep-f">—</td><td class="hit">69 mm</td><td>—</td><td class="sep-o">—</td><td>37 mm</td><td class="hit sep-g">✓</td><td>pre-</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.7%,transparent 0.7%)">15,036</td></tr>
+        <tr><td class="storm">Ernesto (2006)</td><td class="sep-f">—</td><td>44 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">63 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.7%,transparent 0.7%)">15,000</td></tr>
+        <tr><td class="storm">Isaac (2012)</td><td class="sep-f">—</td><td class="hit">104 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">133 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">8,007</td></tr>
+        <tr><td class="storm">Ivan (2004)</td><td class="sep-f">—</td><td>54 mm</td><td>—</td><td class="sep-o">—</td><td>—</td><td class="sep-g">—</td><td>pre-</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">6,500</td></tr>
+        <tr><td class="storm">Tomas (2010)</td><td class="hit sep-f">13,161</td><td class="hit">107 mm</td><td class="hit">✓</td><td class="sep-o">—</td><td class="hit">87 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">5,020</td></tr>
+        <tr><td class="storm">Dean (2007)</td><td class="sep-f">—</td><td>39 mm</td><td>—</td><td class="sep-o">—</td><td>21 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">3,966</td></tr>
+        <tr><td class="storm">Olga (2007)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>35 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">2,352</td></tr>
+        <tr><td class="storm">Erika (2015)</td><td class="sep-f">—</td><td>19 mm</td><td>—</td><td class="sep-o">—</td><td>20 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">1,969</td></tr>
+        <tr><td class="storm">Irene (2011)</td><td class="sep-f">—</td><td>68 mm</td><td>—</td><td class="sep-o">—</td><td>53 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">1,544</td></tr>
+        <tr><td class="storm">Fay (2008)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>45 mm</td><td class="sep-g">—</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">220</td></tr>
+        <tr><td class="storm">Elsa (2021)</td><td class="sep-f">—</td><td>27 mm</td><td class="hit">✓</td><td class="sep-o">—</td><td>41 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">3</td></tr>
+        <tr><td class="storm">Unnamed (2002)</td><td class="sep-f">—</td><td>48 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">64 mm</td><td class="hit sep-g">✓</td><td>pre-</td><td>—</td></tr>
+      </table>
+      </div>
+      <p class="note">
+        Rejeu du mécanisme sur 2002–2025 (tempêtes ayant déclenché, causé des
+        impacts ou reçu une allocation CERF). Cellules orange : condition
+        atteinte (prévisions évaluées avant le seuil des 48 h).
+        CERF : «&nbsp;pre-&nbsp;» = antérieur à la création du CERF (2006) ;
+        «&nbsp;combined&nbsp;» = allocation combinée Fay/Gustav/Hanna/Ike (2008).
+        Pop. affectée : EM-DAT ; Melissa : chiffres préliminaires.
+      </p>
+    </div>
+  </section>
+
+  <!-- 7 · Validation & fonctionnement -->
+  <section class="slide" id="s7">
+    <div class="inner">
+      <div class="kicker">Validation &amp; fonctionnement</div>
+      <h2>Calibration historique et garde-fous</h2>
+      <ul class="plain">
+        <li>📊 <b>Périodes de retour</b> calculées par saison sur l'historique
+            2002–2025 : ≈ 3,0 ans par stade «&nbsp;prévisions&nbsp;», 3,4 ans pour la
+            Réponse précoce, <b>2,4 ans pour le mécanisme global</b>.</li>
+        <li>🌀 <b>Voie DGPC + Hurricane Warning</b> : à défaut d'un historique
+            des alertes DGPC, la calibration s'appuie sur les produits NHC
+            vérifiés dans les archives — un «&nbsp;Hurricane Warning&nbsp;» pour Haïti
+            revient environ tous les 5,6 ans (5 saisons sur 28, 1998–2025 :
+            Gustav, Tomas, Matthew, Irma, Elsa).</li>
+        <li>⏱️ <b>Garde-fous</b> : pas d'activation «&nbsp;prévisions&nbsp;» à moins de
+            48 h du passage prévu ; un stade s'active au plus une fois par
+            tempête ; une activation est acquise pour toute la durée de la
+            tempête ; la Réponse précoce est omise si l'Action a déjà activé.</li>
+        <li>⚙️ <b>Fonctionnement</b> : job automatique 4×/jour (03:50, 09:50,
+            15:50, 21:50 UTC, après chaque avis NHC) ; e-mail d'information à
+            chaque avis pertinent, e-mail de déclenchement à chaque
+            activation.</li>
+      </ul>
+      <p class="note">
+        Chiffres et figures calculés avec le code de production :
+        <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">github.com/OCHA-DAP/ds-aa-hti-hurricanes</a>
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<div class="controls">
+  <button id="prev" aria-label="Diapositive précédente">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="pageno" id="pageno">1 / 7</span>
+  <button id="next" aria-label="Diapositive suivante">›</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const dotsEl = document.getElementById("dots");
+  const pageno = document.getElementById("pageno");
+  let current = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement("div");
+    d.className = "dot" + (i === 0 ? " active" : "");
+    d.addEventListener("click", () => go(i));
+    dotsEl.appendChild(d);
+  });
+  const dots = Array.from(dotsEl.children);
+
+  function go(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => s.classList.toggle("active", j === current));
+    dots.forEach((d, j) => d.classList.toggle("active", j === current));
+    pageno.textContent = (current + 1) + " / " + slides.length;
+    history.replaceState(null, "", "#" + (current + 1));
+  }
+
+  document.getElementById("prev").addEventListener("click", () => go(current - 1));
+  document.getElementById("next").addEventListener("click", () => go(current + 1));
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) go(current + 1);
+    if (["ArrowLeft", "PageUp"].includes(e.key)) go(current - 1);
+  });
+
+  let touchX = null;
+  document.addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; });
+  document.addEventListener("touchend", (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (dx < -40) go(current + 1);
+    if (dx > 40) go(current - 1);
+    touchX = null;
+  });
+
+  function goFromHash() {
+    const h = parseInt(location.hash.slice(1), 10);
+    if (h >= 1 && h <= slides.length && h - 1 !== current) go(h - 1);
+  }
+  window.addEventListener("hashchange", goFromHash);
+  goFromHash();
+</script>
+</body>
+</html>
