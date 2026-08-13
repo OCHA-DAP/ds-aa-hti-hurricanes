@@ -76,6 +76,33 @@
   .overall {
     background: #eef3f8; font-weight: 600;
   }
+  td.logic { text-align: center; white-space: nowrap; width: 1%; }
+  table.def tr.sub td { background: #fbfcfd; font-size: 0.88rem; }
+  table.def tr.sub td:first-child { border-right: none; }
+
+  .tablewrap { overflow-x: auto; }
+  table.hist {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    border: 1px solid var(--line); font-size: 0.8rem;
+    box-shadow: 0 2px 10px rgba(20,40,60,0.06);
+  }
+  table.hist th {
+    padding: 6px 8px; font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted);
+    border-bottom: 2px solid var(--line); text-align: center;
+  }
+  table.hist th.grp-f { background: #e3ecf8; }
+  table.hist th.grp-o { background: #e4f1e8; }
+  table.hist td {
+    padding: 5px 9px; border-bottom: 1px solid var(--line);
+    text-align: center; white-space: nowrap;
+  }
+  table.hist td.storm { text-align: left; font-weight: 600; }
+  table.hist td.hit { background: #f57c00; color: #fff; font-weight: 700; }
+  table.hist td.cerfy { background: #c62828; color: #fff; font-weight: 700; }
+  table.hist td.sep-f { border-left: 2px solid #9dbce4; }
+  table.hist td.sep-o { border-left: 2px solid #9dc9ab; }
+  table.hist td.sep-g { border-left: 2px solid var(--line); }
 
   .cols { display: flex; gap: 26px; align-items: center; text-align: left; }
   .cols .txt { flex: 1 1 34%; min-width: 240px; }
@@ -163,35 +190,42 @@
       <table class="def">
         <tr>
           <th>Déclencheur</th><th>Période de retour</th>
-          <th>Délai max. des prévisions</th><th>Conditions d'activation</th>
+          <th>Délai maximum des prévisions</th>
+          <th colspan="3" style="text-align:center">Conditions de déclenchement</th>
         </tr>
         <tr>
           <td class="stage">Prévisions :<br>Mobilisation</td>
-          <td>≈ 3,0 ans</td><td>120 heures</td>
-          <td>≥ 68 mm de précipitations prévues sur 2 jours
-              <span class="ou">OU</span>
-              &gt; 0 personne prévue exposée aux vents ≥ 64 kt</td>
+          <td>environ 3,0 ans</td><td>120 heures</td>
+          <td>≥ 68 mm de précipitations prévues</td>
+          <td class="logic"><span class="ou">OU</span></td>
+          <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
         </tr>
         <tr>
-          <td class="stage">Prévisions :<br>Action</td>
-          <td>3,0 ans</td><td>72 heures</td>
-          <td>≥ 68 mm de précipitations prévues sur 2 jours
-              <span class="ou">OU</span>
-              &gt; 0 personne prévue exposée aux vents ≥ 64 kt
-              <span class="ou">OU</span>
-              alerte rouge DGPC <span class="et">ET</span> confirmation par un
-              «&nbsp;Hurricane Warning&nbsp;» du NHC</td>
+          <td class="stage" rowspan="3">Prévisions :<br>Action</td>
+          <td rowspan="3">3,0 ans</td><td rowspan="3">72 heures</td>
+          <td>≥ 68 mm de précipitations prévues</td>
+          <td class="logic"><span class="ou">OU</span></td>
+          <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
+        </tr>
+        <tr class="sub">
+          <td colspan="3" class="logic"><span class="ou">OU</span></td>
+        </tr>
+        <tr class="sub">
+          <td>La DGPC lance une alerte rouge</td>
+          <td class="logic"><span class="et">ET</span></td>
+          <td>L'alerte est confirmée par le NOAA NHC avec un
+              «&nbsp;Hurricane Warning&nbsp;»</td>
         </tr>
         <tr>
           <td class="stage">Observations :<br>Réponse précoce</td>
           <td>3,4 ans</td><td>—</td>
-          <td>≥ 57 mm de précipitations observées sur 2 jours (IMERG)
-              <span class="ou">OU</span>
-              &gt; 0 personne observée exposée aux vents ≥ 64 kt</td>
+          <td>≥ 57 mm de précipitations observées</td>
+          <td class="logic"><span class="ou">OU</span></td>
+          <td>&gt; 0 personnes observées d'être exposées aux vents de 64 nœuds</td>
         </tr>
         <tr class="overall">
           <td class="stage">Période de retour globale</td>
-          <td>2,4 ans</td><td colspan="2"></td>
+          <td>2,4 ans</td><td colspan="4"></td>
         </tr>
       </table>
       <p class="note">
@@ -283,8 +317,63 @@
     </div>
   </section>
 
-  <!-- 6 · Validation & fonctionnement -->
+  <!-- 6 · Activations historiques -->
   <section class="slide" id="s6">
+    <div class="inner">
+      <div class="kicker">Validation</div>
+      <h2>Activations historiques, 2002–2025</h2>
+      <div class="tablewrap">
+      <table class="hist">
+        <tr>
+          <th rowspan="2" style="text-align:left">Système</th>
+          <th colspan="3" class="grp-f">Prévision</th>
+          <th colspan="2" class="grp-o">Observé</th>
+          <th rowspan="2">Déclenchement<br>global</th>
+          <th rowspan="2">CERF</th>
+          <th rowspan="2">Pop. affectée<br>totale</th>
+        </tr>
+        <tr>
+          <th class="grp-f">Exp. prév.</th><th class="grp-f">Précip. prév.</th>
+          <th class="grp-f">DGPC Rouge +<br>Hur. Warning</th>
+          <th class="grp-o">Exp. obs.</th><th class="grp-o">Précip. obs.</th>
+        </tr>
+        <tr><td class="storm">Melissa (2025)</td><td class="sep-f">—</td><td class="hit">82 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">80 mm</td><td class="hit sep-g">✓</td><td class="cerfy">$4,000,000</td><td style="background-image:linear-gradient(to right,#d5c8ee 100.0%,transparent 100.0%)">2,300,021</td></tr>
+        <tr><td class="storm">Matthew (2016)</td><td class="sep-f">—</td><td class="hit">139 mm</td><td class="hit">✓</td><td class="hit sep-o">1,202,447</td><td class="hit">125 mm</td><td class="hit sep-g">✓</td><td class="cerfy">$10,100,000</td><td style="background-image:linear-gradient(to right,#d5c8ee 91.3%,transparent 91.3%)">2,100,439</td></tr>
+        <tr><td class="storm">Jeanne (2004)</td><td class="sep-f">—</td><td>30 mm</td><td>—</td><td class="sep-o">—</td><td>25 mm</td><td class="sep-g">—</td><td>pre-</td><td style="background-image:linear-gradient(to right,#d5c8ee 13.7%,transparent 13.7%)">315,594</td></tr>
+        <tr><td class="storm">Sandy (2012)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td class="hit">85 mm</td><td class="hit sep-g">✓</td><td class="cerfy">$4,000,000</td><td style="background-image:linear-gradient(to right,#d5c8ee 8.8%,transparent 8.8%)">201,850</td></tr>
+        <tr><td class="storm">Ike (2008)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>36 mm</td><td class="sep-g">—</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 5.4%,transparent 5.4%)">125,050</td></tr>
+        <tr><td class="storm">Noel (2007)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>53 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 4.7%,transparent 4.7%)">108,763</td></tr>
+        <tr><td class="storm">Gustav (2008)</td><td class="hit sep-f">931,571</td><td>—</td><td class="hit">✓</td><td class="hit sep-o">931,571</td><td class="hit">93 mm</td><td class="hit sep-g">✓</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 3.2%,transparent 3.2%)">73,006</td></tr>
+        <tr><td class="storm">Hanna (2008)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td class="hit">57 mm</td><td class="hit sep-g">✓</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 2.1%,transparent 2.1%)">48,000</td></tr>
+        <tr><td class="storm">Laura (2020)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>—</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 1.9%,transparent 1.9%)">44,175</td></tr>
+        <tr><td class="storm">Irma (2017)</td><td class="sep-f">—</td><td>34 mm</td><td class="hit">✓</td><td class="sep-o">—</td><td>37 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 1.7%,transparent 1.7%)">40,092</td></tr>
+        <tr><td class="storm">Dennis (2005)</td><td class="sep-f">—</td><td class="hit">69 mm</td><td>—</td><td class="sep-o">—</td><td>37 mm</td><td class="hit sep-g">✓</td><td>pre-</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.7%,transparent 0.7%)">15,036</td></tr>
+        <tr><td class="storm">Ernesto (2006)</td><td class="sep-f">—</td><td>44 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">63 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.7%,transparent 0.7%)">15,000</td></tr>
+        <tr><td class="storm">Isaac (2012)</td><td class="sep-f">—</td><td class="hit">104 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">133 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">8,007</td></tr>
+        <tr><td class="storm">Ivan (2004)</td><td class="sep-f">—</td><td>54 mm</td><td>—</td><td class="sep-o">—</td><td>—</td><td class="sep-g">—</td><td>pre-</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">6,500</td></tr>
+        <tr><td class="storm">Tomas (2010)</td><td class="hit sep-f">13,161</td><td class="hit">107 mm</td><td class="hit">✓</td><td class="sep-o">—</td><td class="hit">87 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">5,020</td></tr>
+        <tr><td class="storm">Dean (2007)</td><td class="sep-f">—</td><td>39 mm</td><td>—</td><td class="sep-o">—</td><td>21 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">3,966</td></tr>
+        <tr><td class="storm">Olga (2007)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>35 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">2,352</td></tr>
+        <tr><td class="storm">Erika (2015)</td><td class="sep-f">—</td><td>19 mm</td><td>—</td><td class="sep-o">—</td><td>20 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">1,969</td></tr>
+        <tr><td class="storm">Irene (2011)</td><td class="sep-f">—</td><td>68 mm</td><td>—</td><td class="sep-o">—</td><td>53 mm</td><td class="sep-g">—</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">1,544</td></tr>
+        <tr><td class="storm">Fay (2008)</td><td class="sep-f">—</td><td>—</td><td>—</td><td class="sep-o">—</td><td>45 mm</td><td class="sep-g">—</td><td class="cerfy">combined</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">220</td></tr>
+        <tr><td class="storm">Elsa (2021)</td><td class="sep-f">—</td><td>27 mm</td><td class="hit">✓</td><td class="sep-o">—</td><td>41 mm</td><td class="hit sep-g">✓</td><td>—</td><td style="background-image:linear-gradient(to right,#d5c8ee 0.5%,transparent 0.5%)">3</td></tr>
+        <tr><td class="storm">Unnamed (2002)</td><td class="sep-f">—</td><td>48 mm</td><td>—</td><td class="sep-o">—</td><td class="hit">64 mm</td><td class="hit sep-g">✓</td><td>pre-</td><td>—</td></tr>
+      </table>
+      </div>
+      <p class="note">
+        Rejeu du mécanisme sur 2002–2025 (tempêtes ayant déclenché, causé des
+        impacts ou reçu une allocation CERF). Cellules orange : condition
+        atteinte (prévisions évaluées avant le seuil des 48 h).
+        CERF : «&nbsp;pre-&nbsp;» = antérieur à la création du CERF (2006) ;
+        «&nbsp;combined&nbsp;» = allocation combinée Fay/Gustav/Hanna/Ike (2008).
+        Pop. affectée : EM-DAT ; Melissa : chiffres préliminaires.
+      </p>
+    </div>
+  </section>
+
+  <!-- 7 · Validation & fonctionnement -->
+  <section class="slide" id="s7">
     <div class="inner">
       <div class="kicker">Validation &amp; fonctionnement</div>
       <h2>Calibration historique et garde-fous</h2>
@@ -318,7 +407,7 @@
 <div class="controls">
   <button id="prev" aria-label="Diapositive précédente">‹</button>
   <div class="dots" id="dots"></div>
-  <span class="pageno" id="pageno">1 / 6</span>
+  <span class="pageno" id="pageno">1 / 7</span>
   <button id="next" aria-label="Diapositive suivante">›</button>
 </div>
 
