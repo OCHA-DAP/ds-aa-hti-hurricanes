@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Action anticipatoire Haïti — le mécanisme de déclenchement</title>
+<title>Action anticipatoire Haïti — le mécanisme de déclenchement proposé</title>
 <style>
   :root {
     --blue: #1862d8;
@@ -42,7 +42,7 @@
     font-weight: 700; color: var(--blue); margin-bottom: 12px;
   }
   h1 { font-size: clamp(1.7rem, 4.5vw, 2.8rem); line-height: 1.15; margin-bottom: 18px; }
-  h2 { font-size: clamp(1.3rem, 3vw, 1.9rem); line-height: 1.2; margin-bottom: 16px; }
+  h2 { font-size: clamp(1.3rem, 3vw, 1.9rem); line-height: 1.2; margin-bottom: 18px; }
   p.lead { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--ink); line-height: 1.5; }
   p.note { font-size: 0.9rem; color: var(--muted); margin-top: 16px; line-height: 1.45; }
 
@@ -62,7 +62,6 @@
   }
   table.def tr:last-child td { border-bottom: none; }
   .stage { font-weight: 700; white-space: nowrap; }
-  .stage small { display: block; font-weight: 400; color: var(--muted); }
   .ou {
     display: inline-block; background: var(--blue); color: #fff;
     font-weight: 800; border-radius: 999px; padding: 1px 10px;
@@ -73,12 +72,9 @@
     font-weight: 800; border-radius: 999px; padding: 1px 10px;
     font-size: 0.78rem; margin: 0 6px; vertical-align: middle;
   }
-  .overall {
-    background: #eef3f8; font-weight: 600;
-  }
+  .overall { background: #eef3f8; font-weight: 600; }
   td.logic { text-align: center; white-space: nowrap; width: 1%; }
   table.def tr.sub td { background: #fbfcfd; font-size: 0.88rem; }
-  table.def tr.sub td:first-child { border-right: none; }
 
   .tablewrap { overflow-x: auto; }
   table.hist {
@@ -110,16 +106,41 @@
   .cols img { width: 100%; height: auto; border: 1px solid var(--line);
               border-radius: 10px; background: #fff; }
   .txt ul { padding-left: 18px; }
-  .txt li { margin-bottom: 10px; font-size: 0.98rem; line-height: 1.45; }
+  .txt li { margin-bottom: 12px; font-size: 1.02rem; line-height: 1.5; }
   .txt li b.blue { color: var(--blue); }
   .txt li b.red { color: var(--red); }
 
   .callout {
-    margin-top: 16px; background: #f6e8e6; border-left: 4px solid var(--red);
+    margin-top: 20px; background: #fbf4ea; border-left: 4px solid #c9962a;
     border-radius: 0 10px 10px 0; padding: 12px 16px; text-align: left;
-    font-size: 0.95rem; line-height: 1.5;
+    font-size: 0.98rem; line-height: 1.5;
+    max-width: 720px; margin-left: auto; margin-right: auto;
   }
-  .callout.amber { background: #fbf4ea; border-left-color: #c9962a; }
+
+  /* pathway flow (slides 3, 6, 7) */
+  .flow { display: flex; gap: 10px; align-items: stretch; justify-content: center;
+          flex-wrap: wrap; }
+  .cond {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 16px; flex: 1 1 200px; max-width: 300px;
+    box-shadow: 0 2px 10px rgba(20,40,60,0.06); text-align: center;
+  }
+  .cond .emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
+  .cond b { display: block; font-size: 1.05rem; margin-bottom: 6px; }
+  .cond p { font-size: 0.92rem; color: var(--muted); line-height: 1.45; }
+  .cond p strong { color: var(--ink); }
+  .joiner { display: flex; align-items: center; }
+  .joiner span {
+    background: var(--blue); color: #fff; font-weight: 800;
+    border-radius: 999px; padding: 6px 14px; font-size: 0.95rem;
+  }
+  .joiner.join-et span { background: var(--red); }
+  .down { font-size: 1.8rem; color: var(--muted); margin: 10px 0 6px; }
+  .result {
+    display: inline-block; background: var(--red); color: #fff;
+    font-weight: 800; font-size: 1.15rem; border-radius: 12px;
+    padding: 12px 34px; letter-spacing: 0.04em;
+  }
 
   ul.plain { list-style: none; text-align: left; max-width: 760px; margin: 0 auto; }
   ul.plain li {
@@ -143,12 +164,13 @@
   .dots { display: flex; gap: 8px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: #c3ced3; cursor: pointer; }
   .dot.active { background: var(--blue); }
-  .pageno { font-size: 0.85rem; color: var(--muted); min-width: 3em; }
+  .pageno { font-size: 0.85rem; color: var(--muted); min-width: 3.4em; }
   footer.tag { position: fixed; top: 10px; right: 16px; font-size: 0.75rem; color: var(--muted); z-index: 10; }
 
   @media (max-width: 760px) {
     .cols { flex-direction: column; }
     body { overflow: auto; }
+    .joiner { justify-content: center; width: 100%; }
   }
   @page { size: 380mm 214mm; margin: 0; }
   @media print {
@@ -165,30 +187,33 @@
       width: auto; max-width: 100%; max-height: 62vh;
       display: block; margin: 0 auto;
     }
+    .flow { flex-direction: column; align-items: center; flex-wrap: nowrap; }
+    .cond { flex: 0 1 auto; width: 100%; max-width: 460px; padding: 13px 16px; }
+    .cond .emoji { font-size: 1.6rem; margin-bottom: 4px; }
+    .joiner { justify-content: center; }
+    .joiner span { flex: 0 0 auto; }
   }
 </style>
 </head>
 <body>
-<footer class="tag">OCHA · Centre de données humanitaires — cadre 2026</footer>
+<footer class="tag">OCHA · Centre de données humanitaires — proposition 2026</footer>
 <div id="deck">
 
   <!-- 1 · Titre -->
   <section class="slide active" id="s1">
     <div class="inner">
-      <div class="kicker">Action anticipatoire · Ouragans · Haïti · Cadre 2026</div>
-      <h1>Le mécanisme de déclenchement</h1>
+      <div class="kicker">Action anticipatoire · Ouragans · Haïti</div>
+      <h1>Le mécanisme de déclenchement<br>proposé</h1>
       <p class="lead">
-        Trois déclencheurs spécifiques — <b>Mobilisation</b>, <b>Action</b>,
+        Trois déclencheurs — <b>Mobilisation</b>, <b>Action</b>,
         <b>Réponse précoce</b> — évalués automatiquement à chaque avis du
-        National Hurricane Center (4×/jour), à partir des prévisions
-        déterministes NHC (trajectoire + rayons de vent), des prévisions de
-        précipitations CHIRPS-GEFS et des observations IMERG.
+        National Hurricane Center (4×/jour).
       </p>
-      <p class="note">
-        Les pages qui suivent donnent la définition exacte, puis montrent le
-        calcul des deux conditions en rejouant l'ouragan Matthew (2016) dans
-        le code de production du système de suivi.
-      </p>
+      <div class="callout">
+        ⚠️ <b>Proposition.</b> Ce mécanisme est en attente de validation par
+        la DGPC et les partenaires du cadre — les seuils et les modalités
+        peuvent encore évoluer.
+      </div>
     </div>
   </section>
 
@@ -196,7 +221,7 @@
   <section class="slide" id="s2">
     <div class="inner">
       <div class="kicker">Définition</div>
-      <h2>Le mécanisme, tel qu'implémenté</h2>
+      <h2>Le mécanisme proposé</h2>
       <table class="def">
         <tr>
           <th>Déclencheur</th><th>Période de retour</th>
@@ -239,35 +264,165 @@
         </tr>
       </table>
       <p class="note">
-        Pluie : maximum glissant sur 2 jours de la moyenne nationale, dans la
-        fenêtre où la trajectoire prévue est proche d'Haïti, capée au délai du
-        stade. Exposition : population dans la zone de vents ≥ 64 kt prévus.
-        Garde-fou : aucun déclencheur «&nbsp;prévisions&nbsp;» ne peut s'activer si le
-        passage au plus près est prévu à moins de 48 h. Chaque stade s'active
-        au plus une fois par tempête ; une activation est acquise pour toute
-        la durée de la tempête.
+        Garde-fou : aucun déclencheur «&nbsp;prévisions&nbsp;» à moins de 48 h du
+        passage prévu. Chaque stade s'active au plus une fois par tempête ;
+        une activation est acquise pour toute la durée de la tempête.
       </p>
     </div>
   </section>
 
-  <!-- 3 · Condition pluie -->
+  <!-- 3 · Vue d'ensemble des voies -->
   <section class="slide" id="s3">
     <div class="inner">
-      <div class="kicker">Le calcul · 1/3</div>
-      <h2>Condition pluie — Matthew (2016) rejoué</h2>
+      <div class="kicker">Les voies d'activation</div>
+      <h2>Comment le déclencheur peut-il être atteint&nbsp;?</h2>
+      <div class="flow">
+        <div class="cond">
+          <span class="emoji">🌀</span>
+          <b>Vent</b>
+          <p><strong>&gt; 0 personne</strong> prévue exposée aux vents
+             ≥ 64 nœuds</p>
+        </div>
+        <div class="joiner"><span>OU</span></div>
+        <div class="cond">
+          <span class="emoji">🌧️</span>
+          <b>Pluie</b>
+          <p><strong>≥ 68 mm</strong> de pluie prévue sur 2 jours
+             (moyenne nationale)</p>
+        </div>
+        <div class="joiner"><span>OU</span></div>
+        <div class="cond">
+          <span class="emoji">🚨</span>
+          <b>Alertes officielles</b>
+          <p>Alerte <strong>rouge DGPC</strong> confirmée par un
+             <strong>«&nbsp;Hurricane Warning&nbsp;»</strong> du NHC
+             <br><em>(stade Action uniquement)</em></p>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="result">ACTIVATION</div>
+      <p class="note">
+        Une seule voie suffit. Les trois voies sont détaillées dans les
+        diapositives suivantes — puis le filet de sécurité sur observations.
+      </p>
+    </div>
+  </section>
+
+  <!-- 4 · Voie 1 : vent -->
+  <section class="slide" id="s4">
+    <div class="inner">
+      <div class="kicker">Voie 1 / 3 · Vent</div>
+      <h2>&gt; 0 personne exposée aux vents ≥ 64 kt prévus</h2>
       <div class="cols">
         <div class="txt">
           <ul>
-            <li>À chaque avis NHC, le système prend la prévision CHIRPS-GEFS la
-                plus récente et calcule le <b>maximum glissant sur 2 jours de la
-                pluie moyenne nationale</b>, dans la fenêtre où la trajectoire
-                prévue est à proximité d'Haïti (capée à
-                <b class="blue">120 h</b> / <b style="color:var(--orange)">72 h</b>).</li>
-            <li>Seuil : <b class="red">≥ 68 mm</b> — atteint dès le
-                <b>29 septembre</b>, soit <b>≈ 5 jours avant le landfall</b> :
-                Mobilisation et Action s'activent.</li>
-            <li>Les points creux sont à moins de 48 h du passage prévu : ils ne
-                peuvent plus rien activer.</li>
+            <li>La prévision NHC donne la <b>trajectoire</b> et l'étendue des
+                <b>vents ≥ 64 kt</b> (zone rouge).</li>
+            <li>On compte la <b>population</b> dans l'intersection de cette
+                zone avec Haïti — ici <b class="red">557 762 personnes</b> :
+                condition remplie.</li>
+          </ul>
+        </div>
+        <div class="fig"><img src="assets/matthew_swath.png"
+          alt="Prévision NHC de Matthew du 3 octobre 2016 : trajectoire, zone de vents ≥ 64 kt et intersection avec Haïti"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Voie 2 : pluie -->
+  <section class="slide" id="s5">
+    <div class="inner">
+      <div class="kicker">Voie 2 / 3 · Pluie</div>
+      <h2>≥ 68 mm de pluie prévue sur 2 jours</h2>
+      <div class="cols">
+        <div class="txt">
+          <ul>
+            <li>Prévision de pluie <b>CHIRPS-GEFS</b> : cumul maximal sur
+                2 jours pendant le passage de la tempête.</li>
+            <li>Le déclencheur porte sur la <b>moyenne nationale</b> — ici
+                <b class="red">84 mm ≥ 68 mm</b> : condition remplie.</li>
+          </ul>
+        </div>
+        <div class="fig"><img src="assets/matthew_rain_map.png"
+          alt="Pluie prévue CHIRPS-GEFS pour Matthew, émise le 30 septembre 2016, contour rouge à 68 mm"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Voie 3 : DGPC + NHC -->
+  <section class="slide" id="s6">
+    <div class="inner">
+      <div class="kicker">Voie 3 / 3 · Alertes officielles</div>
+      <h2>Alerte rouge DGPC, confirmée par le NHC</h2>
+      <div class="flow">
+        <div class="cond">
+          <span class="emoji">🇭🇹</span>
+          <b>La DGPC lance une alerte ROUGE</b>
+          <p>Plan Cyclone SAPMAH — décision nationale de protection civile</p>
+        </div>
+        <div class="joiner join-et"><span>ET</span></div>
+        <div class="cond">
+          <span class="emoji">🌪️</span>
+          <b>Le NHC émet un «&nbsp;Hurricane Warning&nbsp;» pour Haïti</b>
+          <p>Vents d'ouragan attendus sur la côte — confirmation
+             météorologique indépendante</p>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="result">ACTION ACTIVÉE</div>
+      <p class="note">
+        Exemple : pour Matthew (2016), le NHC a émis un Hurricane Warning
+        pour la côte sud d'Haïti — cette voie aurait activé le stade Action.
+        Un Hurricane Warning pour Haïti survient environ tous les 5 à 6 ans.
+        Cette voie, proposée à partir du Plan Cyclone, reste à valider avec
+        la DGPC ; elle ne concerne que le stade Action.
+      </p>
+    </div>
+  </section>
+
+  <!-- 7 · Filet de sécurité : observations -->
+  <section class="slide" id="s7">
+    <div class="inner">
+      <div class="kicker">Après le passage · Filet de sécurité</div>
+      <h2>Le déclencheur observationnel — Réponse précoce</h2>
+      <div class="flow">
+        <div class="cond">
+          <span class="emoji">🌧️</span>
+          <b>Pluie observée</b>
+          <p><strong>≥ 57 mm</strong> sur 2 jours, moyenne nationale
+             (satellite IMERG / NASA)</p>
+        </div>
+        <div class="joiner"><span>OU</span></div>
+        <div class="cond">
+          <span class="emoji">🌀</span>
+          <b>Vent observé</b>
+          <p><strong>&gt; 0 personne</strong> dans la zone de vents
+             ≥ 64 nœuds effectivement traversée</p>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="result">RÉPONSE PRÉCOCE ACTIVÉE</div>
+      <p class="note">
+        Évalué sur les <b>observations réelles</b>, sans délai de prévision :
+        si une tempête frappe sans avoir été anticipée, le cadre s'active
+        quand même. (Omis si le stade Action a déjà activé.)
+      </p>
+    </div>
+  </section>
+
+  <!-- 8 · Exemple rejoué : pluie -->
+  <section class="slide" id="s8">
+    <div class="inner">
+      <div class="kicker">Exemple rejoué · Matthew (2016)</div>
+      <h2>La voie pluie active 5 jours avant l'impact</h2>
+      <div class="cols">
+        <div class="txt">
+          <ul>
+            <li>Chaque point = un avis NHC rejoué dans le <b>code de
+                production</b> du système de suivi.</li>
+            <li>La pluie prévue dépasse <b class="red">68 mm</b> dès le
+                <b>29 septembre</b> → Mobilisation et Action s'activent
+                <b>≈ 5 jours avant le landfall</b>.</li>
           </ul>
         </div>
         <div class="fig"><img src="assets/matthew_rain.png"
@@ -276,49 +431,20 @@
     </div>
   </section>
 
-  <!-- 4 · Condition vent : le calcul -->
-  <section class="slide" id="s4">
+  <!-- 9 · Exemple rejoué : vent -->
+  <section class="slide" id="s9">
     <div class="inner">
-      <div class="kicker">Le calcul · 2/3</div>
-      <h2>Condition vent — l'exposition prévue aux vents ≥ 64 kt</h2>
-      <div class="cols">
-        <div class="txt">
-          <ul>
-            <li>La prévision déterministe NHC fournit la <b>trajectoire</b> et
-                les <b>rayons de vent par quadrant</b> à chaque échéance.</li>
-            <li>Les rayons ≥ 64 kt sont assemblés en une <b>zone de vents
-                d'ouragan prévus</b>, capée au délai du stade (72 h / 120 h),
-                moins la bande déjà observée.</li>
-            <li>La <b>population</b> (WorldPop, 1 km) dans l'intersection de
-                cette zone avec Haïti = l'exposition prévue.
-                Condition remplie dès que <b class="red">&gt; 0 personne</b>
-                est exposée.</li>
-          </ul>
-        </div>
-        <div class="fig"><img src="assets/matthew_swath.png"
-          alt="Carte de la prévision NHC du 3 octobre 2016 : trajectoire, zone de vents ≥ 64 kt et intersection avec Haïti"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 5 · Condition vent dans le temps -->
-  <section class="slide" id="s5">
-    <div class="inner">
-      <div class="kicker">Le calcul · 3/3</div>
+      <div class="kicker">Exemple rejoué · Matthew (2016)</div>
       <h2>Pourquoi un «&nbsp;OU&nbsp;» — le vent seul aurait été trop tard</h2>
       <div class="cols">
         <div class="txt">
           <ul>
-            <li>Pour Matthew, la zone de vents ≥ 64 kt prévue ne touche Haïti
-                qu'à partir du 2 octobre au soir — <b>déjà à moins de 48 h du
-                passage</b> (points creux).</li>
-            <li>La condition vent seule n'aurait donc <b>pas activé</b> le
-                cadre pour Matthew.</li>
-            <li>D'où la structure du mécanisme : la <b>pluie prévue</b> active
-                5 jours avant ; l'<b>alerte rouge DGPC confirmée par le
-                Hurricane Warning</b> (émis pour Matthew) offre une voie
-                institutionnelle ; la <b>Réponse précoce</b> sur observations
-                est le filet de sécurité.</li>
+            <li>La zone de vents ≥ 64 kt prévue ne touche Haïti qu'à
+                <b>moins de 48 h du passage</b> (points creux) : la voie vent
+                n'aurait pas activé pour Matthew.</li>
+            <li>Le <b>OU</b> fait le travail : la pluie active 5 jours avant,
+                et le Hurricane Warning (émis pour Matthew) offre la voie
+                officielle.</li>
           </ul>
         </div>
         <div class="fig"><img src="assets/matthew_exposure.png"
@@ -327,8 +453,8 @@
     </div>
   </section>
 
-  <!-- 6 · Activations historiques -->
-  <section class="slide" id="s6">
+  <!-- 10 · Activations historiques -->
+  <section class="slide" id="s10">
     <div class="inner">
       <div class="kicker">Validation</div>
       <h2>Activations historiques, 2002–2025</h2>
@@ -382,31 +508,29 @@
     </div>
   </section>
 
-  <!-- 7 · Validation & fonctionnement -->
-  <section class="slide" id="s7">
+  <!-- 11 · Calibration & fonctionnement -->
+  <section class="slide" id="s11">
     <div class="inner">
-      <div class="kicker">Validation &amp; fonctionnement</div>
-      <h2>Calibration historique et garde-fous</h2>
+      <div class="kicker">Calibration &amp; fonctionnement</div>
+      <h2>Périodes de retour et garde-fous</h2>
       <ul class="plain">
-        <li>📊 <b>Périodes de retour</b> calculées par saison sur l'historique
-            2002–2025 : ≈ 3,0 ans par stade «&nbsp;prévisions&nbsp;», 3,4 ans pour la
-            Réponse précoce, <b>2,4 ans pour le mécanisme global</b>.</li>
+        <li>📊 <b>Périodes de retour</b> (par saison, 2002–2025) : ≈ 3,0 ans
+            par stade «&nbsp;prévisions&nbsp;», 3,4 ans pour la Réponse précoce,
+            <b>2,4 ans pour le mécanisme global</b>.</li>
         <li>🌀 <b>Voie DGPC + Hurricane Warning</b> : à défaut d'un historique
-            des alertes DGPC, la calibration s'appuie sur les produits NHC
-            vérifiés dans les archives — un «&nbsp;Hurricane Warning&nbsp;» pour Haïti
-            revient environ tous les 5,6 ans (5 saisons sur 28, 1998–2025 :
-            Gustav, Tomas, Matthew, Irma, Elsa).</li>
-        <li>⏱️ <b>Garde-fous</b> : pas d'activation «&nbsp;prévisions&nbsp;» à moins de
-            48 h du passage prévu ; un stade s'active au plus une fois par
+            des alertes DGPC, calibrée sur les produits NHC vérifiés — un
+            «&nbsp;Hurricane Warning&nbsp;» pour Haïti ≈ tous les 5,6 ans
+            (5 saisons sur 28, 1998–2025).</li>
+        <li>⏱️ <b>Garde-fous</b> : pas d'activation «&nbsp;prévisions&nbsp;» à moins
+            de 48 h du passage prévu ; un stade s'active au plus une fois par
             tempête ; une activation est acquise pour toute la durée de la
-            tempête ; la Réponse précoce est omise si l'Action a déjà activé.</li>
-        <li>⚙️ <b>Fonctionnement</b> : job automatique 4×/jour (03:50, 09:50,
-            15:50, 21:50 UTC, après chaque avis NHC) ; e-mail d'information à
-            chaque avis pertinent, e-mail de déclenchement à chaque
-            activation.</li>
+            tempête.</li>
+        <li>⚙️ <b>Fonctionnement</b> : évaluation automatique 4×/jour après
+            chaque avis NHC ; e-mail d'information à chaque avis pertinent,
+            e-mail de déclenchement à chaque activation.</li>
       </ul>
       <p class="note">
-        Chiffres et figures calculés avec le code de production :
+        Chiffres et figures calculés avec le code du système de suivi :
         <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">github.com/OCHA-DAP/ds-aa-hti-hurricanes</a>
       </p>
     </div>
@@ -417,7 +541,7 @@
 <div class="controls">
   <button id="prev" aria-label="Diapositive précédente">‹</button>
   <div class="dots" id="dots"></div>
-  <span class="pageno" id="pageno">1 / 7</span>
+  <span class="pageno" id="pageno">1 / 11</span>
   <button id="next" aria-label="Diapositive suivante">›</button>
 </div>
 
