@@ -8,6 +8,9 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     steps:
     - name: Checkout repository
@@ -26,3 +29,29 @@ jobs:
         DSCI_AZ_BLOB_DEV_SAS_WRITE: ${{ secrets.DSCI_AZ_BLOB_DEV_SAS_WRITE }}
         DSCI_AZ_BLOB_PROD_SAS: ${{ secrets.DSCI_AZ_BLOB_PROD_SAS }}
       run: uv run python pipelines/update_chirps_gefs.py
+
+    # A broken GEFS feed does NOT fail the monitoring job (it silently
+    # evaluates rain on the most recent issuance available), so this
+    # workflow must raise its own alarm: open an issue assigned to the
+    # monitoring keepers, who get e-mailed by GitHub. One open issue at
+    # a time; repeat failures add a comment instead.
+    - name: Notify keepers on failure
+      if: failure()
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+          --search "in:title CHIRPS-GEFS download failing" \
+          --json number --jq '.[0].number // empty')
+        if [ -n "$existing" ]; then
+          gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
+            --body "Still failing: $RUN_URL"
+        else
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "CHIRPS-GEFS download failing (scheduled run)" \
+            --assignee zackarno,t-downing \
+            --body "The daily CHIRPS-GEFS download failed: $RUN_URL
+
+        While this feed is stale the HTI monitoring keeps running but evaluates the rain condition on the last successful issuance - it will NOT alert by itself. Rerun this workflow after fixing (it backfills missed days)."
+        fi
