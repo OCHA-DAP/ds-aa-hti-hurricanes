@@ -115,14 +115,26 @@
   .cols .fig { flex: 1 1 66%; }
   .cols img { width: 100%; height: auto; border: 1px solid var(--line);
               border-radius: 10px; background: #fff; }
-  /* two panels side by side: condition met vs not met */
-  .pair { display: flex; gap: 20px; align-items: flex-start; }
-  .pair figure { flex: 1 1 0; min-width: 0; margin: 0; }
-  .pair img {
-    width: 100%; height: auto; background: #fff;
-    border: 1px solid var(--line); border-radius: 10px;
+  /* two panels side by side, each headed by its verdict */
+  .pair { display: flex; gap: 22px; align-items: flex-start; }
+  .pair figure {
+    flex: 1 1 0; min-width: 0; margin: 0;
+    border: 2px solid var(--line); border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(20,40,60,0.06);
   }
-  .pair figure.met img { border-color: #d9b3ad; }
+  .pair figure.met { border-color: var(--red); }
+  .pair figure.notmet { border-color: #b9c4c9; }
+  .pair figcaption {
+    font-weight: 800; font-size: 1rem; letter-spacing: 0.05em;
+    padding: 9px 12px; text-align: center;
+  }
+  .pair figure.met figcaption { background: var(--red); color: #fff; }
+  .pair figure.notmet figcaption {
+    background: #e7ecee; color: var(--muted);
+  }
+  .pair img {
+    display: block; width: 100%; height: auto; background: #fff;
+  }
   p.lede {
     font-size: 1rem; line-height: 1.5; margin: 0 auto 20px;
     color: var(--ink); max-width: 880px;
@@ -342,9 +354,13 @@
         <b>population</b> dans l'intersection de cette zone avec Haïti.
       </p>
       <div class="pair">
-        <figure class="met"><img src="assets/swath_met.png"
+        <figure class="met">
+          <figcaption>✓ SEUIL ATTEINT</figcaption>
+          <img src="assets/swath_met.png"
           alt="Prévision NHC de Matthew du 3 octobre 2016 : la zone de vents de 64 nœuds recouvre la péninsule sud d'Haïti"></figure>
-        <figure><img src="assets/swath_not_met.png"
+        <figure class="notmet">
+          <figcaption>✗ SEUIL NON ATTEINT</figcaption>
+          <img src="assets/swath_not_met.png"
           alt="Prévision NHC de Melissa du 27 octobre 2025 : la zone de vents de 64 nœuds passe à l'ouest d'Haïti sans la toucher"></figure>
       </div>
     </div>
@@ -362,9 +378,13 @@
         (contour rouge) ne suffit pas.
       </p>
       <div class="pair">
-        <figure class="met"><img src="assets/rain_met.png"
+        <figure class="met">
+          <figcaption>✓ SEUIL ATTEINT</figcaption>
+          <img src="assets/rain_met.png"
           alt="Précipitations prévues CHIRPS-GEFS pour Matthew, émises le 30 septembre 2016 : moyenne nationale 84 mm"></figure>
-        <figure><img src="assets/rain_not_met.png"
+        <figure class="notmet">
+          <figcaption>✗ SEUIL NON ATTEINT</figcaption>
+          <img src="assets/rain_not_met.png"
           alt="Précipitations prévues CHIRPS-GEFS pour Irma, émises le 5 septembre 2017 : moyenne nationale 34 mm malgré des pixels au-dessus de 68 mm au nord"></figure>
       </div>
     </div>
