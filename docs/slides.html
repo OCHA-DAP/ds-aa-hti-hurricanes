@@ -74,7 +74,14 @@
   }
   .overall { background: #eef3f8; font-weight: 600; }
   td.logic { text-align: center; white-space: nowrap; width: 1%; }
-  table.def tr.sub td { background: #fbfcfd; font-size: 0.88rem; }
+  /* One band per trigger: the Action stage's three rows share a tint,
+     with dashed separators inside the group, so its OU / ET
+     alternatives clearly belong to the same trigger. Strong lines
+     only between triggers. */
+  table.def tr.act td { background: #e9f1fb; }
+  table.def tr.sub td { font-size: 0.88rem; }
+  table.def tr.dash td { border-bottom: 1px dashed #a9c3e2; }
+  table.def tr.grp-end td { border-bottom: 2px solid #aebcc4; }
 
   .tablewrap { overflow-x: auto; }
   table.hist {
@@ -228,30 +235,30 @@
           <th>Délai maximum des prévisions</th>
           <th colspan="3" style="text-align:center">Conditions de déclenchement</th>
         </tr>
-        <tr>
+        <tr class="grp-end">
           <td class="stage">Prévisions :<br>Mobilisation</td>
           <td>environ 3,0 ans</td><td>120 heures</td>
           <td>≥ 68 mm de précipitations prévues</td>
           <td class="logic"><span class="ou">OU</span></td>
           <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
         </tr>
-        <tr>
+        <tr class="act dash">
           <td class="stage" rowspan="3">Prévisions :<br>Action</td>
           <td rowspan="3">3,0 ans</td><td rowspan="3">72 heures</td>
           <td>≥ 68 mm de précipitations prévues</td>
           <td class="logic"><span class="ou">OU</span></td>
           <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
         </tr>
-        <tr class="sub">
+        <tr class="act sub dash">
           <td colspan="3" class="logic"><span class="ou">OU</span></td>
         </tr>
-        <tr class="sub">
+        <tr class="act sub grp-end">
           <td>La DGPC lance une alerte rouge</td>
           <td class="logic"><span class="et">ET</span></td>
           <td>L'alerte est confirmée par le NOAA NHC avec un
               «&nbsp;Hurricane Warning&nbsp;»</td>
         </tr>
-        <tr>
+        <tr class="grp-end">
           <td class="stage">Observations :<br>Réponse précoce</td>
           <td>3,4 ans</td><td>—</td>
           <td>≥ 57 mm de précipitations observées</td>
