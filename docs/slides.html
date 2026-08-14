@@ -115,6 +115,18 @@
   .cols .fig { flex: 1 1 66%; }
   .cols img { width: 100%; height: auto; border: 1px solid var(--line);
               border-radius: 10px; background: #fff; }
+  /* two panels side by side: condition met vs not met */
+  .pair { display: flex; gap: 20px; align-items: flex-start; }
+  .pair figure { flex: 1 1 0; min-width: 0; margin: 0; }
+  .pair img {
+    width: 100%; height: auto; background: #fff;
+    border: 1px solid var(--line); border-radius: 10px;
+  }
+  .pair figure.met img { border-color: #d9b3ad; }
+  p.lede {
+    font-size: 1rem; line-height: 1.5; margin: 0 auto 20px;
+    color: var(--ink); max-width: 880px;
+  }
   .txt ul { padding-left: 18px; }
   .txt li { margin-bottom: 12px; font-size: 1.02rem; line-height: 1.5; }
   .txt li b.blue { color: var(--blue); }
@@ -197,6 +209,7 @@
       width: auto; max-width: 100%; max-height: 62vh;
       display: block; margin: 0 auto;
     }
+    .pair img { max-height: 58vh; object-fit: contain; }
     .flow { flex-direction: column; align-items: center; flex-wrap: nowrap; }
     .cond { flex: 0 1 auto; width: 100%; max-width: 460px; padding: 13px 16px; }
     .cond .emoji { font-size: 1.6rem; margin-bottom: 4px; }
@@ -227,8 +240,45 @@
     </div>
   </section>
 
-  <!-- 2 · Définition -->
+  <!-- 2 · Vue d'ensemble des voies -->
   <section class="slide" id="s2">
+    <div class="inner">
+      <div class="kicker">Les voies d'activation</div>
+      <h2>Comment le déclencheur peut-il être atteint&nbsp;?</h2>
+      <div class="flow">
+        <div class="cond">
+          <span class="emoji">🌀</span>
+          <b>Vent</b>
+          <p><strong>&gt; 0 personne</strong> prévue exposée aux vents
+             de 64 nœuds</p>
+        </div>
+        <div class="joiner"><span>OU</span></div>
+        <div class="cond">
+          <span class="emoji">🌧️</span>
+          <b>Précipitations</b>
+          <p><strong>≥ 68 mm</strong> de précipitations prévues sur 2 jours
+             (moyenne nationale)</p>
+        </div>
+        <div class="joiner"><span>OU</span></div>
+        <div class="cond">
+          <span class="emoji">🚨</span>
+          <b>Alertes officielles</b>
+          <p>Alerte <strong>rouge DGPC</strong> confirmée par un
+             <strong>«&nbsp;Hurricane Warning&nbsp;»</strong> du NHC
+             <br><em>(stade Action uniquement)</em></p>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="result">ACTIVATION</div>
+      <p class="note">
+        Une seule voie suffit. Les trois voies sont détaillées dans les
+        diapositives suivantes — puis le filet de sécurité sur observations.
+      </p>
+    </div>
+  </section>
+
+  <!-- 3 · Définition -->
+  <section class="slide" id="s3">
     <div class="inner">
       <div class="kicker">Définition</div>
       <h2>Le mécanisme proposé</h2>
@@ -281,60 +331,21 @@
     </div>
   </section>
 
-  <!-- 3 · Vue d'ensemble des voies -->
-  <section class="slide" id="s3">
-    <div class="inner">
-      <div class="kicker">Les voies d'activation</div>
-      <h2>Comment le déclencheur peut-il être atteint&nbsp;?</h2>
-      <div class="flow">
-        <div class="cond">
-          <span class="emoji">🌀</span>
-          <b>Vent</b>
-          <p><strong>&gt; 0 personne</strong> prévue exposée aux vents
-             ≥ 64 nœuds</p>
-        </div>
-        <div class="joiner"><span>OU</span></div>
-        <div class="cond">
-          <span class="emoji">🌧️</span>
-          <b>Pluie</b>
-          <p><strong>≥ 68 mm</strong> de pluie prévue sur 2 jours
-             (moyenne nationale)</p>
-        </div>
-        <div class="joiner"><span>OU</span></div>
-        <div class="cond">
-          <span class="emoji">🚨</span>
-          <b>Alertes officielles</b>
-          <p>Alerte <strong>rouge DGPC</strong> confirmée par un
-             <strong>«&nbsp;Hurricane Warning&nbsp;»</strong> du NHC
-             <br><em>(stade Action uniquement)</em></p>
-        </div>
-      </div>
-      <div class="down">↓</div>
-      <div class="result">ACTIVATION</div>
-      <p class="note">
-        Une seule voie suffit. Les trois voies sont détaillées dans les
-        diapositives suivantes — puis le filet de sécurité sur observations.
-      </p>
-    </div>
-  </section>
-
   <!-- 4 · Voie 1 : vent -->
   <section class="slide" id="s4">
     <div class="inner">
       <div class="kicker">Voie 1 / 3 · Vent</div>
-      <h2>&gt; 0 personne exposée aux vents ≥ 64 kt prévus</h2>
-      <div class="cols">
-        <div class="txt">
-          <ul>
-            <li>La prévision NHC donne la <b>trajectoire</b> et l'étendue des
-                <b>vents ≥ 64 kt</b> (zone rouge).</li>
-            <li>On compte la <b>population</b> dans l'intersection de cette
-                zone avec Haïti — ici <b class="red">557 762 personnes</b> :
-                condition remplie.</li>
-          </ul>
-        </div>
-        <div class="fig"><img src="assets/matthew_swath.png"
-          alt="Prévision NHC de Matthew du 3 octobre 2016 : trajectoire, zone de vents ≥ 64 kt et intersection avec Haïti"></div>
+      <h2>&gt; 0 personne exposée aux vents de 64 nœuds prévus</h2>
+      <p class="lede">
+        La prévision du NHC donne la <b>trajectoire</b> et l'étendue des
+        <b>vents de 64 nœuds</b> (zone rouge). On compte la
+        <b>population</b> dans l'intersection de cette zone avec Haïti.
+      </p>
+      <div class="pair">
+        <figure class="met"><img src="assets/swath_met.png"
+          alt="Prévision NHC de Matthew du 3 octobre 2016 : la zone de vents de 64 nœuds recouvre la péninsule sud d'Haïti"></figure>
+        <figure><img src="assets/swath_not_met.png"
+          alt="Prévision NHC de Melissa du 27 octobre 2025 : la zone de vents de 64 nœuds passe à l'ouest d'Haïti sans la toucher"></figure>
       </div>
     </div>
   </section>
@@ -342,19 +353,19 @@
   <!-- 5 · Voie 2 : pluie -->
   <section class="slide" id="s5">
     <div class="inner">
-      <div class="kicker">Voie 2 / 3 · Pluie</div>
-      <h2>≥ 68 mm de pluie prévue sur 2 jours</h2>
-      <div class="cols">
-        <div class="txt">
-          <ul>
-            <li>Prévision de pluie <b>CHIRPS-GEFS</b> : cumul maximal sur
-                2 jours pendant le passage de la tempête.</li>
-            <li>Le déclencheur porte sur la <b>moyenne nationale</b> — ici
-                <b class="red">84 mm ≥ 68 mm</b> : condition remplie.</li>
-          </ul>
-        </div>
-        <div class="fig"><img src="assets/matthew_rain_map.png"
-          alt="Pluie prévue CHIRPS-GEFS pour Matthew, émise le 30 septembre 2016, contour rouge à 68 mm"></div>
+      <div class="kicker">Voie 2 / 3 · Précipitations</div>
+      <h2>≥ 68 mm de précipitations prévues sur 2 jours</h2>
+      <p class="lede">
+        Prévision de précipitations <b>CHIRPS-GEFS</b> : cumul maximal sur
+        2 jours pendant le passage de la tempête. Le déclencheur porte sur
+        la <b>moyenne nationale</b> — dépasser 68 mm localement
+        (contour rouge) ne suffit pas.
+      </p>
+      <div class="pair">
+        <figure class="met"><img src="assets/rain_met.png"
+          alt="Précipitations prévues CHIRPS-GEFS pour Matthew, émises le 30 septembre 2016 : moyenne nationale 84 mm"></figure>
+        <figure><img src="assets/rain_not_met.png"
+          alt="Précipitations prévues CHIRPS-GEFS pour Irma, émises le 5 septembre 2017 : moyenne nationale 34 mm malgré des pixels au-dessus de 68 mm au nord"></figure>
       </div>
     </div>
   </section>
@@ -398,7 +409,7 @@
       <div class="flow">
         <div class="cond">
           <span class="emoji">🌧️</span>
-          <b>Pluie observée</b>
+          <b>Précipitations observées</b>
           <p><strong>≥ 57 mm</strong> sur 2 jours, moyenne nationale
              (satellite IMERG / NASA)</p>
         </div>
@@ -407,7 +418,7 @@
           <span class="emoji">🌀</span>
           <b>Vent observé</b>
           <p><strong>&gt; 0 personne</strong> dans la zone de vents
-             ≥ 64 nœuds effectivement traversée</p>
+             de 64 nœuds effectivement traversée</p>
         </div>
       </div>
       <div class="down">↓</div>
@@ -490,7 +501,7 @@
         À moins de <b>48 h</b> du passage prévu — l'«&nbsp;heure limite&nbsp;» du
         cadre — il est trop tard pour agir
         avant l'impact : les déclencheurs «&nbsp;prévisions&nbsp;» ne peuvent plus
-        s'activer, quelles que soient la pluie ou l'exposition prévues. Après
+        s'activer, quelles que soient les précipitations ou l'exposition prévues. Après
         le passage, seule la Réponse précoce (observations) reste possible.
       </p>
     </div>
