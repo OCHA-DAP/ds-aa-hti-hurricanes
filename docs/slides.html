@@ -78,7 +78,10 @@
      with dashed separators inside the group, so its OU / ET
      alternatives clearly belong to the same trigger. Strong lines
      only between triggers. */
-  table.def tr.act td { background: #e9f1fb; }
+  table.def td.actL { background: #e9f1fb; }
+  table.def tr.alt-a td { background: #eef5fc; }
+  table.def tr.or-row td { background: #f8fbfe; }
+  table.def tr.alt-b td { background: #dcebf9; }
   table.def tr.sub td { font-size: 0.88rem; }
   table.def tr.dash td { border-bottom: 1px dashed #a9c3e2; }
   table.def tr.grp-end td { border-bottom: 2px solid #aebcc4; }
@@ -242,17 +245,17 @@
           <td class="logic"><span class="ou">OU</span></td>
           <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
         </tr>
-        <tr class="act dash">
-          <td class="stage" rowspan="3">Prévisions :<br>Action</td>
-          <td rowspan="3">3,0 ans</td><td rowspan="3">72 heures</td>
+        <tr class="alt-a dash">
+          <td class="stage actL" rowspan="3">Prévisions :<br>Action</td>
+          <td class="actL" rowspan="3">3,0 ans</td><td class="actL" rowspan="3">72 heures</td>
           <td>≥ 68 mm de précipitations prévues</td>
           <td class="logic"><span class="ou">OU</span></td>
           <td>&gt; 0 personnes prévues d'être exposées aux vents de 64 nœuds</td>
         </tr>
-        <tr class="act sub dash">
+        <tr class="or-row sub dash">
           <td colspan="3" class="logic"><span class="ou">OU</span></td>
         </tr>
-        <tr class="act sub grp-end">
+        <tr class="alt-b sub grp-end">
           <td>La DGPC lance une alerte rouge</td>
           <td class="logic"><span class="et">ET</span></td>
           <td>L'alerte est confirmée par le NOAA NHC avec un
