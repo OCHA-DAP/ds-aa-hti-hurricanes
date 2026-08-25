@@ -189,13 +189,30 @@ def _fetch_one(session, filename, run, bbox):
     )
 
 
-def fetch_window(start, end, run="final", bbox=HTI_BBOX, max_workers=4):
+def fetch_window(
+    start, end, run="final", bbox=HTI_BBOX, max_workers=4, allow_late=True
+):
     """Half-hourly precipitation *accumulation* (mm) over the window.
 
     Returns a DataArray with dims (time, lat, lon); each time step is the
-    millimetres that fell in that half hour.
+    millimetres that fell in that half hour. ``.attrs["run"]`` records
+    which product was actually used.
+
+    The Final run is gauge-adjusted and preferred, but it lags real time by
+    months — recent storms are only in the Late run. Rather than silently
+    dropping them, fall back to Late and record it, so the difference can
+    be surfaced instead of hidden.
     """
     granules = find_granules(start, end, run=run)
+    if not granules and allow_late and run == "final":
+        logger.warning(
+            "no final-run IMERG for %s - %s; falling back to the late run "
+            "(not gauge-adjusted)",
+            start,
+            end,
+        )
+        run = "late"
+        granules = find_granules(start, end, run=run)
     if not granules:
         raise RuntimeError(f"no {run} IMERG granules for {start} - {end}")
     logger.info(

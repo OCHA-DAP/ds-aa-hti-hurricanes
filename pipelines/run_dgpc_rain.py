@@ -67,6 +67,9 @@ def main(only=None):
             "window_start": start,
             "window_end": end,
             "n_timesteps": int(da.sizes["time"]),
+            # Final (gauge-adjusted) or Late; recent storms
+            # are only in Late. Surfaced on the page.
+            "imerg_run": da.attrs.get("run", "final"),
         }
         stats = storm_rain_stats(da)
         rec.update(stats)
