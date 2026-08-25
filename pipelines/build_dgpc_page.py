@@ -138,7 +138,47 @@ def main():
         },
     )
 
-    html = render(df, chart_wind, rp, rain, v, rmw_validation_note())
+    chart_rain = ""
+    if rain is not None and len(rain):
+        # Carry the wind table's storm labels over so both sections name
+        # storms identically.
+        rain = rain.drop(columns=["label"], errors="ignore").merge(
+            df[["atcf_id", "label"]], on="atcf_id", how="left"
+        )
+        rain["label"] = rain["label"].fillna(rain["atcf_id"])
+        rc = rain.sort_values("any_pixel_24h_mm", ascending=False)
+        chart_rain = grouped_barh(
+            rc["label"].tolist(),
+            [
+                (
+                    "obsv",
+                    "Point de grille (max.)",
+                    rc["any_pixel_24h_mm"].tolist(),
+                ),
+                (
+                    "extra",
+                    "Moyenne départementale (max.)",
+                    rc["department_max_24h_mm"].tolist(),
+                ),
+                (
+                    "fcast",
+                    "Moyenne nationale",
+                    rc["national_mean_24h_mm"].tolist(),
+                ),
+            ],
+            thresholds=[
+                (
+                    dc.ORANGE_RAIN["threshold_mm"],
+                    "Alerte orange — 100 mm / 24 h",
+                    "orange",
+                )
+            ],
+            x_title="Cumul maximal de précipitations sur 24 h (mm)",
+        )
+
+    html = render(
+        df, chart_wind, rp, rain, v, rmw_validation_note(), chart_rain
+    )
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     logger.info("wrote %s (%.0f kB)", OUT, OUT.stat().st_size / 1024)

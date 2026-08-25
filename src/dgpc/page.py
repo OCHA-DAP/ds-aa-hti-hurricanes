@@ -138,7 +138,7 @@ def _rp_tile(rp_years, n_events, label):
     )
 
 
-def render(df, chart_wind, rp, rain, variant, rmw_note):
+def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
     """Assemble the whole page."""
     v = variant
     n_storms = len(df)
@@ -182,7 +182,13 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
         for r in rp.itertuples()
     )
 
-    rain_section = _rain_section(rain)
+    has_rain = rain is not None and len(rain) > 0
+    rain_section = _rain_section(rain, chart_rain, n_storms)
+    status_callout = _status_callout(has_rain)
+    rain_pill = (
+        "" if has_rain else
+        ' <span class="pill orange">en attente</span>'
+    )
     sens_rows = _sensitivity_rows(df)
 
     return f"""<!doctype html>
@@ -231,17 +237,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
   {_rp_tile(rp_r, len(yrs_r), "période de retour du seuil de vent rouge")}
 </div>
 
-<div class="callout">
-  <h3>Statut : analyse préliminaire</h3>
-  <p>
-    Le volet <b>vent</b> est complet. Le volet <b>précipitations</b> est en
-    attente : il exige des données de pluie infra-journalières (les seuils
-    de 60–80 mm/h et de 300 mm/6–12 h ne peuvent pas être évalués sur des
-    cumuls journaliers), et l’accès au produit IMERG semi-horaire n’était pas
-    disponible au moment de la rédaction. La méthode est prête et documentée
-    à la section 5.
-  </p>
-</div>
+{status_callout}
 
 <h2>1. Ce que la DGPC a communiqué</h2>
 
@@ -344,8 +340,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
       rafale de 1,25 pour la variante « rafales ».</li>
 </ul>
 
-<h2>5. Méthode — précipitations
-<span class="pill orange">en attente</span></h2>
+<h2>5. Méthode — précipitations{rain_pill}</h2>
 
 <p>
   Les seuils de la DGPC portent sur des durées de 1 h, 6–12 h et 24 h. Le
@@ -369,9 +364,11 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
   </p>
 </div>
 
+<h2>6. Résultats — précipitations</h2>
+
 {rain_section}
 
-<h2>6. Résultats — vent</h2>
+<h2>7. Résultats — vent</h2>
 
 <figure>
 {chart_wind}
@@ -399,7 +396,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
 {storm_rows}
 </tbody></table></div>
 
-<h2>7. Sensibilité : quelle lecture du vent ?</h2>
+<h2>8. Sensibilité : quelle lecture du vent ?</h2>
 
 <p>
   La DGPC n’a pas précisé si « ≥ 200 km/h » désigne un vent soutenu ou une
@@ -428,7 +425,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
   a écrit — mais c’est aussi la plus stricte des trois.
 </p>
 
-<h2>8. Périodes de retour</h2>
+<h2>9. Périodes de retour — vent</h2>
 
 <p>
   Calculées par la position de Weibull sur {n_years} saisons
@@ -475,7 +472,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
   </p>
 </div>
 
-<h2>9. Questions pour la DGPC</h2>
+<h2>10. Questions pour la DGPC</h2>
 
 <ol>
   <li>Les seuils s’appliquent-ils à des valeurs <b>prévues</b> ou
@@ -495,7 +492,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note):
       souhaite-t-elle voir utilisées ?</li>
 </ol>
 
-<h2>10. Limites</h2>
+<h2>11. Limites</h2>
 
 <ul>
   <li>Le champ de vent est un modèle paramétrique, non une simulation : il
@@ -582,7 +579,43 @@ def _sensitivity_rows(df, top_n=8):
     return "\n".join(out)
 
 
-def _rain_section(rain):
+def _status_callout(has_rain):
+    """The banner at the top: what is and is not settled."""
+    if not has_rain:
+        return """<div class="callout">
+  <h3>Statut : analyse préliminaire</h3>
+  <p>
+    Le volet <b>vent</b> est complet. Le volet <b>précipitations</b> est en
+    attente : il exige des données de pluie infra-journalières (les seuils
+    de 60–80 mm/h et de 300 mm/6–12 h ne peuvent pas être évalués sur des
+    cumuls journaliers), et l’accès au produit IMERG semi-horaire n’était
+    pas disponible au moment de la rédaction. La méthode est prête et
+    documentée à la section 5.
+  </p>
+</div>"""
+    return """<div class="callout">
+  <h3>Statut : proposition à discuter avec la DGPC</h3>
+  <p>
+    Les deux volets — vent et précipitations — sont calculés. Ce qui reste
+    ouvert n’est pas le calcul mais l’<b>interprétation</b> des seuils :
+    tant que la DGPC n’aura pas précisé la nature des valeurs (prévues ou
+    observées), l’échelle spatiale, et s’il s’agit de vent soutenu ou de
+    rafales, les résultats doivent être lus comme un éventail de lectures
+    possibles plutôt que comme un verdict unique. Les questions sont
+    rassemblées à la section 9.
+  </p>
+</div>"""
+
+
+AGG_LABELS = {
+    "national_mean": "Moyenne nationale",
+    "department_max": "Moyenne départementale (max.)",
+    "any_pixel": "Point de grille (max.)",
+}
+
+
+def _rain_section(rain, chart_rain="", n_total=None):
+    """Results for the rainfall criteria, or a pending note."""
     if rain is None or len(rain) == 0:
         return (
             '<div class="note"><h3>Résultats — précipitations</h3>'
@@ -591,4 +624,122 @@ def _rain_section(rain):
             "(<code>pipelines/run_dgpc_rain.py</code>) ; le calcul prend "
             "environ une heure une fois l’accès rétabli.</p></div>"
         )
-    return ""
+
+    d = rain.sort_values("any_pixel_24h_mm", ascending=False)
+    n_years = dc.SEASON_END - dc.SEASON_START + 1
+
+    # How many storms meet each criterion under each aggregation — this
+    # comparison is the section's whole point.
+    matrix = []
+    for crit, label, thr in (
+        ("rain_orange", "Orange — 100 mm / 24 h", ""),
+        ("rain_red_rate", "Rouge — 60 mm / 1 h", ""),
+        ("rain_red_12h", "Rouge — 300 mm / 12 h", ""),
+        ("rain_red_6h", "Rouge — 300 mm / 6 h", ""),
+    ):
+        cells = []
+        for agg in dc.AGGREGATIONS:
+            col = f"{agg}_{crit}"
+            if col not in rain:
+                cells.append("<td class='num'>—</td>")
+                continue
+            hit = rain[rain[col].fillna(False).astype(bool)]
+            n_st = len(hit)
+            n_yr = hit["season"].nunique()
+            rp = (n_years + 1) / n_yr if n_yr else np.inf
+            rp_txt = f"{fr_num(rp, 1)} ans" if np.isfinite(rp) else "jamais"
+            cells.append(
+                f"<td class='num'>{n_st}<br>"
+                f"<span style='color:#5e6a6b;font-size:.85em'>{rp_txt}</span>"
+                "</td>"
+            )
+        matrix.append(
+            f"<tr><td class='nm'>{escape(label)}{thr}</td>"
+            + "".join(cells)
+            + "</tr>"
+        )
+
+    rows = []
+    for _, r in d.iterrows():
+        rows.append(
+            "<tr>"
+            f"<td class='nm'>{escape(str(r.get('label', r['atcf_id'])))}</td>"
+            f"<td class='num'>{fr_num(r['national_mean_24h_mm'])}</td>"
+            f"<td class='num'>{fr_num(r['department_max_24h_mm'])}</td>"
+            f"<td class='num'>{fr_num(r['any_pixel_24h_mm'])}</td>"
+            f"<td class='num'>{fr_num(r['any_pixel_1h_mm'])}</td>"
+            f"<td class='num'>{fr_num(r['any_pixel_12h_mm'])}</td>"
+            f"<td>{verdict(r.get('department_max_rain_orange'))}</td>"
+            "</tr>"
+        )
+
+    # If any storm's IMERG window failed, say so — a missing storm is not
+    # the same as a storm that did not meet a threshold.
+    missing = ""
+    if n_total and len(rain) < n_total:
+        gap = n_total - len(rain)
+        missing = (
+            f'<div class="note"><p><b>{gap} '
+            f'{plural(gap, "tempête")} sur {n_total} '
+            f'{plural(gap, "n’a", "n’ont")} pas pu être '
+            f'{plural(gap, "évaluée")}</b> (fenêtre IMERG incomplète). '
+            "Ces tempêtes sont absentes des comptes ci-dessous : une "
+            "donnée manquante n’est pas un seuil non atteint, et les "
+            "périodes de retour sont donc des bornes basses.</p></div>"
+        )
+
+    agg_head = "".join(
+        f"<th>{escape(AGG_LABELS[a])}</th>" for a in dc.AGGREGATIONS
+    )
+    figure = (
+        f"<figure>{chart_rain}<figcaption>Cumul maximal sur 24 h par "
+        "tempête, selon les trois agrégations spatiales. Le seuil orange "
+        "de 100 mm est atteint bien plus souvent au point de grille qu’en "
+        "moyenne nationale — c’est la même pluie, lue à trois échelles."
+        "</figcaption></figure>"
+        if chart_rain
+        else ""
+    )
+
+    return f"""
+<h3>Combien de tempêtes atteignent chaque critère</h3>
+
+<p>
+  Nombre de tempêtes ({len(rain)} {plural(len(rain), "évaluée")}) et
+  période de retour associée,
+  selon l’échelle spatiale retenue. <b>C’est le tableau le plus important
+  de cette page</b> : le même critère de pluie passe d’exceptionnel à
+  courant selon la surface sur laquelle on l’applique.
+</p>
+
+{missing}
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Critère</th>{agg_head}</tr></thead>
+<tbody>
+{chr(10).join(matrix)}
+</tbody></table></div>
+
+{figure}
+
+<h3>Détail par tempête</h3>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr>
+  <th>Tempête</th>
+  <th>24 h<br>moy. nationale</th>
+  <th>24 h<br>moy. dép. max.</th>
+  <th>24 h<br>point max.</th>
+  <th>1 h<br>point max.</th>
+  <th>12 h<br>point max.</th>
+  <th>Orange<br>(départ.)</th>
+</tr></thead>
+<tbody>
+{chr(10).join(rows)}
+</tbody></table></div>
+
+<p>
+  Toutes les valeurs sont des cumuls maximaux en mm, sur des fenêtres
+  glissantes, dans la fenêtre d’attribution de chaque tempête.
+</p>
+"""

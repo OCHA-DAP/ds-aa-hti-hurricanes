@@ -113,8 +113,30 @@ are documented in `src/dgpc/constants.py` and on the page itself.
 
 ```shell
 uv run python pipelines/run_dgpc_wind.py    # ~10 min, writes to blob
-uv run python pipelines/run_dgpc_rain.py    # needs Earthdata credentials
 uv run python pipelines/build_dgpc_page.py  # renders docs/dgpc-alertes.html
+```
+
+The **rainfall** leg runs on Databricks rather than locally, because the
+Earthdata credentials live in the `dsci` secret scope and are injected by the
+compute policy — nobody has to hold the password (job `dgpc_rain` in
+`databricks.yml`; ~45 min for all 42 storms):
+
+```shell
+databricks bundle deploy -p default
+databricks bundle run dgpc_rain -p default --params dgpc_storms=AL142016  # smoke test
+databricks bundle run dgpc_rain -p default                                # all storms
+```
+
+A `--storm`/`dgpc_storms` run **merges** into the stored table rather than
+replacing it, and the pipeline refuses to write an empty result, so a partial
+run cannot wipe the rest. Killing the local CLI does not stop the job — it
+runs server-side; poll it with `databricks jobs get-run <run_id>`.
+
+Both numerical modules carry a runnable self-check:
+
+```shell
+uv run python -m src.dgpc.windfield       # profile reproduces every NHC radius
+uv run python -m src.dgpc.rain_analysis   # aggregation ordering, land masking
 ```
 
 ## Published site
