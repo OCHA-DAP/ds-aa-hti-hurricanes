@@ -10,6 +10,8 @@ Usage: uv run python pipelines/run_dgpc_rain.py [--storm AL142016]
 """
 
 import argparse
+import tempfile
+from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
@@ -26,6 +28,21 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 OUT_PREFIX = f"{blob.PROJECT_PREFIX}/processed/dgpc"
+
+
+def _cache_window(da, atcf_id):
+    """Persist one storm's half-hourly window to blob as netCDF.
+
+    ``DataArray.to_netcdf()`` with no path only works through the scipy
+    (netCDF-3) backend and needs a named variable, neither of which holds
+    here — so write a real file with h5netcdf and upload the bytes.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / f"{atcf_id}.nc"
+        da.rename("precipitation").to_netcdf(path, engine="h5netcdf")
+        blob.upload_blob_data(
+            f"{OUT_PREFIX}/imerg_hh/{atcf_id}.nc", path.read_bytes()
+        )
 
 
 def main(only=None):
@@ -57,14 +74,15 @@ def main(only=None):
         records.append(rec)
 
         # Cache the raw window so the analysis can be re-run without
-        # re-downloading ~300 granules per storm.
+        # re-downloading ~250 granules per storm.
         try:
-            blob.upload_blob_data(
-                f"{OUT_PREFIX}/imerg_hh/{s.atcf_id}.nc",
-                da.to_netcdf(),
+            _cache_window(da, s.atcf_id)
+        except Exception as exc:  # noqa: BLE001
+            # Non-fatal: the stats are already computed. Log the reason
+            # rather than a bare "could not cache" so it stays diagnosable.
+            logger.warning(
+                "could not cache IMERG window for %s: %s", s.atcf_id, exc
             )
-        except Exception:
-            logger.warning("could not cache IMERG window for %s", s.atcf_id)
 
     df = pd.DataFrame(records)
     if df.empty:
