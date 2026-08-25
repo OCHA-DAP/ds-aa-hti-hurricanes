@@ -58,3 +58,6 @@ SEASON_END = 2025
 
 # Storms are attributed to Haiti using the framework's existing distance
 # gate (src.constants.D_THRESH = 230 km from the adm0 boundary).
+
+# The 2026 framework’s overall return period, for comparison.
+FRAMEWORK_RP_YEARS = 2.4

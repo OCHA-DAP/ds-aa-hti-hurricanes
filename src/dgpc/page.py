@@ -190,6 +190,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
         ' <span class="pill orange">en attente</span>'
     )
     sens_rows = _sensitivity_rows(df)
+    implications = _implications(rain, rp_o, rp_r, n_years)
 
     return f"""<!doctype html>
 <html lang="fr">
@@ -440,27 +441,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
 {rp_rows}
 </tbody></table></div>
 
-<div class="callout">
-  <h3>Ce que cela implique pour le cadre</h3>
-  <p>
-    Le cadre est calibré autour d’une période de retour globale de
-    <b>2,4 ans</b>. Le seuil de vent orange, en observation, ne se produit
-    qu’une fois tous les {fr_num(rp_o, 1)} ans, et le seuil rouge une fois
-    tous les {fr_num(rp_r, 1)} ans. <b>Les seuils de vent de la DGPC sont
-    donc bien trop rares pour piloter à eux seuls un déclencheur d’action
-    anticipatoire</b> : utilisés seuls, ils laisseraient passer la grande
-    majorité des saisons où le cadre doit agir.
-  </p>
-  <p>
-    Deux conséquences. D’abord, si les niveaux d’alerte de la DGPC doivent
-    être reliés au cadre, ce sont les critères de <b>précipitations</b> qui
-    porteront l’essentiel des activations — d’où l’importance de compléter
-    ce volet. Ensuite, le rapprochement entre les deux systèmes est
-    probablement à concevoir comme une <b>correspondance</b> (le cadre
-    signale à la DGPC que ses seuils sont en passe d’être atteints) plutôt
-    que comme une substitution.
-  </p>
-</div>
+{implications}
 
 <div class="note">
   <h3>Prudence sur les valeurs rares</h3>
@@ -579,6 +560,64 @@ def _sensitivity_rows(df, top_n=8):
     return "\n".join(out)
 
 
+def _implications(rain, rp_o, rp_r, n_years):
+    """The synthesis: what these thresholds would mean for the framework."""
+    wind_part = (
+        f"<p>Le cadre est calibré autour d’une période de retour globale de "
+        f"<b>{fr_num(dc.FRAMEWORK_RP_YEARS, 1)} ans</b>. Le seuil de vent "
+        f"orange, en observation, ne se produit qu’une fois tous les "
+        f"{fr_num(rp_o, 1)} ans, et le seuil rouge une fois tous les "
+        f"{fr_num(rp_r, 1)} ans. <b>Les seuils de vent de la DGPC sont donc "
+        f"bien trop rares pour piloter à eux seuls un déclencheur d’action "
+        f"anticipatoire</b> : utilisés seuls, ils laisseraient passer la "
+        f"grande majorité des saisons où le cadre doit agir.</p>"
+    )
+    if rain is None or len(rain) == 0:
+        return f'<div class="callout"><h3>Ce que cela implique pour le ' \
+               f'cadre</h3>{wind_part}</div>'
+
+    rp = {}
+    for agg in dc.AGGREGATIONS:
+        col = f"{agg}_rain_orange"
+        ny = (
+            rain.loc[rain[col].fillna(False).astype(bool), "season"].nunique()
+            if col in rain
+            else 0
+        )
+        rp[agg] = (n_years + 1) / ny if ny else np.inf
+
+    return f'''<div class="callout">
+  <h3>Ce que cela implique pour le cadre</h3>
+  {wind_part}
+  <p>
+    Côté <b>précipitations</b>, tout dépend de l’échelle spatiale. Le même
+    seuil de 100 mm/24 h correspond à une période de retour de
+    <b>{fr_num(rp["national_mean"], 1)} ans</b> en moyenne nationale,
+    <b>{fr_num(rp["department_max"], 1)} ans</b> en moyenne départementale,
+    et <b>{fr_num(rp["any_pixel"], 1)} ans</b> au point de grille —
+    c’est-à-dire presque chaque tempête. Ce n’est pas une nuance
+    technique : c’est la différence entre un seuil exceptionnel et un
+    seuil de routine.
+  </p>
+  <p>
+    Un point mérite l’attention de la DGPC : lu à l’échelle
+    <b>départementale</b>, le seuil orange de précipitations tombe à
+    {fr_num(rp["department_max"], 1)} ans, très proche des
+    {fr_num(dc.FRAMEWORK_RP_YEARS, 1)} ans du cadre. C’est la lecture qui
+    rapproche le plus les deux systèmes, et c’est aussi celle qui correspond
+    à la façon dont la DGPC émet ses alertes — par département.
+  </p>
+  <p>
+    Enfin, aucun critère <b>rouge</b> de pluie n’est atteint en moyenne
+    nationale ou départementale sur toute la période : le seuil de
+    300 mm/6 h n’est jamais atteint, même au point de grille. Le
+    rapprochement entre les deux systèmes est donc probablement à concevoir
+    comme une <b>correspondance</b> (le cadre signale à la DGPC que ses
+    seuils sont en passe d’être atteints) plutôt que comme une substitution.
+  </p>
+</div>'''
+
+
 def _status_callout(has_rain):
     """The banner at the top: what is and is not settled."""
     if not has_rain:
@@ -688,6 +727,23 @@ def _rain_section(rain, chart_rain="", n_total=None):
             "périodes de retour sont donc des bornes basses.</p></div>"
         )
 
+    late = ""
+    if "imerg_run" in rain:
+        late_storms = rain.loc[
+            rain["imerg_run"].astype(str) == "late", "label"
+        ].tolist()
+        if late_storms:
+            names = ", ".join(escape(str(s)) for s in late_storms)
+            late = (
+                '<div class="note"><p>'
+                f"<b>{names}</b> : évaluée à partir du produit IMERG "
+                "<i>Late</i> et non <i>Final</i>. Le produit Final, "
+                "ajusté sur les pluviomètres, ne couvre pas encore cette "
+                "période. Les valeurs restent comparables, mais elles ne "
+                "bénéficient pas de cet ajustement."
+                "</p></div>"
+            )
+
     agg_head = "".join(
         f"<th>{escape(AGG_LABELS[a])}</th>" for a in dc.AGGREGATIONS
     )
@@ -713,6 +769,7 @@ def _rain_section(rain, chart_rain="", n_total=None):
 </p>
 
 {missing}
+{late}
 
 <div class="tablewrap"><table class="wraphead">
 <thead><tr><th>Critère</th>{agg_head}</tr></thead>
