@@ -88,6 +88,51 @@ uv run python pipelines/send_test_email.py   # Hurricane Melissa (2025) replay t
 └── ...
 ```
 
+## DGPC alert levels (August 2026 guidance)
+
+The DGPC communicated the thresholds behind its orange and red alert levels
+(orange: 100 mm/24 h or 100–120 km/h; red: 60–80 mm/h or 300 mm/6–12 h or
+≥ 200 km/h). `src/dgpc/` evaluates them against every storm that came within
+`D_THRESH` of Haiti, 2002–2025, and publishes the result to the Pages site.
+
+The DGPC did not say whether the values are forecast or observed, which data
+sources they refer to, or over what area a threshold must be met — so the
+analysis reports the readings side by side rather than picking one. Assumptions
+are documented in `src/dgpc/constants.py` and on the page itself.
+
+- **Wind** — NHC forecasts only carry 34/50/64-kt radii, none of which is a DGPC
+  level, so `src/dgpc/windfield.py` fits a piecewise power-law profile through
+  those radii plus a climatological radius of maximum wind (Willoughby et al.
+  2006; NHC does not forecast it). Invariants are guarded by a runnable
+  self-check: `uv run python -m src.dgpc.windfield`.
+- **Rainfall** — the framework's own rainfall plumbing is daily, which cannot
+  address the sub-daily criteria, so `src/datasources/imerg_hh.py` pulls IMERG
+  half-hourly (CMR for granule discovery, GES DISC OPeNDAP with a bbox
+  constraint for the data). **Needs working Earthdata credentials**
+  (`IMERG_USERNAME` / `IMERG_PASSWORD`).
+
+```shell
+uv run python pipelines/run_dgpc_wind.py    # ~10 min, writes to blob
+uv run python pipelines/run_dgpc_rain.py    # needs Earthdata credentials
+uv run python pipelines/build_dgpc_page.py  # renders docs/dgpc-alertes.html
+```
+
+## Published site
+
+GitHub Pages serves `main:/docs` at
+<https://ocha-dap.github.io/ds-aa-hti-hurricanes/>. One repo gets one Pages
+site, so products share a URL space behind a landing page at `/`
+([convention](https://github.com/OCHA-DAP/ds-knowledge-base/blob/main/methods/static-data-apps.md)):
+
+| Path | Product | Built by |
+|---|---|---|
+| `/` | landing page (cards) | hand-edited `docs/index.html` |
+| `/slides.html` | trigger-mechanism deck (French) | hand-edited |
+| `/dgpc-alertes.html` | DGPC alert-level analysis (French) | `pipelines/build_dgpc_page.py` |
+
+French terminology follows the team's doc-sourced glossary
+([KB `docs/I18N.md`](https://github.com/OCHA-DAP/ds-knowledge-base/blob/main/docs/I18N.md)).
+
 ## Reproducing this analysis
 
 This repo uses [uv](https://docs.astral.sh/uv/):

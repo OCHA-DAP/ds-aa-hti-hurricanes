@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Niveaux d’alerte de la DGPC — évaluation historique</title>
+<style>
+:root{--blue:#1862d8;--blue-dark:#0e4aab;--ink:#1e2a2b;--muted:#5e6a6b;
+--bg:#f4f7f9;--card:#fff;--line:#dde5e8;--orange:#ec835a;--red:#d03b3b;
+--green:#0f8a5f;--amber-bg:#fdf6ec;--amber-line:#e8cfa8;--amber-ink:#8a5a12}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);
+line-height:1.62;padding:0 5vw 6rem}
+.wrap{max-width:56rem;margin:0 auto}
+header{padding:4.5rem 0 2.2rem}
+.kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;
+font-weight:700;color:var(--blue);margin-bottom:.8rem}
+h1{font-size:clamp(1.7rem,4.4vw,2.5rem);line-height:1.16;margin-bottom:1rem}
+.sub{font-size:1.08rem;color:var(--muted);max-width:44em}
+.crumb{font-size:.86rem;margin-bottom:1.6rem}
+.crumb a{color:var(--muted)}
+h2{font-size:1.42rem;margin:3.2rem 0 .9rem;line-height:1.25;
+padding-top:1.6rem;border-top:1px solid var(--line)}
+h3{font-size:1.08rem;margin:1.9rem 0 .5rem}
+p{margin-bottom:.95rem;max-width:44em}
+ul,ol{margin:0 0 1rem 1.15rem;max-width:44em}
+li{margin-bottom:.42rem}
+code{background:#eef2f5;padding:.1em .38em;border-radius:4px;font-size:.9em}
+.lead{font-size:1.05rem}
+.callout{background:var(--amber-bg);border:1px solid var(--amber-line);
+border-left:4px solid var(--orange);border-radius:8px;padding:1.1rem 1.3rem;
+margin:1.5rem 0;max-width:44em}
+.callout h3{margin-top:0;color:var(--amber-ink);font-size:1rem}
+.callout p:last-child{margin-bottom:0}
+.note{background:#fff;border:1px solid var(--line);border-radius:8px;
+padding:1.1rem 1.3rem;margin:1.5rem 0;max-width:44em;font-size:.94rem}
+.note h3{margin-top:0;font-size:1rem}
+.note p:last-child{margin-bottom:0}
+figure{margin:1.8rem 0;background:var(--card);border:1px solid var(--line);
+border-radius:10px;padding:1.2rem 1rem .8rem;overflow-x:auto}
+figcaption{font-size:.86rem;color:var(--muted);margin-top:.7rem;
+padding:0 .4rem}
+.tablewrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);
+border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--line);
+white-space:nowrap;vertical-align:top}
+table.prose th,table.prose td{white-space:normal;min-width:11rem}
+table.wraphead th{white-space:normal}
+th{background:#f7fafb;font-weight:700;font-size:.82rem;color:var(--muted);
+text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.nm{font-weight:600}
+.v-yes{color:var(--green);font-weight:600}
+.v-no{color:var(--muted)}
+.v-na{color:var(--muted)}
+.pill{display:inline-block;font-size:.72rem;text-transform:uppercase;
+letter-spacing:.08em;font-weight:700;padding:.18rem .5rem;border-radius:5px}
+.pill.orange{background:#fdefe7;color:#a4551f}
+.pill.red{background:#fbeaea;color:#a02a2a}
+.stats{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
+margin:1.6rem 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem 1.1rem}
+.stat .big{font-size:1.9rem;font-weight:700;line-height:1.1;
+font-variant-numeric:tabular-nums}
+.stat .lab{font-size:.83rem;color:var(--muted);margin-top:.3rem}
+footer{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--line);
+font-size:.86rem;color:var(--muted)}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="crumb"><a href="./">←
+  Action anticipatoire · Ouragans · Haïti</a></p>
+  <div class="kicker">Analyse · août 2026</div>
+  <h1>Niveaux d’alerte de la DGPC : évaluation historique</h1>
+  <p class="sub">
+    Les seuils de pluie et de vent des alertes orange et rouge communiqués par
+    la DGPC en août 2026, appliqués rétrospectivement aux 42 tempêtes
+    passées à moins de 230 km d’Haïti entre
+    2002 et 2025.
+  </p>
+</header>
+
+<p class="lead">
+  La DGPC a communiqué les seuils qui définissent ses niveaux d’alerte orange
+  et rouge. Cette page répond à une seule question : <strong>quelles tempêtes
+  passées auraient atteint ces seuils ?</strong> La réponse dépend fortement
+  d’hypothèses que la DGPC n’a pas précisées — elles sont listées à la
+  section 2 et devraient être tranchées avant toute utilisation de ces
+  seuils dans le cadre d’action anticipatoire.
+</p>
+
+<div class="stats">
+  <div class="stat"><div class="big">3</div>
+    <div class="lab">tempêtes atteignant
+    le seuil de vent <b>orange</b>
+    (≥ 100 km/h sur terre, observation)</div></div>
+  <div class="stat"><div class="big">1</div>
+    <div class="lab">tempête atteignant
+    le seuil de vent <b>rouge</b>
+    (≥ 200 km/h sur terre, observation)</div></div>
+  <div class="stat"><div class="big">8,3 ans</div><div class="lab">période de retour du seuil de vent orange</div></div>
+  <div class="stat"><div class="big">25,0 ans</div><div class="lab">période de retour du seuil de vent rouge <b>— estimation fragile : 1 événement</b></div></div>
+</div>
+
+<div class="callout">
+  <h3>Statut : analyse préliminaire</h3>
+  <p>
+    Le volet <b>vent</b> est complet. Le volet <b>précipitations</b> est en
+    attente : il exige des données de pluie infra-journalières (les seuils
+    de 60–80 mm/h et de 300 mm/6–12 h ne peuvent pas être évalués sur des
+    cumuls journaliers), et l’accès au produit IMERG semi-horaire n’était pas
+    disponible au moment de la rédaction. La méthode est prête et documentée
+    à la section 5.
+  </p>
+</div>
+
+<h2>1. Ce que la DGPC a communiqué</h2>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Niveau</th><th>Précipitations</th><th>Vent</th></tr></thead>
+<tbody>
+<tr><td><span class="pill orange">Orange</span></td>
+    <td>100 mm / 24 h</td><td>100–120 km/h</td></tr>
+<tr><td><span class="pill red">Rouge</span></td>
+    <td>60–80 mm/h <i>ou</i> 300 mm / 6–12 h</td><td>≥ 200 km/h</td></tr>
+</tbody></table></div>
+
+<p>
+  Converties en nœuds — l’unité des prévisions du NHC — les vitesses de vent
+  correspondent à environ <b>54 nœuds</b> (100 km/h), <b>65 nœuds</b>
+  (120 km/h) et <b>108 nœuds</b> (200 km/h). Aucune de ces valeurs ne
+  correspond à un rayon de vent prévu par le NHC, qui ne publie que les
+  rayons à 34, 50 et 64 nœuds ; la section 4 explique comment le champ de
+  vent est reconstruit.
+</p>
+
+<h2>2. Ce que nous avons dû supposer</h2>
+
+<p>
+  La DGPC n’a précisé ni la nature des valeurs (prévues ou observées), ni les
+  sources de données, ni la surface sur laquelle un seuil doit être atteint.
+  Chaque hypothèse ci-dessous change le résultat, parfois du tout au tout.
+</p>
+
+<div class="tablewrap"><table class="prose">
+<thead><tr><th>Question ouverte</th><th>Hypothèse retenue ici</th>
+<th>Ce que cela change</th></tr></thead>
+<tbody>
+<tr><td>Prévision ou observation ?</td>
+    <td>Les deux sont présentées côte à côte pour le vent</td>
+    <td>L’écart est décisif : voir Matthew ci-dessous</td></tr>
+<tr><td>Vent en mer ou sur terre ?</td>
+    <td>Sur terre, avec réduction de frottement (×0,85)</td>
+    <td>Environ 15 % — assez pour franchir ou non le seuil rouge</td></tr>
+<tr><td>Vent soutenu ou rafale ?</td>
+    <td>Vent soutenu (résultat principal) ; rafales en sensibilité</td>
+    <td>Environ 25 % de plus pour les rafales</td></tr>
+<tr><td>Sur quelle surface ?</td>
+    <td>Pour les précipitations : moyenne nationale, moyenne départementale
+        et point de grille, présentées côte à côte. Pour le vent : maximum
+        atteint en un point du territoire, avec le détail par département —
+        une « moyenne nationale de vent » n’aurait pas de sens physique.</td>
+    <td>Le seuil de pluie peut être atteint localement sans l’être
+        en moyenne nationale ; c’est le choix le plus lourd de
+        conséquences de toute la liste</td></tr>
+<tr><td>« 60–80 mm/h » : quelle borne ?</td>
+    <td>La borne basse, 60 mm en 1 h</td>
+    <td>Lecture la plus permissive</td></tr>
+<tr><td>« 300 mm / 6–12 h » : quelle fenêtre ?</td>
+    <td>300 mm en 12 h (le résultat à 6 h est aussi donné)</td>
+    <td>La fenêtre de 6 h est nettement plus exigeante</td></tr>
+<tr><td>« 100–120 km/h » : plage ou seuil ?</td>
+    <td>Seuil minimal : ≥ 100 km/h</td>
+    <td>Une lecture en plage fermée exclurait les tempêtes les plus
+        fortes</td></tr>
+</tbody></table></div>
+
+<h2>3. Tempêtes considérées</h2>
+
+<p>
+  Les 42 tempêtes dont le centre analysé est passé à moins de
+  230 km
+  d’Haïti entre 2002 et 2025 — le même critère de
+  distance que celui utilisé pour attribuer les précipitations à une tempête
+  dans le cadre. La période commence en 2002 parce que c’est
+  l’année où le NHC a commencé à prévoir les rayons de vent à 64 nœuds, sans
+  lesquels le champ de vent ne peut pas être reconstruit.
+</p>
+
+<h2>4. Méthode — vent</h2>
+
+<p>
+  Le NHC ne publie que les rayons de vent par quadrant à 34, 50 et 64 nœuds.
+  Les niveaux de la DGPC (54, 65 et 108 nœuds) n’en font pas partie : un
+  champ de vent paramétrique est donc reconstruit pour chaque point de la
+  trajectoire.
+</p>
+
+<ul>
+  <li><b>Profil radial.</b> Loi de puissance par morceaux passant exactement
+      par les points d’ancrage (R<sub>max</sub>, V<sub>max</sub>),
+      (r<sub>64</sub>, 64), (r<sub>50</sub>, 50), (r<sub>34</sub>, 34), en
+      échelle logarithmique. Le profil reproduit donc chaque rayon publié par
+      le NHC à 0,1 nœud près.</li>
+  <li><b>Rayon des vents maximaux.</b> Le NHC ne le prévoit pas (le champ est
+      systématiquement nul). Il est estimé par la relation climatologique de
+      Willoughby et al. (2006). Sur les 502 points de trajectoire d’IBTrACS atteignant 108 nœuds ou plus (2002–2025), le rayon observé médian est de 27,8 km contre 25,2 km pour la climatologie, soit un écart médian de 5 % — la relation est fiable précisément là où se joue le niveau rouge.</li>
+  <li><b>Asymétrie.</b> Les rayons par quadrant sont interpolés de manière
+      continue en azimut, ce qui conserve l’asymétrie prévue par le NHC.</li>
+  <li><b>Passage sur terre.</b> La trajectoire est interpolée à l’heure, le
+      champ de vent est évalué sur la grille WorldPop 1 km d’Haïti, et l’on
+      retient le maximum atteint en chaque point.</li>
+  <li><b>Réduction sur terre.</b> Les rayons du NHC décrivent un vent soutenu
+      sur mer ; un facteur de 0,85 est appliqué sur terre, et un facteur de
+      rafale de 1,25 pour la variante « rafales ».</li>
+</ul>
+
+<h2>5. Méthode — précipitations
+<span class="pill orange">en attente</span></h2>
+
+<p>
+  Les seuils de la DGPC portent sur des durées de 1 h, 6–12 h et 24 h. Le
+  cadre suit aujourd’hui les précipitations au pas <i>journalier</i>
+  (CHIRPS-GEFS en prévision, IMERG en observation), ce qui ne permet pas
+  d’évaluer les critères infra-journaliers. L’analyse utilise donc le produit
+  <b>IMERG semi-horaire</b> (0,1°, pas de 30 minutes), réduit pour chaque
+  tempête au cumul glissant maximal sur chaque fenêtre, selon les trois
+  agrégations spatiales.
+</p>
+
+<div class="note">
+  <h3>Un seuil qui ne peut pas être prévu</h3>
+  <p>
+    Le critère rouge de <b>60–80 mm/h</b> est un critère de <i>mesure</i>, pas
+    de prévision : aucun modèle météorologique global (maille de 25 km) ne
+    résout une intensité horaire ponctuelle de cet ordre. Il peut être
+    constaté en temps réel, mais il ne peut pas déclencher une action
+    anticipatoire. Les critères 100 mm/24 h et 300 mm/12 h, eux, sont
+    prévisibles.
+  </p>
+</div>
+
+<div class="note"><h3>Résultats — précipitations</h3><p>En attente de l’accès aux données IMERG semi-horaires. La méthode et le code sont en place (<code>pipelines/run_dgpc_rain.py</code>) ; le calcul prend environ une heure une fois l’accès rétabli.</p></div>
+
+<h2>6. Résultats — vent</h2>
+
+<figure>
+<svg viewBox="0 0 760 1398" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;max-width:100%;height:auto"><rect width="760" height="1398" fill="#ffffff"/><line x1="132.0" y1="54" x2="132.0" y2="1364" stroke="#dde5e8" stroke-width="1"/><text x="132.0" y="1379" fill="#5e6a6b" font-size="10" text-anchor="middle">0</text><line x1="262.1" y1="54" x2="262.1" y2="1364" stroke="#dde5e8" stroke-width="1"/><text x="262.1" y="1379" fill="#5e6a6b" font-size="10" text-anchor="middle">50</text><line x1="392.1" y1="54" x2="392.1" y2="1364" stroke="#dde5e8" stroke-width="1"/><text x="392.1" y="1379" fill="#5e6a6b" font-size="10" text-anchor="middle">100</text><line x1="522.2" y1="54" x2="522.2" y2="1364" stroke="#dde5e8" stroke-width="1"/><text x="522.2" y="1379" fill="#5e6a6b" font-size="10" text-anchor="middle">150</text><line x1="652.3" y1="54" x2="652.3" y2="1364" stroke="#dde5e8" stroke-width="1"/><text x="652.3" y="1379" fill="#5e6a6b" font-size="10" text-anchor="middle">200</text><text x="414.0" y="1392" fill="#5e6a6b" font-size="10.5" text-anchor="middle">Vent soutenu maximal sur terre en Haïti (km/h)</text><line x1="392.1" y1="32" x2="392.1" y2="1364" stroke="#ec835a" stroke-width="1.5" stroke-dasharray="4 3"/><text x="398.1" y="29" fill="#ec835a" font-size="10.5" font-weight="700" text-anchor="start">Alerte orange — 100 km/h</text><line x1="652.3" y1="46" x2="652.3" y2="1364" stroke="#d03b3b" stroke-width="1.5" stroke-dasharray="4 3"/><text x="646.3" y="43" fill="#d03b3b" font-size="10.5" font-weight="700" text-anchor="end">Alerte rouge — 200 km/h</text><text x="122" y="75.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Matthew 2016</text><rect x="132" y="62.0" width="532.1" height="9" rx="3.5" fill="#1baf7a"/><text x="670.1" y="70.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">205</text><rect x="132" y="73.0" width="511.9" height="9" rx="3.5" fill="#2a78d6"/><text x="649.9" y="81.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">197</text><text x="122" y="106.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Tomas 2010</text><rect x="132" y="93.0" width="306.5" height="9" rx="3.5" fill="#1baf7a"/><text x="444.5" y="101.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">118</text><rect x="132" y="104.0" width="368.6" height="9" rx="3.5" fill="#2a78d6"/><text x="506.6" y="112.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">142</text><text x="122" y="137.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Gustav 2008</text><rect x="132" y="124.0" width="300.2" height="9" rx="3.5" fill="#1baf7a"/><text x="438.2" y="132.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">115</text><rect x="132" y="135.0" width="348.1" height="9" rx="3.5" fill="#2a78d6"/><text x="486.1" y="143.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">134</text><text x="122" y="168.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Isaias 2020</text><rect x="132" y="155.0" width="237.5" height="9" rx="3.5" fill="#1baf7a"/><text x="375.5" y="163.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">91</text><rect x="132" y="166.0" width="235.0" height="9" rx="3.5" fill="#2a78d6"/><text x="373.0" y="174.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">90</text><text x="122" y="199.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Dennis 2005</text><rect x="132" y="186.0" width="236.4" height="9" rx="3.5" fill="#1baf7a"/><text x="374.4" y="194.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">91</text><rect x="132" y="197.0" width="228.6" height="9" rx="3.5" fill="#2a78d6"/><text x="366.6" y="205.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">88</text><text x="122" y="230.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Isaac 2012</text><rect x="132" y="217.0" width="225.2" height="9" rx="3.5" fill="#1baf7a"/><text x="363.2" y="225.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><rect x="132" y="228.0" width="389.0" height="9" rx="3.5" fill="#2a78d6"/><text x="527.0" y="236.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">150</text><text x="122" y="261.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Hanna 2008</text><rect x="132" y="248.0" width="225.2" height="9" rx="3.5" fill="#1baf7a"/><text x="363.2" y="256.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><rect x="132" y="259.0" width="225.2" height="9" rx="3.5" fill="#2a78d6"/><text x="363.2" y="267.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><text x="122" y="292.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Elsa 2021</text><rect x="132" y="279.0" width="218.7" height="9" rx="3.5" fill="#1baf7a"/><text x="356.7" y="287.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">84</text><rect x="132" y="290.0" width="307.1" height="9" rx="3.5" fill="#2a78d6"/><text x="445.1" y="298.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">118</text><text x="122" y="323.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Dean 2007</text><rect x="132" y="310.0" width="218.6" height="9" rx="3.5" fill="#1baf7a"/><text x="356.6" y="318.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">84</text><rect x="132" y="321.0" width="282.3" height="9" rx="3.5" fill="#2a78d6"/><text x="420.3" y="329.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">109</text><text x="122" y="354.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Ike 2008</text><rect x="132" y="341.0" width="218.6" height="9" rx="3.5" fill="#1baf7a"/><text x="356.6" y="349.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">84</text><rect x="132" y="352.0" width="219.5" height="9" rx="3.5" fill="#2a78d6"/><text x="357.5" y="360.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">84</text><text x="122" y="385.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Odette 2003</text><rect x="132" y="372.0" width="208.1" height="9" rx="3.5" fill="#1baf7a"/><text x="346.1" y="380.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">80</text><rect x="132" y="383.0" width="225.1" height="9" rx="3.5" fill="#2a78d6"/><text x="363.1" y="391.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><text x="122" y="416.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Laura 2020</text><rect x="132" y="403.0" width="207.4" height="9" rx="3.5" fill="#1baf7a"/><text x="345.4" y="411.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">80</text><rect x="132" y="414.0" width="246.4" height="9" rx="3.5" fill="#2a78d6"/><text x="384.4" y="422.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">95</text><text x="122" y="447.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Ernesto 2006</text><rect x="132" y="434.0" width="197.9" height="9" rx="3.5" fill="#1baf7a"/><text x="335.9" y="442.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">76</text><rect x="132" y="445.0" width="302.1" height="9" rx="3.5" fill="#2a78d6"/><text x="440.1" y="453.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">116</text><text x="122" y="478.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Noel 2007</text><rect x="132" y="465.0" width="187.7" height="9" rx="3.5" fill="#1baf7a"/><text x="325.7" y="473.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">72</text><rect x="132" y="476.0" width="242.0" height="9" rx="3.5" fill="#2a78d6"/><text x="380.0" y="484.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">93</text><text x="122" y="509.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Jeanne 2004</text><rect x="132" y="496.0" width="184.3" height="9" rx="3.5" fill="#1baf7a"/><text x="322.3" y="504.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">71</text><rect x="132" y="507.0" width="225.2" height="9" rx="3.5" fill="#2a78d6"/><text x="363.2" y="515.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><text x="122" y="540.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Alpha 2005</text><rect x="132" y="527.0" width="183.0" height="9" rx="3.5" fill="#1baf7a"/><text x="321.0" y="535.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">70</text><rect x="132" y="538.0" width="169.4" height="9" rx="3.5" fill="#2a78d6"/><text x="307.4" y="546.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">65</text><text x="122" y="571.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Olga 2007</text><rect x="132" y="558.0" width="177.5" height="9" rx="3.5" fill="#1baf7a"/><text x="315.5" y="566.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">68</text><rect x="132" y="569.0" width="184.3" height="9" rx="3.5" fill="#2a78d6"/><text x="322.3" y="577.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">71</text><text x="122" y="602.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Irene 2011</text><rect x="132" y="589.0" width="174.9" height="9" rx="3.5" fill="#1baf7a"/><text x="312.9" y="597.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">67</text><rect x="132" y="600.0" width="289.9" height="9" rx="3.5" fill="#2a78d6"/><text x="427.9" y="608.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">111</text><text x="122" y="633.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Beryl 2024</text><rect x="132" y="620.0" width="173.2" height="9" rx="3.5" fill="#1baf7a"/><text x="311.2" y="628.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">67</text><rect x="132" y="631.0" width="191.6" height="9" rx="3.5" fill="#2a78d6"/><text x="329.6" y="639.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">74</text><text x="122" y="664.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Irma 2017</text><rect x="132" y="651.0" width="171.2" height="9" rx="3.5" fill="#1baf7a"/><text x="309.2" y="659.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">66</text><rect x="132" y="662.0" width="235.0" height="9" rx="3.5" fill="#2a78d6"/><text x="373.0" y="670.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">90</text><text x="122" y="695.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Sandy 2012</text><rect x="132" y="682.0" width="170.4" height="9" rx="3.5" fill="#1baf7a"/><text x="308.4" y="690.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">65</text><rect x="132" y="693.0" width="149.9" height="9" rx="3.5" fill="#2a78d6"/><text x="287.9" y="701.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">58</text><text x="122" y="726.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Fay 2008</text><rect x="132" y="713.0" width="163.8" height="9" rx="3.5" fill="#1baf7a"/><text x="301.8" y="721.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">63</text><rect x="132" y="724.0" width="169.1" height="9" rx="3.5" fill="#2a78d6"/><text x="307.1" y="732.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">65</text><text x="122" y="757.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Grace 2021</text><rect x="132" y="744.0" width="160.1" height="9" rx="3.5" fill="#1baf7a"/><text x="298.1" y="752.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">62</text><rect x="132" y="755.0" width="196.1" height="9" rx="3.5" fill="#2a78d6"/><text x="334.1" y="763.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">75</text><text x="122" y="788.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Emily 2011</text><rect x="132" y="775.0" width="156.4" height="9" rx="3.5" fill="#1baf7a"/><text x="294.4" y="783.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">60</text><rect x="132" y="786.0" width="213.3" height="9" rx="3.5" fill="#2a78d6"/><text x="351.3" y="794.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">82</text><text x="122" y="819.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Melissa 2025</text><rect x="132" y="806.0" width="147.4" height="9" rx="3.5" fill="#1baf7a"/><text x="285.4" y="814.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">57</text><rect x="132" y="817.0" width="195.0" height="9" rx="3.5" fill="#2a78d6"/><text x="333.0" y="825.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">75</text><text x="122" y="850.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Lili 2002</text><rect x="132" y="837.0" width="146.7" height="9" rx="3.5" fill="#1baf7a"/><text x="284.7" y="845.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">56</text><rect x="132" y="848.0" width="348.1" height="9" rx="3.5" fill="#2a78d6"/><text x="486.1" y="856.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">134</text><text x="122" y="881.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Franklin 2023</text><rect x="132" y="868.0" width="133.6" height="9" rx="3.5" fill="#1baf7a"/><text x="271.6" y="876.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">51</text><rect x="132" y="879.0" width="225.1" height="9" rx="3.5" fill="#2a78d6"/><text x="363.1" y="887.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><text x="122" y="912.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Chantal 2013</text><rect x="132" y="899.0" width="131.8" height="9" rx="3.5" fill="#1baf7a"/><text x="269.8" y="907.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">51</text><rect x="132" y="910.0" width="225.2" height="9" rx="3.5" fill="#2a78d6"/><text x="363.2" y="918.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">87</text><text x="122" y="943.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Fred 2021</text><rect x="132" y="930.0" width="129.6" height="9" rx="3.5" fill="#1baf7a"/><text x="267.6" y="938.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">50</text><rect x="132" y="941.0" width="184.3" height="9" rx="3.5" fill="#2a78d6"/><text x="322.3" y="949.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">71</text><text x="122" y="974.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Fiona 2022</text><rect x="132" y="961.0" width="128.0" height="9" rx="3.5" fill="#1baf7a"/><text x="266.0" y="969.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">49</text><rect x="132" y="972.0" width="147.9" height="9" rx="3.5" fill="#2a78d6"/><text x="285.9" y="980.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">57</text><text x="122" y="1005.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Charley 2004</text><rect x="132" y="992.0" width="126.8" height="9" rx="3.5" fill="#1baf7a"/><text x="264.8" y="1000.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">49</text><rect x="132" y="1003.0" width="145.5" height="9" rx="3.5" fill="#2a78d6"/><text x="283.5" y="1011.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">56</text><text x="122" y="1036.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Oscar 2024</text><rect x="132" y="1023.0" width="125.0" height="9" rx="3.5" fill="#1baf7a"/><text x="263.0" y="1031.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">48</text><rect x="132" y="1034.0" width="124.4" height="9" rx="3.5" fill="#2a78d6"/><text x="262.4" y="1042.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">48</text><text x="122" y="1067.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Bertha 2014</text><rect x="132" y="1054.0" width="124.7" height="9" rx="3.5" fill="#1baf7a"/><text x="262.7" y="1062.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">48</text><rect x="132" y="1065.0" width="128.0" height="9" rx="3.5" fill="#2a78d6"/><text x="266.0" y="1073.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">49</text><text x="122" y="1098.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Imelda 2025</text><rect x="132" y="1085.0" width="116.3" height="9" rx="3.5" fill="#1baf7a"/><text x="254.3" y="1093.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">45</text><rect x="132" y="1096.0" width="102.9" height="9" rx="3.5" fill="#2a78d6"/><text x="240.9" y="1104.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">40</text><text x="122" y="1129.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Rita 2005</text><rect x="132" y="1116.0" width="114.4" height="9" rx="3.5" fill="#1baf7a"/><text x="252.4" y="1124.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">44</text><rect x="132" y="1127.0" width="99.3" height="9" rx="3.5" fill="#2a78d6"/><text x="237.3" y="1135.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">38</text><text x="122" y="1160.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Earl 2016</text><rect x="132" y="1147.0" width="111.0" height="9" rx="3.5" fill="#1baf7a"/><text x="249.0" y="1155.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">43</text><rect x="132" y="1158.0" width="130.8" height="9" rx="3.5" fill="#2a78d6"/><text x="268.8" y="1166.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">50</text><text x="122" y="1191.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Cristobal 2014</text><rect x="132" y="1178.0" width="109.1" height="9" rx="3.5" fill="#1baf7a"/><text x="247.1" y="1186.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">42</text><rect x="132" y="1189.0" width="105.4" height="9" rx="3.5" fill="#2a78d6"/><text x="243.4" y="1197.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">41</text><text x="122" y="1222.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Chris 2006</text><rect x="132" y="1209.0" width="63.1" height="9" rx="3.5" fill="#1baf7a"/><text x="201.1" y="1217.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">24</text><rect x="132" y="1220.0" width="129.5" height="9" rx="3.5" fill="#2a78d6"/><text x="267.5" y="1228.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">50</text><text x="122" y="1253.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Kate 2015</text><rect x="132" y="1240.0" width="54.6" height="9" rx="3.5" fill="#1baf7a"/><text x="192.6" y="1248.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">21</text><rect x="132" y="1251.0" width="60.2" height="9" rx="3.5" fill="#2a78d6"/><text x="198.2" y="1259.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">23</text><text x="122" y="1284.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Erika 2015</text><rect x="132" y="1271.0" width="50.2" height="9" rx="3.5" fill="#1baf7a"/><text x="188.2" y="1279.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">19</text><rect x="132" y="1282.0" width="181.9" height="9" rx="3.5" fill="#2a78d6"/><text x="319.9" y="1290.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">70</text><text x="122" y="1315.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Debby 2024</text><rect x="132" y="1302.0" width="47.9" height="9" rx="3.5" fill="#1baf7a"/><text x="185.9" y="1310.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">18</text><rect x="132" y="1313.0" width="102.4" height="9" rx="3.5" fill="#2a78d6"/><text x="240.4" y="1321.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">39</text><text x="122" y="1346.5" fill="#1e2a2b" font-size="11.5" text-anchor="end">Hermine 2016</text><rect x="132" y="1333.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="1341.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="1344.0" width="120.4" height="9" rx="3.5" fill="#2a78d6"/><text x="258.4" y="1352.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">46</text><line x1="132" y1="54" x2="132" y2="1364" stroke="#5e6a6b" stroke-width="1"/><rect x="132" y="6" width="19" height="8" rx="3" fill="#1baf7a"/><text x="157" y="13.5" fill="#1e2a2b" font-size="11">Observation (trajectoire réelle)</text><rect x="359.2" y="6" width="19" height="8" rx="3" fill="#2a78d6"/><text x="384.2" y="13.5" fill="#1e2a2b" font-size="11">Prévision (émission la plus forte du NHC)</text></svg>
+<figcaption>
+  Vent soutenu maximal atteint sur le territoire haïtien, par tempête, en
+  observation (trajectoire réelle) et en prévision (meilleure émission du
+  NHC, toutes échéances confondues). Réduction de frottement de 0,85
+  appliquée. Les tempêtes sans barre de prévision n’ont pas d’émission du NHC
+  approchant suffisamment Haïti.
+</figcaption>
+</figure>
+
+<p>
+  Sur la trajectoire réelle, <b>3</b> tempêtes ont amené des vents soutenus d’au moins 100 km/h sur le territoire haïtien (Gustav 2008, Tomas 2010, Matthew 2016). <b>1</b> d’entre elles a atteint 200 km/h (Matthew 2016).
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr>
+  <th>Tempête</th><th>Distance min.<br>(km)</th>
+  <th>Vent max.<br>obs. (km/h)</th><th>Vent max.<br>prév. (km/h)</th>
+  <th>Seuil<br>orange</th><th>Seuil<br>rouge</th>
+  <th>Population<br>≥ 100 km/h</th>
+</tr></thead>
+<tbody>
+<tr><td class='nm'>Lili 2002</td><td class='num'>124</td><td class='num'>56</td><td class='num'>134</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Odette 2003</td><td class='num'>40</td><td class='num'>80</td><td class='num'>87</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Charley 2004</td><td class='num'>177</td><td class='num'>49</td><td class='num'>56</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Jeanne 2004</td><td class='num'>50</td><td class='num'>71</td><td class='num'>87</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='num'>107</td><td class='num'>91</td><td class='num'>88</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Rita 2005</td><td class='num'>221</td><td class='num'>44</td><td class='num'>38</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Alpha 2005</td><td class='num'>0</td><td class='num'>70</td><td class='num'>65</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Chris 2006</td><td class='num'>159</td><td class='num'>24</td><td class='num'>50</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td class='num'>12</td><td class='num'>76</td><td class='num'>116</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Dean 2007</td><td class='num'>150</td><td class='num'>84</td><td class='num'>109</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Noel 2007</td><td class='num'>0</td><td class='num'>72</td><td class='num'>93</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Olga 2007</td><td class='num'>0</td><td class='num'>68</td><td class='num'>71</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Fay 2008</td><td class='num'>3</td><td class='num'>63</td><td class='num'>65</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td class='num'>0</td><td class='num'>115</td><td class='num'>134</td><td><span class="v-yes">✓ atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>275 562</td></tr>
+<tr><td class='nm'>Hanna 2008</td><td class='num'>18</td><td class='num'>87</td><td class='num'>87</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Ike 2008</td><td class='num'>108</td><td class='num'>84</td><td class='num'>84</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='num'>32</td><td class='num'>118</td><td class='num'>142</td><td><span class="v-yes">✓ atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>57 104</td></tr>
+<tr><td class='nm'>Emily 2011</td><td class='num'>5</td><td class='num'>60</td><td class='num'>82</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Irene 2011</td><td class='num'>134</td><td class='num'>67</td><td class='num'>111</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='num'>8</td><td class='num'>87</td><td class='num'>150</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Sandy 2012</td><td class='num'>216</td><td class='num'>65</td><td class='num'>58</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Chantal 2013</td><td class='num'>186</td><td class='num'>51</td><td class='num'>87</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Bertha 2014</td><td class='num'>152</td><td class='num'>48</td><td class='num'>49</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Cristobal 2014</td><td class='num'>106</td><td class='num'>42</td><td class='num'>41</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Erika 2015</td><td class='num'>1</td><td class='num'>19</td><td class='num'>70</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Kate 2015</td><td class='num'>204</td><td class='num'>21</td><td class='num'>23</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Earl 2016</td><td class='num'>194</td><td class='num'>43</td><td class='num'>50</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Hermine 2016</td><td class='num'>166</td><td class='num'>0</td><td class='num'>46</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Matthew 2016</td><td class='num'>0</td><td class='num'>205</td><td class='num'>197</td><td><span class="v-yes">✓ atteint</span></td><td><span class="v-yes">✓ atteint</span></td><td class='num'>1 191 875</td></tr>
+<tr><td class='nm'>Irma 2017</td><td class='num'>159</td><td class='num'>66</td><td class='num'>90</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Isaias 2020</td><td class='num'>50</td><td class='num'>91</td><td class='num'>90</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Laura 2020</td><td class='num'>0</td><td class='num'>80</td><td class='num'>95</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='num'>79</td><td class='num'>84</td><td class='num'>118</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Fred 2021</td><td class='num'>0</td><td class='num'>50</td><td class='num'>71</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Grace 2021</td><td class='num'>20</td><td class='num'>62</td><td class='num'>75</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Fiona 2022</td><td class='num'>176</td><td class='num'>49</td><td class='num'>57</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Franklin 2023</td><td class='num'>66</td><td class='num'>51</td><td class='num'>87</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Beryl 2024</td><td class='num'>203</td><td class='num'>67</td><td class='num'>74</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Debby 2024</td><td class='num'>3</td><td class='num'>18</td><td class='num'>39</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Oscar 2024</td><td class='num'>112</td><td class='num'>48</td><td class='num'>48</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Imelda 2025</td><td class='num'>150</td><td class='num'>45</td><td class='num'>40</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+<tr><td class='nm'>Melissa 2025</td><td class='num'>218</td><td class='num'>57</td><td class='num'>75</td><td><span class="v-no">— non atteint</span></td><td><span class="v-no">— non atteint</span></td><td class='num'>0</td></tr>
+</tbody></table></div>
+
+<h2>7. Sensibilité : quelle lecture du vent ?</h2>
+
+<p>
+  La DGPC n’a pas précisé si « ≥ 200 km/h » désigne un vent soutenu ou une
+  rafale, ni s’il s’agit du vent sur terre ou en mer. Les trois lectures
+  sont données ci-dessous pour les tempêtes les plus fortes. <b>Le verdict
+  sur le niveau rouge change selon la lecture retenue</b> : c’est la
+  question la plus urgente à trancher avec la DGPC.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr>
+  <th>Tempête</th>
+  <th>Vent soutenu sur terre (×0,85)</th>
+  <th>Vent soutenu non réduit</th>
+  <th>Rafale sur terre (×1,25)</th>
+  <th>Prévision (soutenu sur terre)</th>
+</tr></thead>
+<tbody>
+<tr><td class='nm'>Matthew 2016</td><td class='num' style='color:#a02a2a;font-weight:700'>205</td><td class='num' style='color:#a02a2a;font-weight:700'>241</td><td class='num' style='color:#a02a2a;font-weight:700'>256</td><td class='num'>197</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='num'>118</td><td class='num'>139</td><td class='num'>147</td><td class='num'>142</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td class='num'>115</td><td class='num'>136</td><td class='num'>144</td><td class='num'>134</td></tr>
+<tr><td class='nm'>Isaias 2020</td><td class='num'>91</td><td class='num'>107</td><td class='num'>114</td><td class='num'>90</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='num'>91</td><td class='num'>107</td><td class='num'>114</td><td class='num'>88</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='num'>87</td><td class='num'>102</td><td class='num'>108</td><td class='num'>150</td></tr>
+<tr><td class='nm'>Hanna 2008</td><td class='num'>87</td><td class='num'>102</td><td class='num'>108</td><td class='num'>87</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='num'>84</td><td class='num'>99</td><td class='num'>105</td><td class='num'>118</td></tr>
+</tbody></table></div>
+
+<p>
+  Toutes les valeurs sont en km/h ; la ligne de 200 km/h est le seuil rouge.
+  La lecture « vent soutenu sur terre » est celle retenue comme résultat
+  principal, parce que c’est la formulation la plus proche de ce que la DGPC
+  a écrit — mais c’est aussi la plus stricte des trois.
+</p>
+
+<h2>8. Périodes de retour</h2>
+
+<p>
+  Calculées par la position de Weibull sur 24 saisons
+  (2002–2025) : période de retour =
+  (24 + 1) / nombre d’années comptant au moins une activation.
+</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Critère</th><th>Tempêtes</th><th>Années</th>
+<th>Période de retour (ans)</th><th>Années concernées</th></tr></thead>
+<tbody>
+<tr><td class='nm'>Vent ≥ 100 km/h — observation</td><td class='num'>3</td><td class='num'>3</td><td class='num'>8,3</td><td style='white-space:normal'>2008, 2010, 2016</td></tr>
+<tr><td class='nm'>Vent ≥ 100 km/h — prévision</td><td class='num'>9</td><td class='num'>9</td><td class='num'>2,8</td><td style='white-space:normal'>2002, 2006, 2007, 2008, 2010, 2011, 2012, 2016, 2021</td></tr>
+<tr><td class='nm'>Vent ≥ 200 km/h — observation</td><td class='num'>1</td><td class='num'>1</td><td class='num'>25,0</td><td style='white-space:normal'>2016</td></tr>
+<tr><td class='nm'>Vent ≥ 200 km/h — prévision</td><td class='num'>0</td><td class='num'>0</td><td class='num'>—</td><td style='white-space:normal'>—</td></tr>
+</tbody></table></div>
+
+<div class="callout">
+  <h3>Ce que cela implique pour le cadre</h3>
+  <p>
+    Le cadre est calibré autour d’une période de retour globale de
+    <b>2,4 ans</b>. Le seuil de vent orange, en observation, ne se produit
+    qu’une fois tous les 8,3 ans, et le seuil rouge une fois
+    tous les 25,0 ans. <b>Les seuils de vent de la DGPC sont
+    donc bien trop rares pour piloter à eux seuls un déclencheur d’action
+    anticipatoire</b> : utilisés seuls, ils laisseraient passer la grande
+    majorité des saisons où le cadre doit agir.
+  </p>
+  <p>
+    Deux conséquences. D’abord, si les niveaux d’alerte de la DGPC doivent
+    être reliés au cadre, ce sont les critères de <b>précipitations</b> qui
+    porteront l’essentiel des activations — d’où l’importance de compléter
+    ce volet. Ensuite, le rapprochement entre les deux systèmes est
+    probablement à concevoir comme une <b>correspondance</b> (le cadre
+    signale à la DGPC que ses seuils sont en passe d’être atteints) plutôt
+    que comme une substitution.
+  </p>
+</div>
+
+<div class="note">
+  <h3>Prudence sur les valeurs rares</h3>
+  <p>
+    Un enregistrement de 24 saisons ne peut pas soutenir une
+    affirmation solide au-delà d’environ 1 fois tous les 8 ans. Les périodes
+    de retour du niveau rouge reposent sur très peu d’événements et doivent
+    être lues comme des ordres de grandeur.
+  </p>
+</div>
+
+<h2>9. Questions pour la DGPC</h2>
+
+<ol>
+  <li>Les seuils s’appliquent-ils à des valeurs <b>prévues</b> ou
+      <b>observées</b> ? Le cadre d’action anticipatoire a besoin de valeurs
+      prévues ; une alerte fondée sur l’observation arrive après l’impact.</li>
+  <li>Les vitesses de vent désignent-elles un <b>vent soutenu</b> ou des
+      <b>rafales</b>, et sur terre ou en mer ? L’écart entre ces lectures
+      dépasse 40 %.</li>
+  <li>Sur quelle <b>surface</b> un seuil de pluie doit-il être atteint : un
+      point, une commune, un département, le pays ?</li>
+  <li>Le critère de <b>60–80 mm/h</b> a-t-il vocation à déclencher une
+      alerte anticipée ? Il n’est pas prévisible ; s’il doit servir, ce ne
+      peut être qu’en constat temps réel.</li>
+  <li>« 100–120 km/h » désigne-t-il une <b>plage</b> (et donc un plafond au
+      delà duquel on passe en rouge) ou un <b>seuil minimal</b> ?</li>
+  <li>Quelles <b>sources de données</b> la DGPC utilise-t-elle ou
+      souhaite-t-elle voir utilisées ?</li>
+</ol>
+
+<h2>10. Limites</h2>
+
+<ul>
+  <li>Le champ de vent est un modèle paramétrique, non une simulation : il
+      reproduit fidèlement les rayons publiés par le NHC mais interpole entre
+      eux, et <b>extrapole</b> vers le cœur pour le niveau à 108 nœuds.</li>
+  <li>Le rayon des vents maximaux n’est pas prévu par le NHC. C’est la
+      principale incertitude structurelle du niveau rouge.</li>
+  <li>La réduction sur terre (0,85) est une valeur conventionnelle et
+      uniforme ; le relief haïtien produit en réalité de fortes variations
+      locales, à la hausse comme à la baisse.</li>
+  <li>Le volet précipitations n’est pas encore calculé.</li>
+  <li>Le critère de distance (230 km) est mesuré en projection Web Mercator,
+      comme dans le reste du cadre : à la latitude d’Haïti cela correspond à
+      environ 217 km réels. Cette convention est conservée pour rester
+      comparable aux autres analyses du cadre.</li>
+  <li>IMERG (0,1°, soit environ 11 km) lisse les intensités extrêmes de
+      courte durée : les résultats à 1 h seront des estimations basses.</li>
+</ul>
+
+<footer>
+  OCHA · Centre de données humanitaires — analyse préparée pour la révision
+  2026 du cadre d’action anticipatoire pour les tempêtes et ouragans en
+  Haïti. Code et méthode :
+  <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes"
+  >ds-aa-hti-hurricanes</a>.
+  Données : NHC (prévisions et trajectoires), IBTrACS, WorldPop 2026,
+  IMERG (NASA GPM). Mise à jour août 2026.
+</footer>
+
+</div>
+</body>
+</html>
