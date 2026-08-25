@@ -138,7 +138,16 @@ def _rp_tile(rp_years, n_events, label):
     )
 
 
-def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
+def render(
+    df,
+    chart_wind,
+    rp,
+    rain,
+    variant,
+    rmw_note,
+    chart_rain="",
+    acts=None,
+):
     """Assemble the whole page."""
     v = variant
     n_storms = len(df)
@@ -186,11 +195,11 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
     rain_section = _rain_section(rain, chart_rain, n_storms)
     status_callout = _status_callout(has_rain)
     rain_pill = (
-        "" if has_rain else
-        ' <span class="pill orange">en attente</span>'
+        "" if has_rain else ' <span class="pill orange">en attente</span>'
     )
     sens_rows = _sensitivity_rows(df)
     implications = _implications(rain, rp_o, rp_r, n_years)
+    activations_table = _activations_table(acts)
 
     return f"""<!doctype html>
 <html lang="fr">
@@ -397,7 +406,11 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
 {storm_rows}
 </tbody></table></div>
 
-<h2>8. Sensibilité : quelle lecture du vent ?</h2>
+<h2>8. Le cadre et l’alerte orange, côte à côte</h2>
+
+{activations_table}
+
+<h2>9. Sensibilité : quelle lecture du vent ?</h2>
 
 <p>
   La DGPC n’a pas précisé si « ≥ 200 km/h » désigne un vent soutenu ou une
@@ -426,7 +439,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
   a écrit — mais c’est aussi la plus stricte des trois.
 </p>
 
-<h2>9. Périodes de retour — vent</h2>
+<h2>10. Périodes de retour — vent</h2>
 
 <p>
   Calculées par la position de Weibull sur {n_years} saisons
@@ -453,7 +466,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
   </p>
 </div>
 
-<h2>10. Questions pour la DGPC</h2>
+<h2>11. Questions pour la DGPC</h2>
 
 <ol>
   <li>Les seuils s’appliquent-ils à des valeurs <b>prévues</b> ou
@@ -473,7 +486,7 @@ def render(df, chart_wind, rp, rain, variant, rmw_note, chart_rain=""):
       souhaite-t-elle voir utilisées ?</li>
 </ol>
 
-<h2>11. Limites</h2>
+<h2>12. Limites</h2>
 
 <ul>
   <li>Le champ de vent est un modèle paramétrique, non une simulation : il
@@ -560,6 +573,129 @@ def _sensitivity_rows(df, top_n=8):
     return "\n".join(out)
 
 
+def _mark(hit, na=False):
+    """Compact verdict for the wide comparison matrix (deck convention)."""
+    if na:
+        return '<td style="text-align:center;color:#9aa5a6">n/d</td>'
+    if hit is None or (np.isscalar(hit) and pd.isna(hit)):
+        return '<td style="text-align:center;color:#9aa5a6">n/d</td>'
+    if bool(hit):
+        return (
+            '<td style="text-align:center;background:#e7f4ee;'
+            'color:#0f8a5f;font-weight:700">✓</td>'
+        )
+    return '<td style="text-align:center;color:#9aa5a6">—</td>'
+
+
+def _activations_table(acts):
+    """Framework activations beside the DGPC orange level, several ways."""
+    if acts is None or len(acts) == 0:
+        return ""
+
+    v = dc.PRIMARY_WIND_VARIANT
+    rows = []
+    for _, r in acts.iterrows():
+        na = pd.isna(r.get("atcf_id"))
+        pop = r.get("pop_affected_n")
+        rows.append(
+            "<tr>"
+            f"<td class='nm'>{escape(str(r['storm']))}</td>"
+            + _mark(r.get("triggered_hit"))
+            + _mark(r.get(f"obsv_{v}_orange"), na)
+            + _mark(r.get("national_mean_rain_orange"), na)
+            + _mark(r.get("department_max_rain_orange"), na)
+            + _mark(r.get("any_pixel_rain_orange"), na)
+            + _mark(r.get("orange_combined"), na)
+            + f"<td class='num'>{fr_num(pop)}</td>"
+            + f"<td>{escape(str(r.get('cerf') or '—'))}</td>"
+            "</tr>"
+        )
+
+    n_na = int(acts["atcf_id"].isna().sum())
+    na_note = ""
+    if n_na:
+        names = ", ".join(
+            escape(str(s))
+            for s in acts.loc[acts["atcf_id"].isna(), "storm"].tolist()
+        )
+        na_note = (
+            f" <b>{names}</b> {plural(n_na, 'est', 'sont')} "
+            f"{plural(n_na, 'marquée')} « n/d » : "
+            f"{plural(n_na, 'cette tempête n’est', 'ces tempêtes ne sont')} "
+            f"pas dans le jeu analysé ici — leur centre n’est jamais passé à "
+            f"moins de {D_THRESH} km d’Haïti, alors que le registre du cadre "
+            f"retient aussi les tempêtes ayant causé des impacts à plus "
+            f"grande distance."
+        )
+
+    counts = {}
+    for key, col in (
+        ("cadre", "triggered_hit"),
+        ("vent", f"obsv_{v}_orange"),
+        ("nat", "national_mean_rain_orange"),
+        ("dep", "department_max_rain_orange"),
+        ("pix", "any_pixel_rain_orange"),
+        ("comb", "orange_combined"),
+    ):
+        counts[key] = (
+            int(acts[col].fillna(False).astype(bool).sum())
+            if col in acts
+            else 0
+        )
+
+    return f"""
+<p>
+  Le registre des activations du cadre — les mêmes tempêtes que dans les
+  diapositives — mis en regard de l’alerte orange de la DGPC, sous chacune
+  des définitions possibles. La question qu’il permet de poser : <b>là où le
+  cadre s’active, la DGPC aurait-elle été en alerte orange, et
+  inversement ?</b>{na_note}
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead>
+<tr>
+  <th rowspan="2">Tempête</th>
+  <th rowspan="2">Déclenchement<br>du cadre</th>
+  <th colspan="5" style="text-align:center">
+    Alerte orange DGPC, selon la définition retenue</th>
+  <th rowspan="2">Pop. affectée</th>
+  <th rowspan="2">CERF</th>
+</tr>
+<tr>
+  <th style="text-align:center">Vent<br>≥ 100 km/h</th>
+  <th style="text-align:center">Pluie<br>moy. nat.</th>
+  <th style="text-align:center">Pluie<br>moy. dép.</th>
+  <th style="text-align:center">Pluie<br>point</th>
+  <th style="text-align:center">Vent <i>ou</i><br>pluie dép.</th>
+</tr>
+</thead>
+<tbody>
+{chr(10).join(rows)}
+</tbody>
+<tfoot><tr style="background:#f7fafb;font-weight:700">
+  <td>Total ({len(acts)} tempêtes)</td>
+  <td style="text-align:center">{counts["cadre"]}</td>
+  <td style="text-align:center">{counts["vent"]}</td>
+  <td style="text-align:center">{counts["nat"]}</td>
+  <td style="text-align:center">{counts["dep"]}</td>
+  <td style="text-align:center">{counts["pix"]}</td>
+  <td style="text-align:center">{counts["comb"]}</td>
+  <td></td><td></td>
+</tr></tfoot>
+</table></div>
+
+<p>
+  ✓ = seuil atteint ; — = seuil non atteint ; n/d = hors du jeu analysé.
+  Les colonnes de pluie utilisent le critère orange de 100 mm/24 h, lu sur
+  trois surfaces différentes ; la dernière colonne combine le vent et la
+  lecture départementale, qui est celle qui correspond à la façon dont la
+  DGPC émet ses alertes.
+  Population affectée : EM-DAT, reprise des diapositives.
+</p>
+"""
+
+
 def _implications(rain, rp_o, rp_r, n_years):
     """The synthesis: what these thresholds would mean for the framework."""
     wind_part = (
@@ -573,8 +709,10 @@ def _implications(rain, rp_o, rp_r, n_years):
         f"grande majorité des saisons où le cadre doit agir.</p>"
     )
     if rain is None or len(rain) == 0:
-        return f'<div class="callout"><h3>Ce que cela implique pour le ' \
-               f'cadre</h3>{wind_part}</div>'
+        return (
+            f'<div class="callout"><h3>Ce que cela implique pour le '
+            f"cadre</h3>{wind_part}</div>"
+        )
 
     rp = {}
     for agg in dc.AGGREGATIONS:
@@ -586,7 +724,7 @@ def _implications(rain, rp_o, rp_r, n_years):
         )
         rp[agg] = (n_years + 1) / ny if ny else np.inf
 
-    return f'''<div class="callout">
+    return f"""<div class="callout">
   <h3>Ce que cela implique pour le cadre</h3>
   {wind_part}
   <p>
@@ -615,7 +753,7 @@ def _implications(rain, rp_o, rp_r, n_years):
     comme une <b>correspondance</b> (le cadre signale à la DGPC que ses
     seuils sont en passe d’être atteints) plutôt que comme une substitution.
   </p>
-</div>'''
+</div>"""
 
 
 def _status_callout(has_rain):

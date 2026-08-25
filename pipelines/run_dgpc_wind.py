@@ -46,10 +46,13 @@ def main():
             logger.exception("forecast wind failed for %s", aid)
 
         try:
-            rec = observed_wind(aid)
+            rec = observed_wind(aid, closest_time=s.closest_time)
             if rec:
                 for tag, scale in RMW_SENSITIVITY.items():
-                    alt = observed_wind(aid, rmw_scale=scale)
+                    alt = observed_wind(
+                        aid, rmw_scale=scale,
+                        closest_time=s.closest_time,
+                    )
                     rec[f"sustained_land_max_kt_rmw_{tag}"] = alt.get(
                         "sustained_land_max_kt"
                     )

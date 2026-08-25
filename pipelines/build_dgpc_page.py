@@ -13,6 +13,7 @@ from sqlalchemy import text
 
 from src.datasources import storms_db as sdb
 from src.dgpc import constants as dc
+from src.dgpc.activations import match_to_storm_set, parse_deck_activations
 from src.dgpc.charts import grouped_barh
 from src.dgpc.page import fr_num, render
 from src.dgpc.results import (
@@ -75,6 +76,49 @@ def rmw_validation_note():
         f"{fr_num(climo.median(), 1)} km pour la climatologie, soit un "
         f"écart médian de {fr_num(abs(1 - ratio) * 100, 0)} % — la relation "
         f"est fiable précisément là où se joue le niveau rouge."
+    )
+
+
+def build_activations(df, rain, v):
+    """The deck's activation record joined to the DGPC orange verdicts."""
+    try:
+        deck = parse_deck_activations()
+    except Exception:
+        logger.warning("could not parse the deck's activation table")
+        return None
+
+    acts = match_to_storm_set(deck, df)
+
+    wind_cols = ["atcf_id", f"obsv_{v}_orange"]
+    acts = acts.merge(
+        df[[c for c in wind_cols if c in df]], on="atcf_id", how="left"
+    )
+
+    if rain is not None and len(rain):
+        rain_cols = [
+            "atcf_id",
+            "national_mean_rain_orange",
+            "department_max_rain_orange",
+            "any_pixel_rain_orange",
+        ]
+        acts = acts.merge(
+            rain[[c for c in rain_cols if c in rain]],
+            on="atcf_id",
+            how="left",
+        )
+
+    # The composite reading: wind OR the departmental rain criterion.
+    wind_hit = acts.get(f"obsv_{v}_orange")
+    rain_hit = acts.get("department_max_rain_orange")
+    if wind_hit is not None and rain_hit is not None:
+        combined = wind_hit.fillna(False).astype(bool) | rain_hit.fillna(
+            False
+        ).astype(bool)
+        # Keep "not in the analysed set" distinct from "not met".
+        acts["orange_combined"] = combined.where(acts["atcf_id"].notna())
+
+    return acts.sort_values(
+        "pop_affected_n", ascending=False, na_position="last"
     )
 
 
@@ -176,8 +220,10 @@ def main():
             x_title="Cumul maximal de précipitations sur 24 h (mm)",
         )
 
+    acts = build_activations(df, rain, v)
+
     html = render(
-        df, chart_wind, rp, rain, v, rmw_validation_note(), chart_rain
+        df, chart_wind, rp, rain, v, rmw_validation_note(), chart_rain, acts
     )
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")

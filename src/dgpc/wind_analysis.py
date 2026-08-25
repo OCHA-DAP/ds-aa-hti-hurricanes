@@ -190,12 +190,20 @@ def forecast_wind_by_issuance(atcf_id, rmw_scale=1.0, max_dist_km=600):
     return pd.DataFrame(records)
 
 
-def observed_wind(atcf_id, rmw_scale=1.0):
-    """Max wind on Haitian land from the IBTrACS best track."""
+def observed_wind(atcf_id, rmw_scale=1.0, closest_time=None):
+    """Max wind on Haitian land from the IBTrACS best track.
+
+    ``closest_time`` (the storm's closest approach) is used to check that
+    the best track actually spans the approach. IBTrACS starts a track when
+    a system is named, so a storm that passed Haiti before naming — Hermine
+    2016 is three days short — has no observed wind field there at all.
+    Reporting the resulting 0 km/h as an observation would be wrong, so the
+    gap is flagged and the page shows it as undetermined.
+    """
     lat2d, lon2d, land, pop, dept_idx, dept_names = load_grid()
     df = pd.read_sql(text(OBSV_Q), sdb.get_engine(), params={"a": atcf_id})
     if df.empty:
-        return {}
+        return {"atcf_id": atcf_id, "obsv_track_covers": False}
 
     df = df.rename(columns={"valid_time": "vt"})
     df["leadtime"] = (df.vt - df.vt.min()).dt.total_seconds() / 3600.0
@@ -205,6 +213,18 @@ def observed_wind(atcf_id, rmw_scale=1.0):
     field = max_wind_field(
         track, lat2d, lon2d, max_dist_km=800, rmw_scale=rmw_scale
     )
-    rec = {"atcf_id": atcf_id, "obsv_vmax_kt": float(df.wind_speed.max())}
+    covers = True
+    if closest_time is not None:
+        ct = pd.Timestamp(closest_time)
+        tol = pd.Timedelta(hours=3)
+        covers = bool(
+            (df["vt"].min() - tol) <= ct <= (df["vt"].max() + tol)
+        )
+
+    rec = {
+        "atcf_id": atcf_id,
+        "obsv_vmax_kt": float(df.wind_speed.max()),
+        "obsv_track_covers": covers,
+    }
     rec.update(_summarise(field, land, pop, dept_idx, dept_names))
     return rec
