@@ -48,18 +48,34 @@ def summarise_wind_forecast(fcast: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarise_wind_observed(obsv: pd.DataFrame) -> pd.DataFrame:
-    """Per-storm verdicts from the best track."""
-    out = obsv[["atcf_id", "obsv_vmax_kt"]].copy()
+    """Per-storm verdicts from the best track.
+
+    Where the best track does not span the storm's closest approach, the
+    maxima are blanked rather than reported: IBTrACS simply has no
+    observation of that storm over Haiti, and a computed 0 km/h would
+    read as "the wind was calm" instead of "we do not know".
+    """
+    cols = ["atcf_id", "obsv_vmax_kt"]
+    if "obsv_track_covers" in obsv:
+        cols.append("obsv_track_covers")
+    out = obsv[cols].copy()
+    covers = (
+        out["obsv_track_covers"].fillna(True).astype(bool)
+        if "obsv_track_covers" in out
+        else pd.Series(True, index=out.index)
+    )
     for v in WIND_VARIANTS:
         col = f"{v}_max_kt"
         if col not in obsv:
             continue
-        out[f"obsv_{v}_max_kt"] = obsv[col]
-        out[f"obsv_{v}_max_kmh"] = obsv[col] * 1.852
-        out[f"obsv_{v}_orange"] = obsv[col] >= dc.ORANGE_WIND_KT
-        out[f"obsv_{v}_red"] = obsv[col] >= dc.RED_WIND_KT
-        out[f"obsv_{v}_pop_orange"] = obsv[f"{v}_pop_orange"]
-        out[f"obsv_{v}_pop_red"] = obsv[f"{v}_pop_red"]
+        out[f"obsv_{v}_max_kt"] = obsv[col].where(covers)
+        out[f"obsv_{v}_max_kmh"] = (obsv[col] * 1.852).where(covers)
+        out[f"obsv_{v}_orange"] = (obsv[col] >= dc.ORANGE_WIND_KT).where(
+            covers
+        )
+        out[f"obsv_{v}_red"] = (obsv[col] >= dc.RED_WIND_KT).where(covers)
+        out[f"obsv_{v}_pop_orange"] = obsv[f"{v}_pop_orange"].where(covers)
+        out[f"obsv_{v}_pop_red"] = obsv[f"{v}_pop_red"].where(covers)
     return out
 
 

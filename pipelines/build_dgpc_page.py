@@ -111,11 +111,16 @@ def build_activations(df, rain, v):
     wind_hit = acts.get(f"obsv_{v}_orange")
     rain_hit = acts.get("department_max_rain_orange")
     if wind_hit is not None and rain_hit is not None:
-        combined = wind_hit.fillna(False).astype(bool) | rain_hit.fillna(
-            False
-        ).astype(bool)
-        # Keep "not in the analysed set" distinct from "not met".
-        acts["orange_combined"] = combined.where(acts["atcf_id"].notna())
+        w = wind_hit.fillna(False).astype(bool)
+        r = rain_hit.fillna(False).astype(bool)
+        combined = w | r
+        # An OR is only "not met" when *both* halves are known not to be
+        # met. Where the wind is undetermined (no best-track coverage) and
+        # the rain did not fire, the honest answer is undetermined, not no.
+        unknown = wind_hit.isna() & ~r
+        acts["orange_combined"] = combined.where(
+            acts["atcf_id"].notna() & ~unknown
+        )
 
     return acts.sort_values(
         "pop_affected_n", ascending=False, na_position="last"

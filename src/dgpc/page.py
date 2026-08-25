@@ -105,9 +105,14 @@ def fr_num(v, decimals=0):
     return f"{v:,.{decimals}f}".replace(",", " ").replace(".", ",")
 
 
-def verdict(flag):
+def verdict(flag, nd_label=False):
+    """Condition verdict; a missing value is "not determined", not "unmet"."""
     if flag is None or (np.isscalar(flag) and pd.isna(flag)):
-        return '<span class="v-na">—</span>'
+        return (
+            '<span class="v-na">n/d</span>'
+            if nd_label
+            else '<span class="v-na">—</span>'
+        )
     return (
         '<span class="v-yes">✓ atteint</span>'
         if bool(flag)
@@ -175,8 +180,8 @@ def render(
             f"<td class='num'>{fr_num(r['min_dist_km'])}</td>"
             f"<td class='num'>{fr_num(r.get(f'obsv_{v}_max_kmh'))}</td>"
             f"<td class='num'>{fr_num(r.get(f'{v}_max_kmh'))}</td>"
-            f"<td>{verdict(r.get(f'obsv_{v}_orange'))}</td>"
-            f"<td>{verdict(r.get(f'obsv_{v}_red'))}</td>"
+            f"<td>{verdict(r.get(f'obsv_{v}_orange'), nd_label=True)}</td>"
+            f"<td>{verdict(r.get(f'obsv_{v}_red'), nd_label=True)}</td>"
             f"<td class='num'>{fr_num(r.get(f'obsv_{v}_pop_orange'))}</td>"
             "</tr>"
         )
@@ -198,6 +203,7 @@ def render(
         "" if has_rain else ' <span class="pill orange">en attente</span>'
     )
     sens_rows = _sensitivity_rows(df)
+    track_gap = _track_gap_note(df, variant)
     implications = _implications(rain, rp_o, rp_r, n_years)
     activations_table = _activations_table(acts)
 
@@ -395,6 +401,8 @@ def render(
   {_headline(n_o, n_r, orange_storms, red_storms)}
 </p>
 
+{track_gap}
+
 <div class="tablewrap"><table class="wraphead">
 <thead><tr>
   <th>Tempête</th><th>Distance min.<br>(km)</th>
@@ -545,6 +553,30 @@ def _headline(n_o, n_r, orange_storms, red_storms):
     else:
         tail = " Aucune n’a atteint 200 km/h en vent soutenu sur terre."
     return head + tail
+
+
+def _track_gap_note(df, v):
+    """Storms with no observed wind field over Haiti, and why."""
+    col = f"obsv_{v}_max_kmh"
+    if col not in df:
+        return ""
+    missing = df[df[col].isna()]
+    if missing.empty:
+        return ""
+    names = ", ".join(escape(str(s)) for s in missing["label"].tolist())
+    n = len(missing)
+    return f"""<div class="note">
+  <h3>Vent observé indisponible pour {n} {plural(n, "tempête")}</h3>
+  <p>
+    <b>{names}</b> : la meilleure trajectoire d’IBTrACS ne couvre pas le
+    passage au plus près d’Haïti. IBTrACS ouvre une trajectoire lorsque le
+    système est nommé — une tempête passée avant d’être nommée n’a donc pas
+    de champ de vent observé sur le pays. Ces cases sont marquées
+    « n/d » plutôt que 0 km/h : l’absence de mesure n’est pas un vent nul.
+    Il s’agit de systèmes faibles, et aucun n’aurait vraisemblablement
+    atteint 100 km/h, mais le seuil ne peut pas être vérifié pour eux.
+  </p>
+</div>"""
 
 
 def _sensitivity_rows(df, top_n=8):
