@@ -22,6 +22,8 @@ import numpy as np
 import pandas as pd
 import requests
 import xarray as xr
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from src.utils.logging import get_logger
 
@@ -149,7 +151,21 @@ def _session():
         create_auth_files()
     except Exception as exc:  # noqa: BLE001
         logger.warning("could not write Earthdata auth files: %s", exc)
-    return EarthdataSession(user, pw)
+
+    session = EarthdataSession(user, pw)
+    # GES DISC throttles bursts with 503s. Back off and retry rather than
+    # dropping granules — an incomplete window is useless to us.
+    retry = Retry(
+        total=5,
+        backoff_factor=1.5,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["GET"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_maxsize=32)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
 
 
 def _fetch_one(session, filename, run, bbox):
@@ -161,14 +177,19 @@ def _fetch_one(session, filename, run, bbox):
     url = f"{_opendap_url(filename, run)}.nc4?{ce}"
     r = session.get(url, timeout=180, allow_redirects=True)
     r.raise_for_status()
-    if r.content[:3] == b"\x89HD" or r.content[:3] == b"CDF":
+    head = r.content[:4]
+    if head[:3] == b"CDF":
         return xr.open_dataset(BytesIO(r.content))
+    if head == b"\x89HDF":
+        # OPeNDAP's .nc4 response is HDF5, which xarray can only open
+        # through h5netcdf (the netcdf4 backend declines it here).
+        return xr.open_dataset(BytesIO(r.content), engine="h5netcdf")
     raise RuntimeError(
         f"non-netCDF response for {filename}: {r.content[:200]!r}"
     )
 
 
-def fetch_window(start, end, run="final", bbox=HTI_BBOX, max_workers=8):
+def fetch_window(start, end, run="final", bbox=HTI_BBOX, max_workers=4):
     """Half-hourly precipitation *accumulation* (mm) over the window.
 
     Returns a DataArray with dims (time, lat, lon); each time step is the

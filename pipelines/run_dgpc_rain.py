@@ -67,6 +67,28 @@ def main(only=None):
             logger.warning("could not cache IMERG window for %s", s.atcf_id)
 
     df = pd.DataFrame(records)
+    if df.empty:
+        # Never clobber a good result with an empty one: a failed run must
+        # leave the previous output (and the published page) untouched.
+        raise RuntimeError(
+            f"no storms produced rainfall stats ({len(storms)} attempted); "
+            "leaving rain_stats.parquet as it was"
+        )
+
+    if only:
+        # A partial run merges into the stored table rather than replacing
+        # it, so smoke-testing one storm cannot wipe the other 41.
+        try:
+            prev = blob.load_parquet_from_blob(
+                f"{OUT_PREFIX}/rain_stats.parquet"
+            )
+            keep = prev[~prev.atcf_id.isin(df.atcf_id)]
+            df = pd.concat([keep, df], ignore_index=True)
+            logger.info("merged with %d existing rows", len(keep))
+        except Exception:
+            logger.info("no existing rain_stats.parquet to merge with")
+
+    df = df.sort_values("season").reset_index(drop=True)
     blob.upload_parquet_to_blob(f"{OUT_PREFIX}/rain_stats.parquet", df)
     logger.info("wrote %d rows to %s/rain_stats.parquet", len(df), OUT_PREFIX)
     return df

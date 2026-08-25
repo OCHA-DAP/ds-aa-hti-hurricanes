@@ -200,5 +200,7 @@ resources:
             - pypi: { package: "geopandas>=1.0" }
             - pypi: { package: "rioxarray>=0.15" }
             - pypi: { package: "netcdf4" }
+            # OPeNDAP returns HDF5 for .nc4; only h5netcdf will open it.
+            - pypi: { package: "h5netcdf" }
             - pypi: { package: "azure-storage-blob>=12.20" }
             - pypi: { package: "databricks-sdk" }
