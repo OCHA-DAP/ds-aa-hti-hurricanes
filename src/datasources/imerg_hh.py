@@ -38,6 +38,9 @@ GRID_RES = 0.1
 # Haiti with a small pad, so edge cells are not clipped away.
 HTI_BBOX = (-74.6, 17.9, -71.5, 20.2)
 
+# A storm window must arrive essentially complete; see fetch_window.
+MIN_GRANULE_FRACTION = 0.98
+
 COLLECTIONS = {
     "final": ("GPM_3IMERGHH", "GPM_3IMERGHH.07"),
     "late": ("GPM_3IMERGHHL", "GPM_3IMERGHHL.07"),
@@ -95,12 +98,58 @@ def _opendap_url(filename, run="final"):
     return f"{OPENDAP_ROOT}/{coll}/{ts.year}/{ts.dayofyear:03d}/{filename}"
 
 
+class EarthdataSession(requests.Session):
+    """Session that survives Earthdata's cross-host login redirect.
+
+    A GES DISC data URL bounces through ``urs.earthdata.nasa.gov`` and back.
+    ``requests`` strips the Authorization header on any cross-host redirect
+    (by design), so a plain ``session.auth`` never reaches the login host
+    and every fetch returns "Credentials ... are invalid". This is NASA's
+    documented workaround: keep the header for the Earthdata hosts in the
+    chain, drop it for anything else.
+    """
+
+    AUTH_HOST = "urs.earthdata.nasa.gov"
+
+    def __init__(self, username, password):
+        super().__init__()
+        self.auth = (username, password)
+
+    def rebuild_auth(self, prepared_request, response):
+        headers = prepared_request.headers
+        if "Authorization" not in headers:
+            return
+        original = requests.utils.urlparse(response.request.url).hostname
+        redirect = requests.utils.urlparse(prepared_request.url).hostname
+        if (
+            original != redirect
+            and redirect != self.AUTH_HOST
+            and original != self.AUTH_HOST
+        ):
+            del headers["Authorization"]
+
+
 def _session():
-    s = requests.Session()
-    user = os.environ["IMERG_USERNAME"]
-    pw = os.environ["IMERG_PASSWORD"]
-    s.auth = (user, pw)
-    return s
+    """Authenticated Earthdata session (also writes the .netrc/.dodsrc set).
+
+    Missing credentials fail loudly here rather than as 14 000 identical
+    "invalid credentials" granule warnings.
+    """
+    user = os.environ.get("IMERG_USERNAME")
+    pw = os.environ.get("IMERG_PASSWORD")
+    if not user or not pw:
+        raise RuntimeError(
+            "IMERG_USERNAME / IMERG_PASSWORD are not set. On Databricks "
+            "they come from the cluster policy (secret scope `dsci`); "
+            "locally they come from .env."
+        )
+    try:
+        from src.datasources.imerg import create_auth_files
+
+        create_auth_files()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("could not write Earthdata auth files: %s", exc)
+    return EarthdataSession(user, pw)
 
 
 def _fetch_one(session, filename, run, bbox):
@@ -146,8 +195,19 @@ def fetch_window(start, end, run="final", bbox=HTI_BBOX, max_workers=8):
             except Exception as exc:
                 logger.warning("granule %s failed: %s", fn, exc)
 
-    if not frames:
-        raise RuntimeError("every granule fetch failed (check credentials)")
+    # A window is only usable if nearly all of it arrived: a rolling
+    # accumulation over a series with holes silently *understates* the
+    # maximum, which would read as "threshold not met" rather than as an
+    # error. Fail loudly instead.
+    got, want = len(frames), len(granules)
+    if got < want:
+        logger.warning("%d of %d granules failed", want - got, want)
+    if got < MIN_GRANULE_FRACTION * want:
+        raise RuntimeError(
+            f"only {got}/{want} granules fetched "
+            f"({got / want:.0%}); refusing to compute accumulations from "
+            "an incomplete series (check Earthdata credentials)"
+        )
 
     times = sorted(frames)
     arrs = []

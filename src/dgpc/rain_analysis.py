@@ -169,3 +169,97 @@ def storm_window(first_near, last_near, pad_days=2):
         pd.Timestamp(first_near) - pd.Timedelta(days=pad_days),
         pd.Timestamp(last_near) + pd.Timedelta(days=pad_days),
     )
+
+
+def selfcheck(verbose=True):
+    """Assert the reduction's invariants.
+
+    Run: ``python -m src.dgpc.rain_analysis``.
+
+    Injects a known extreme at a real land point (Les Cayes) over otherwise
+    light noise and checks that:
+    1. a point extreme surfaces in ``any_pixel`` and is diluted away in the
+       department and national means (the aggregation choice is the single
+       biggest lever on the DGPC verdict, so it must demonstrably bite);
+    2. the ordering any_pixel >= department_max >= national_mean holds at
+       every window;
+    3. sea cells are excluded - Haiti is horseshoe-shaped, so the centre of
+       its bounding box is open water in the Golfe de la Gonave.
+    """
+    import numpy as _np
+    import pandas as _pd
+    import xarray as _xr
+
+    from src.datasources.imerg_hh import GRID_RES, HTI_BBOX
+
+    minx, miny, maxx, maxy = HTI_BBOX
+    lons = _np.arange(minx, maxx, GRID_RES) + GRID_RES / 2
+    lats = _np.arange(miny, maxy, GRID_RES) + GRID_RES / 2
+    times = _pd.date_range("2016-10-03", periods=48 * 5, freq="30min")
+
+    rng = _np.random.default_rng(0)
+    vals = rng.gamma(0.3, 0.4, size=(len(times), len(lats), len(lons)))
+    ci = int(_np.abs(lats - 18.20).argmin())  # Les Cayes, Sud
+    cj = int(_np.abs(lons - (-73.75)).argmin())
+    vals[100:104, ci, cj] = 40.0  # 80 mm in any 1 h
+    vals[200:248, :, :] += 2.5  # broad 24 h soak
+
+    da = _xr.DataArray(
+        vals,
+        coords={"time": times, "lat": lats, "lon": lons},
+        dims=("time", "lat", "lon"),
+    )
+    stats = storm_rain_stats(da)
+    crit = evaluate_criteria(stats)
+
+    failures = []
+    if not stats["any_pixel_1h_mm"] > 75:
+        failures.append(
+            f"any_pixel 1h = {stats['any_pixel_1h_mm']:.1f}, want >75"
+        )
+    if not crit["any_pixel_rain_red_rate"]:
+        failures.append("60 mm/h should trip on any_pixel")
+    if crit["national_mean_rain_red_rate"]:
+        failures.append(
+            "a single-cell extreme must not trip the national mean"
+        )
+    for w in WINDOWS:
+        a, d, n = (
+            stats[f"any_pixel_{w}_mm"],
+            stats[f"department_max_{w}_mm"],
+            stats[f"national_mean_{w}_mm"],
+        )
+        if not (a >= d >= n):
+            failures.append(f"{w}: ordering broken ({a:.1f}/{d:.1f}/{n:.1f})")
+        if verbose:
+            print(
+                f"  {w:>3}: national {n:7.1f} | dept_max {d:7.1f} "
+                f"| any_pixel {a:7.1f}"
+            )
+
+    # Sea cells excluded: the bbox centre sits in the Golfe de la Gonave.
+    from src.utils.raster import upsample_dataarray
+
+    up = upsample_dataarray(
+        da.isel(time=slice(0, 2)),
+        resolution=UPSAMPLE_RES,
+        lat_dim="lat",
+        lon_dim="lon",
+    )
+    land, _, _ = _masks(up)
+    mid_lat = int(_np.abs(up.lat.to_numpy() - 19.10).argmin())
+    mid_lon = int(_np.abs(up.lon.to_numpy() - (-73.05)).argmin())
+    if bool(land[mid_lat, mid_lon]):
+        failures.append("Golfe de la Gonave is being counted as land")
+
+    if failures:
+        raise AssertionError(
+            "rain_analysis selfcheck failed:\n  " + "\n  ".join(failures)
+        )
+    if verbose:
+        print("rain_analysis selfcheck: OK")
+    return True
+
+
+if __name__ == "__main__":
+    selfcheck()
