@@ -6,7 +6,10 @@ approach from blob, and writes under ``processed/dgpc/``:
 
 - ``dept_rain_fcast.parquet``  - one row per storm x GEFS issue x valid
                                  day x department (mean, pixel max)
-- ``dept_verdicts.parquet``    - one row per storm x department
+- ``dept_verdicts_archive.parquet`` - one row per storm x department,
+  sustained wind, no cutoff: the reading of the first (archived) page.
+  The cutoff-aware, gust-based ``dept_verdicts.parquet`` used by the
+  department page is written by ``run_dgpc_pathways.py``.
 
 Usage: uv run python pipelines/run_dgpc_dept_forecast.py
 """
@@ -67,7 +70,7 @@ def main():
     verdicts = department_verdicts(rain_long, wind_long, storms, dept_names)
     verdicts = verdicts.merge(pd.DataFrame(coverage), on="atcf_id")
     blob.upload_parquet_to_blob(
-        f"{OUT_PREFIX}/dept_verdicts.parquet", verdicts
+        f"{OUT_PREFIX}/dept_verdicts_archive.parquet", verdicts
     )
     logger.info(
         "wrote %d rain rows and %d verdict rows to %s",

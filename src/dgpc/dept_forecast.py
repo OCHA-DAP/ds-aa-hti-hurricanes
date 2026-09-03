@@ -156,8 +156,13 @@ def wind_forecast_by_dept(
 
 
 def _first_hit_lead(g: pd.DataFrame, flag, lead_col):
+    """Lead time of the *earliest* forecast meeting the criterion.
+
+    Lead is measured to closest approach, so the earliest issuance is the
+    one with the largest lead.
+    """
     hit = g[flag]
-    return float(hit[lead_col].min()) if len(hit) else np.nan
+    return float(hit[lead_col].max()) if len(hit) else np.nan
 
 
 def department_verdicts(

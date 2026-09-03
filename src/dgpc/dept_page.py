@@ -16,10 +16,11 @@ from html import escape
 import numpy as np
 import pandas as pd
 
-from src.constants import D_THRESH
+from src.constants import D_THRESH, LT_CUTOFF_HRS
 from src.dgpc import constants as dc
 from src.dgpc.dept_forecast import READINGS
 from src.dgpc.page import CSS, MONTHS_FR, _count_cell, _mark, fr_num, plural
+from src.dgpc.pathways import PATHWAYS, flags, rp_table
 
 # South-west to north-east, the order a reader scans a map of Haiti.
 DEPT_ORDER = [
@@ -55,9 +56,9 @@ table.matrix td{padding:.35rem .5rem;font-size:.84rem}
 """
 
 
-def _val_cell(v, thr, na=False, decimals=0):
+def _val_cell(v, thr, na=False, decimals=0, missing="n/d"):
     if na or v is None or (np.isscalar(v) and pd.isna(v)):
-        return "<td class='val na'>n/d</td>"
+        return f"<td class='val na'>{missing}</td>"
     cls = "val hit" if v >= thr else "val"
     return f"<td class='{cls}'>{fr_num(v, decimals)}</td>"
 
@@ -247,7 +248,144 @@ def _freq_table(freq):
 """
 
 
-def render(tbl, verdicts, counts, freq, chart="", notes=None):
+CONFIGS = [
+    ("actuel", "Seuils actuels, sans voie rouge", 68, 57, None),
+    ("orange6", "Seuils actuels + orange ≥ 6 dép.", 68, 57, 6),
+    ("ajuste", "Proposition : obs. 52 mm + orange ≥ 6 dép.", 68, 52, 6),
+]
+
+
+def _pathways_section(pdf, deck_trig, n_last_year=14):
+    """The framework's pathways and the orange option, storm by storm."""
+    if pdf is None or len(pdf) == 0:
+        return ""
+    cfg_flags = {k: flags(pdf, rf, ro, n) for k, _, rf, ro, n in CONFIGS}
+
+    # Per-pathway return periods under each configuration.
+    rp_rows = []
+    for k, lab, rf, ro, n in CONFIGS:
+        rp = rp_table(cfg_flags[k]).set_index("pathway")
+        cells = "".join(
+            f"<td class='num'>{int(rp.loc[p, 'n_storms'])}<br>"
+            f"<span style='color:#5e6a6b;font-size:.85em'>"
+            f"{fr_num(rp.loc[p, 'rp_years'], 1) if np.isfinite(rp.loc[p, 'rp_years']) else 'jamais'}"
+            "</span></td>"
+            for p in list(PATHWAYS) + ["any"]
+        )
+        rp_rows.append(
+            f"<tr><td class='nm'>{escape(lab)}</td>"
+            f"<td class='num'>{rf}</td><td class='num'>{ro}</td>"
+            f"<td class='num'>{n if n else '—'}</td>{cells}</tr>"
+        )
+    heads = "".join(
+        f"<th>{escape(v)}</th>" for v in list(PATHWAYS.values()) + ["Ensemble"]
+    )
+
+    # Storm by storm under the proposed configuration.
+    prop = cfg_flags["ajuste"]
+    cur = cfg_flags["actuel"]
+    _, _, rf_p, ro_p, n_p = CONFIGS[2]
+    rows = []
+    for i, r in pdf.iterrows():
+        f = prop.loc[i]
+        rows.append(
+            "<tr>"
+            f"<td class='nm'>{escape(str(r['label']))}</td>"
+            + _mark(deck_trig.get(r["atcf_id"], False))
+            + _mark(bool(cur.loc[i, "any"]))
+            + _val_cell(r["fcast_exp_64"], 1)
+            + _val_cell(r["fcast_rain_mm"], rf_p, missing="—")
+            + _val_cell(
+                r["n_orange"],
+                n_p,
+                na=not r["orange_rain_known"] and r["n_orange"] < n_p,
+            )
+            + _val_cell(r["obsv_exp_64"], 1)
+            + _val_cell(r["obsv_rain_mm"], ro_p)
+            + _mark(bool(f["any"]))
+            + "</tr>"
+        )
+    n_prop = int(prop["any"].sum())
+    yrs_prop = int(prop.loc[prop["any"], "season"].nunique())
+    rp_prop = (
+        (dc.SEASON_END - dc.SEASON_START + 2) / yrs_prop
+        if yrs_prop
+        else np.inf
+    )
+    n_cur = int(cur["any"].sum())
+    n_deck = int(sum(bool(v) for v in deck_trig.values()))
+
+    return f"""
+<p>
+  Le cadre 2026 s’active sur l’une de cinq voies : exposition prévue à des
+  vents de 64 nœuds, précipitations prévues, alerte rouge de la DGPC
+  confirmée par un <i>Hurricane Warning</i>, exposition observée,
+  précipitations observées. La question posée ici : <b>si la voie « rouge »
+  est remplacée par une voie « alerte orange dans au moins N départements »,
+  quels seuils gardent le même nombre d’activations que le cadre de l’an
+  dernier</b> ({n_last_year} tempêtes sur 2002–2025) ?
+</p>
+
+<h3>Période de retour de chaque voie</h3>
+
+<p>
+  Nombre de tempêtes atteignant chaque voie et période de retour associée
+  (saisons avec au moins une tempête), sous trois jeux de seuils. La voie
+  rouge n’est pas modélisée ici ; avec elle, le registre du cadre 2026
+  compte {n_deck} activations.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Configuration</th><th>Pluie prév.<br>(mm/2 j)</th>
+<th>Pluie obs.<br>(mm/2 j)</th><th>Orange<br>(dép. min.)</th>{heads}</tr></thead>
+<tbody>
+{chr(10).join(rp_rows)}
+</tbody></table></div>
+
+<p>
+  Sans voie rouge, les seuils actuels ne retiennent que {n_cur} tempêtes.
+  Ajouter l’alerte orange à partir de 6 départements ramène Ike 2008, Irene
+  2011 et Chantal 2013 ; abaisser le seuil de pluie observée à 52 mm ramène
+  Noel 2007. On retrouve alors {n_prop} tempêtes en {yrs_prop} saisons
+  (période de retour {fr_num(rp_prop, 1)} ans), comme le cadre de l’an
+  dernier. Irma 2017 et Elsa 2021, qui ne s’activaient que par la voie
+  rouge, sortent du registre : elles n’atteignent que 5 départements en
+  orange avant l’heure limite.
+</p>
+
+<h3>Tempête par tempête, sous la proposition</h3>
+
+<p>
+  Valeurs de chaque voie ; cases orange = seuil atteint sous la
+  proposition (pluie prévue ≥ {rf_p} mm, pluie observée ≥ {ro_p} mm, alerte
+  orange dans ≥ {n_p} départements, exposition &gt; 0). Exposition en
+  personnes ; pluie en mm sur 2 jours (moyenne nationale) ; orange en
+  nombre de départements.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr>
+  <th>Tempête</th><th>Cadre 2026<br>(registre)</th><th>Seuils actuels<br>sans rouge</th>
+  <th>Exposition<br>prévue</th><th>Pluie<br>prévue</th><th>Orange<br>(dép.)</th>
+  <th>Exposition<br>observée</th><th>Pluie<br>observée</th><th>Proposition</th>
+</tr></thead>
+<tbody>
+{chr(10).join(rows)}
+</tbody></table></div>
+
+<p class="legend">
+  Les indicateurs du cadre (heure limite, pluie prévue à l’échéance
+  Action, pluie observée) sont repris du rejeu historique utilisé pour
+  calibrer les seuils 2026, de sorte que la colonne « seuils actuels »
+  reproduit le registre des diapositives hors voie rouge. « — » en pluie
+  prévue : aucun avis émis avant l’heure limite ne prévoyait de passage à
+  moins de {D_THRESH} km. Laura et Isaias 2020 n’ont pas de prévision
+  CHIRPS-GEFS : leur colonne orange ne compte que le vent.
+</p>
+"""
+
+
+def render(tbl, verdicts, counts, freq, chart="", notes=None, pathways=None):
     """Assemble the page.
 
     ``tbl`` is the per-storm table (storm set joined to the deck's
@@ -370,17 +508,18 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
 <th>Source</th></tr></thead>
 <tbody>
 <tr><td class="nm">Vent</td>
-    <td>le champ de vent prévu (vent soutenu sur terre, réduction ×0,85)
-        atteint 100 km/h en un point du département, pour au moins un avis
-        du NHC émis pendant l’approche</td>
+    <td>les <b>rafales</b> prévues (vent soutenu sur terre ×0,85, facteur de
+        rafale ×1,25) atteignent 100 km/h en un point du département, pour
+        au moins un avis du NHC émis avant l’heure limite</td>
     <td>Avis du NHC, champ paramétrique</td></tr>
 <tr><td class="nm">Pluie — moyenne du département</td>
     <td>la moyenne du département d’une prévision journalière atteint
-        100 mm, pour au moins une émission pendant l’approche</td>
+        100 mm, pour la prévision CHIRPS-GEFS associée à un avis émis avant
+        l’heure limite</td>
     <td>CHIRPS-GEFS, 0,05°</td></tr>
 <tr><td class="nm">Pluie — point le plus arrosé</td>
-    <td>un pixel (5,5 km) du département atteint 100 mm dans une prévision
-        journalière</td>
+    <td>un pixel (5,5 km) du département atteint 100 mm dans cette même
+        prévision journalière — la lecture que la DGPC applique</td>
     <td>CHIRPS-GEFS, 0,05°</td></tr>
 <tr><td class="nm">Vent <i>ou</i> pluie</td>
     <td>l’une des deux conditions ci-dessus — c’est la définition
@@ -430,7 +569,11 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
 
 {figure}
 
-<h2>3. Combien de tempêtes placent au moins un département en orange</h2>
+<h2>3. Les voies de déclenchement du cadre et l’option « orange »</h2>
+
+{_pathways_section(*(pathways or (None, {})))}
+
+<h2>4. Combien de tempêtes placent au moins un département en orange</h2>
 
 <div class="tablewrap"><table class="wraphead">
 <thead><tr>
@@ -451,7 +594,7 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
   critère et le passage au plus près.
 </p>
 
-<h2>4. Le détail par département</h2>
+<h2>5. Le détail par département</h2>
 
 <p>
   Les trois matrices ci-dessous donnent, pour chaque tempête et chaque
@@ -459,7 +602,7 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
   orange atteignent le seuil. Départements du sud-ouest au nord-est.
 </p>
 
-<h3>Vent prévu maximal dans le département (km/h)</h3>
+<h3>Rafales prévues maximales dans le département (km/h)</h3>
 {_matrix(verdicts, storms_order, "wind_max_kmh", dc.ORANGE_WIND_KMH[0])}
 
 <h3>Pluie prévue — moyenne du département (mm / jour)</h3>
@@ -468,7 +611,7 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
 <h3>Pluie prévue — point le plus arrosé du département (mm / jour)</h3>
 {_matrix(verdicts, storms_order, "rain_pix_max_mm", thr_mm)}
 
-<h2>5. Préavis</h2>
+<h2>6. Préavis</h2>
 
 <p>
   Pour les tempêtes ayant placé au moins un département en orange : heures
@@ -480,7 +623,7 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
 
 {_lead_table(counts)}
 
-<h2>6. Fréquence par département</h2>
+<h2>7. Fréquence par département</h2>
 
 <p>
   Nombre de tempêtes ayant placé chaque département en orange sur
@@ -489,29 +632,36 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None):
 
 {_freq_table(freq)}
 
-<h2>7. Méthode et limites</h2>
+<h2>8. Méthode et limites</h2>
 
 <ul>
   <li><b>Tempêtes</b> : centre analysé passé à moins de {D_THRESH} km
       d’Haïti, {dc.SEASON_START}–{dc.SEASON_END} — le jeu de la première
       analyse. Le registre du cadre retient aussi des tempêtes plus
       lointaines ayant causé des impacts (Ivan 2004), marquées n/d.</li>
-  <li><b>Prévisions de pluie</b> : CHIRPS-GEFS émis de {dc.FCAST_LEAD_DAYS}
-      jours avant le premier passage à moins de {D_THRESH} km jusqu’au
-      dernier ; jours de validité attribués de la veille du premier
-      passage au lendemain du dernier. Produit <b>journalier</b> : la
-      valeur d’un jour calendaire tient lieu du cumul sur 24 h, ce qui
-      sous-estime légèrement un cumul glissant. Moyennes départementales
-      sur un ré-échantillonnage à {dc.GEFS_UPSAMPLE_RES}°.</li>
+  <li><b>Avis considérés</b> : chaque avis du NHC dont le passage au plus
+      près prévu est à {LT_CUTOFF_HRS} h ou plus — la même heure limite que
+      les voies de prévision du cadre. Les indicateurs de cutoff et de
+      pluie prévue sont repris du rejeu historique qui a servi à calibrer
+      les seuils 2026 (Melissa 2025 : valeurs du registre).</li>
+  <li><b>Prévisions de pluie</b> : pour chaque avis, la prévision
+      CHIRPS-GEFS du jour (ou la plus récente), sur les jours où la
+      trajectoire prévue passe à moins de {D_THRESH} km d’Haïti — la règle
+      d’attribution du cadre. Produit <b>journalier</b> : la valeur d’un
+      jour calendaire tient lieu du cumul sur 24 h, ce qui sous-estime
+      légèrement un cumul glissant. Moyennes départementales sur un
+      ré-échantillonnage à {dc.GEFS_UPSAMPLE_RES}°.</li>
   <li><b>Prévisions de vent</b> : champ de vent paramétrique reconstruit à
       partir des rayons de vent de chaque avis du NHC, vent soutenu réduit
-      sur terre (×0,85), maximum dans chaque département. Méthode et
-      validation dans l’analyse archivée.</li>
-  <li><b>Une prévision suffit</b> : un département est compté en orange
-      dès qu’une émission pendant l’approche atteint le critère, quelle
-      que soit l’échéance — c’est la lecture la plus favorable à l’alerte,
-      et c’est pourquoi le vent prévu place bien plus de tempêtes en
-      orange que le vent observé (voir l’archive).</li>
+      sur terre (×0,85) puis converti en rafales (×1,25, facteur
+      conventionnel en terrain dégagé), maximum dans chaque département.
+      Méthode et validation dans l’analyse archivée.</li>
+  <li><b>Un avis suffit</b> : un département est compté en orange dès
+      qu’un avis émis avant l’heure limite atteint le critère, quelle que
+      soit l’échéance. La lecture en rafales est nettement plus permissive
+      que celle en vent soutenu de l’archive : Chantal 2013, simple tempête
+      tropicale passée au large, place ainsi les dix départements en orange
+      sur ses prévisions à cinq jours.</li>
   <li><b>Registre du cadre</b> : repris des diapositives, qui font foi ;
       les tempêtes qui n’y figurent pas n’ont pas activé le cadre.</li>
 </ul>

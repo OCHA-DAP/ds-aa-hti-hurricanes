@@ -148,7 +148,10 @@ def load():
         logger.warning("no rain_stats.parquet yet — rendering rain as pending")
         rain = None
     try:
-        dept = blob.load_parquet_from_blob(f"{PREFIX}/dept_verdicts.parquet")
+        # The archived reading: sustained wind, no cutoff.
+        dept = blob.load_parquet_from_blob(
+            f"{PREFIX}/dept_verdicts_archive.parquet"
+        )
     except Exception:
         logger.warning("no dept_verdicts.parquet yet — rendering as pending")
         dept = None

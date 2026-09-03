@@ -150,6 +150,15 @@ def main():
         x_title="Départements en alerte orange (sur 10)",
     )
 
+    pdf = blob.load_parquet_from_blob(f"{PREFIX}/pathways.parquet").merge(
+        tbl[["atcf_id", "label"]], on="atcf_id", how="left"
+    )
+    deck_trig = (
+        tbl[tbl["in_deck"] & tbl["atcf_id"].notna()]
+        .set_index("atcf_id")["triggered_hit"]
+        .astype(bool)
+        .to_dict()
+    )
     html = render(
         tbl,
         verdicts,
@@ -157,6 +166,7 @@ def main():
         freq,
         chart=chart,
         notes={"deck": deck_note},
+        pathways=(pdf, deck_trig),
     )
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")

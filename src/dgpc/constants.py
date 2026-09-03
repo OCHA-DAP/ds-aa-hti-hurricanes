@@ -81,3 +81,9 @@ GEFS_ISSUE_HOUR_UTC = 8 + 50 / 60
 # Department means are taken on a nearest-neighbour upsample of the 0.05
 # deg grid so that department boundaries are resolved.
 GEFS_UPSAMPLE_RES = 0.01
+
+# The plan (SAPMAH Cyclone 2025, p.32) words the orange wind figure as
+# "rafales" - gusts - so the department reading uses the gust variant.
+# Simulated alerts only count if the forecast that met the criterion was
+# issued before the framework's 48 h cutoff (src.constants.LT_CUTOFF_HRS).
+ORANGE_WIND_VARIANT = "gust_land"
