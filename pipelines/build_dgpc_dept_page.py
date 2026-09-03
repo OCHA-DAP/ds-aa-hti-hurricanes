@@ -27,6 +27,7 @@ logger = get_logger(__name__)
 
 PREFIX = f"{blob.PROJECT_PREFIX}/processed/dgpc"
 OUT = Path("docs/dgpc-departements.html")
+MAP_JSON = Path("docs/assets/dgpc-departements.json")
 
 
 def storm_label(row):
@@ -171,6 +172,18 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     logger.info("wrote %s (%.0f kB)", OUT, OUT.stat().st_size / 1024)
+
+    # The advisory-by-advisory map data needs the storms DB (tracks and
+    # exposure); when it is unreachable the previous file stands.
+    try:
+        from src.dgpc import map_data
+
+        map_data.write(MAP_JSON)
+        logger.info(
+            "wrote %s (%.0f kB)", MAP_JSON, MAP_JSON.stat().st_size / 1024
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("map data not refreshed: %s", exc)
     return tbl
 
 

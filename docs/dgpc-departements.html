@@ -79,6 +79,35 @@ tr.dim td.nm{color:#5e6a6b;font-weight:500}
 .legend{font-size:.86rem;color:var(--muted)}
 table.matrix th{font-size:.74rem}
 table.matrix td{padding:.35rem .5rem;font-size:.84rem}
+
+#carte-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem;margin:1.4rem 0}
+#carte{height:520px;border-radius:8px;border:1px solid var(--line)}
+.ctl{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;
+margin-bottom:.8rem;font-size:.92rem}
+.ctl select,.ctl button{font:inherit;padding:.3rem .55rem;border:1px solid var(--line);
+border-radius:6px;background:#fff}
+.ctl button{cursor:pointer}
+.ctl button:disabled{opacity:.4;cursor:default}
+.ctl input[type=range]{width:min(360px,100%)}
+.ctl label{white-space:nowrap}
+.advlab{font-weight:700}
+.badge{display:inline-block;font-size:.74rem;font-weight:700;padding:.12rem .5rem;
+border-radius:5px;margin-left:.4rem;vertical-align:middle}
+.badge.ok{background:#e7f4ee;color:#0f8a5f}
+.badge.cut{background:#fbeaea;color:#a02a2a}
+.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.88rem;margin:.6rem 0}
+.toggles label{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
+.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;border:1px solid #0002}
+#voies{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.6rem;
+margin-top:.8rem;font-size:.88rem}
+#voies .v{border:1px solid var(--line);border-radius:8px;padding:.55rem .75rem;background:#fafcfc}
+#voies .v.hit{border-color:#0f8a5f;background:#e7f4ee}
+#voies .v.off{opacity:.55}
+#voies .v b{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;
+letter-spacing:.04em;margin-bottom:.15rem}
+#voies .v .val{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
+.leaflet-tooltip.dep{font-size:.82rem;line-height:1.35}
 </style>
 </head>
 <body>
@@ -296,26 +325,60 @@ table.matrix td{padding:.35rem .5rem;font-size:.84rem}
 <th>Pluie obs.<br>(mm/2 j)</th><th>Orange<br>(dép. min.)</th><th>Prévision — exposition à 64 nœuds</th><th>Prévision — précipitations</th><th>Alerte orange DGPC (départements)</th><th>Observation — exposition à 64 nœuds</th><th>Observation — précipitations</th><th>Ensemble</th></tr></thead>
 <tbody>
 <tr><td class='nm'>Seuils actuels, sans voie rouge</td><td class='num'>68</td><td class='num'>57</td><td class='num'>—</td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>3,6</span></td><td class='num'>10<br><span style='color:#5e6a6b;font-size:.85em'>3,1</span></td></tr>
-<tr><td class='nm'>Seuils actuels + orange ≥ 6 dép.</td><td class='num'>68</td><td class='num'>57</td><td class='num'>6</td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0</span></td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>3,6</span></td><td class='num'>13<br><span style='color:#5e6a6b;font-size:.85em'>2,5</span></td></tr>
-<tr><td class='nm'>Proposition : obs. 52 mm + orange ≥ 6 dép.</td><td class='num'>68</td><td class='num'>52</td><td class='num'>6</td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0</span></td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>11<br><span style='color:#5e6a6b;font-size:.85em'>2,8</span></td><td class='num'>14<br><span style='color:#5e6a6b;font-size:.85em'>2,3</span></td></tr>
+<tr><td class='nm'>Proposition : + orange ≥ 6 dép.</td><td class='num'>68</td><td class='num'>57</td><td class='num'>6</td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0</span></td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>3,6</span></td><td class='num'>13<br><span style='color:#5e6a6b;font-size:.85em'>2,5</span></td></tr>
+</tbody></table></div>
+
+<h3>Combien de départements ? Toutes les options, seuils inchangés</h3>
+
+<p>
+  Sans voie rouge, les seuils actuels ne retiennent que 10 tempêtes en
+  8 saisons. Le tableau donne, pour chaque nombre minimal de départements
+  en orange, le registre obtenu en gardant les seuils de pluie et
+  d’exposition tels quels.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Orange dans<br>≥ N départements</th><th>Tempêtes</th>
+<th>Saisons</th><th>Période de<br>retour (ans)</th>
+<th>Tempêtes ajoutées au registre sans voie rouge</th></tr></thead>
+<tbody>
+<tr><td class='num'>1</td><td class='num'>21</td><td class='num'>16</td><td class='num'>1,6</td><td style='white-space:normal'>Dean 2007, Ike 2008, Emily 2011, Irene 2011, Chantal 2013, Irma 2017, Laura 2020, Elsa 2021, Grace 2021, Franklin 2023, Beryl 2024</td></tr>
+<tr><td class='num'>2</td><td class='num'>18</td><td class='num'>15</td><td class='num'>1,7</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Laura 2020, Elsa 2021, Franklin 2023</td></tr>
+<tr><td class='num'>3</td><td class='num'>17</td><td class='num'>14</td><td class='num'>1,8</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Laura 2020, Elsa 2021</td></tr>
+<tr><td class='num'>4</td><td class='num'>16</td><td class='num'>13</td><td class='num'>1,9</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Elsa 2021</td></tr>
+<tr><td class='num'>5</td><td class='num'>16</td><td class='num'>13</td><td class='num'>1,9</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Elsa 2021</td></tr>
+<tr style='background:#fdefe7;font-weight:700'><td class='num'>6 <span class='pill orange'>proposé</span></td><td class='num'>13</td><td class='num'>10</td><td class='num'>2,5</td><td style='white-space:normal'>Ike 2008, Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>7</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,5</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>8</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,5</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>9</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,5</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>10</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,5</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
 </tbody></table></div>
 
 <p>
-  Sans voie rouge, les seuils actuels ne retiennent que 10 tempêtes.
-  Ajouter l’alerte orange à partir de 6 départements ramène Ike 2008, Irene
-  2011 et Chantal 2013 ; abaisser le seuil de pluie observée à 52 mm ramène
-  Noel 2007. On retrouve alors 14 tempêtes en 11 saisons
-  (période de retour 2,3 ans), comme le cadre de l’an
-  dernier. Irma 2017 et Elsa 2021, qui ne s’activaient que par la voie
-  rouge, sortent du registre : elles n’atteignent que 5 départements en
-  orange avant l’heure limite.
+  Aucun seuil ne redonne exactement les 14 activations du cadre de
+  l’an dernier : Dean 2007, Irma 2017 et Elsa 2021 comptent chacune 5
+  départements, si bien que le registre passe de 16 tempêtes à 5
+  départements à 13 à 6. <b>La proposition retient 6 départements</b> :
+  13 tempêtes en 10 saisons, période de retour
+  2,5 ans, en ajoutant Ike 2008, Irene 2011, Chantal 2013. Ike 2008 est la
+  tempête à fort impact que le cadre actuel manque ; Irene et Chantal sont
+  le coût de la lecture en rafales. Irma 2017 et Elsa 2021, qui ne
+  s’activaient que par la voie rouge, sortent du registre.
 </p>
 
-<h3>Tempête par tempête, sous la proposition</h3>
+<p>
+  Si l’alerte orange de la DGPC était en pratique portée par la pluie
+  seule, ou par le vent soutenu plutôt que les rafales, 3 départements
+  donneraient exactement 14 tempêtes (Dean, Ike, Irene, Elsa) et Chantal
+  ne compterait jamais. Cette lecture dépend de la pratique de la DGPC et
+  n’est pas retenue ici.
+</p>
+
+<h3>Tempête par tempête, sous la proposition (orange ≥ 6 départements)</h3>
 
 <p>
   Valeurs de chaque voie ; cases orange = seuil atteint sous la
-  proposition (pluie prévue ≥ 68 mm, pluie observée ≥ 52 mm, alerte
+  proposition (pluie prévue ≥ 68 mm, pluie observée ≥ 57 mm, alerte
   orange dans ≥ 6 départements, exposition &gt; 0). Exposition en
   personnes ; pluie en mm sur 2 jours (moyenne nationale) ; orange en
   nombre de départements.
@@ -339,14 +402,14 @@ table.matrix td{padding:.35rem .5rem;font-size:.84rem}
 <tr><td class='nm'>Ernesto 2006</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td class='val'>0</td><td class='val'>44</td><td class='val'>3</td><td class='val'>0</td><td class='val hit'>63</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Olga 2007</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val'>0</td><td class='val'>35</td><td style="text-align:center;color:#9aa5a6">—</td></tr>
 <tr><td class='nm'>Dean 2007</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val'>39</td><td class='val'>5</td><td class='val'>0</td><td class='val'>21</td><td style="text-align:center;color:#9aa5a6">—</td></tr>
-<tr><td class='nm'>Noel 2007</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val'>0</td><td class='val hit'>53</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
+<tr><td class='nm'>Noel 2007</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val'>0</td><td class='val'>53</td><td style="text-align:center;color:#9aa5a6">—</td></tr>
 <tr><td class='nm'>Fay 2008</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val'>0</td><td class='val'>45</td><td style="text-align:center;color:#9aa5a6">—</td></tr>
 <tr><td class='nm'>Gustav 2008</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val hit'>931 571</td><td class='val hit'>93</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Hanna 2008</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val'>0</td><td class='val hit'>57</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Ike 2008</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val na'>—</td><td class='val hit'>6</td><td class='val'>0</td><td class='val'>36</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Tomas 2010</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td class='val hit'>13 161</td><td class='val hit'>107</td><td class='val hit'>10</td><td class='val'>0</td><td class='val hit'>87</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Emily 2011</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val'>19</td><td class='val'>1</td><td class='val'>0</td><td class='val'>28</td><td style="text-align:center;color:#9aa5a6">—</td></tr>
-<tr><td class='nm'>Irene 2011</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val'>68</td><td class='val hit'>10</td><td class='val'>0</td><td class='val hit'>53</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
+<tr><td class='nm'>Irene 2011</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val'>68</td><td class='val hit'>10</td><td class='val'>0</td><td class='val'>53</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Sandy 2012</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td class='val'>0</td><td class='val hit'>142</td><td class='val'>1</td><td class='val'>0</td><td class='val hit'>85</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Isaac 2012</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td class='val'>0</td><td class='val hit'>104</td><td class='val hit'>8</td><td class='val'>0</td><td class='val hit'>133</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
 <tr><td class='nm'>Chantal 2013</td><td style="text-align:center;color:#9aa5a6">—</td><td style="text-align:center;color:#9aa5a6">—</td><td class='val'>0</td><td class='val'>10</td><td class='val hit'>10</td><td class='val'>0</td><td class='val'>10</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td></tr>
@@ -627,7 +690,55 @@ table.matrix td{padding:.35rem .5rem;font-size:.84rem}
 </tbody></table></div>
 
 
-<h2>8. Méthode et limites</h2>
+<h2>8. Avis par avis : quand l’alerte orange serait tombée</h2>
+
+<p>
+  Choisir une tempête, puis faire défiler les avis du NHC. Pour chaque
+  avis, la carte montre les départements que la prévision associée aurait
+  placés en alerte orange (rafales, pluie au point le plus arrosé, ou les
+  deux), ceux déjà en orange sur un avis précédent émis avant l’heure
+  limite, la trajectoire prévue, et l’état des voies du cadre à cet
+  instant. Survoler un département pour lire les valeurs. Chaque couche se
+  masque d’un clic.
+</p>
+
+
+<div id="carte-wrap">
+  <div class="ctl">
+    <label>Tempête
+      <select id="storm-sel"></select></label>
+    <button id="prev" type="button" aria-label="Avis précédent">◀</button>
+    <input id="adv-range" type="range" min="0" max="0" value="0">
+    <button id="next" type="button" aria-label="Avis suivant">▶</button>
+    <button id="play" type="button">▶ Lecture</button>
+    <span id="adv-lab" class="advlab"></span>
+  </div>
+  <div class="toggles">
+    <label><input type="checkbox" id="t-wind" checked>
+      <span class="sw" style="background:#ec835a"></span> Orange — rafales ≥ 100 km/h</label>
+    <label><input type="checkbox" id="t-rain" checked>
+      <span class="sw" style="background:#1862d8"></span> Orange — pluie ≥ 100 mm (point)</label>
+    <label><input type="checkbox" id="t-cum" checked>
+      <span class="sw" style="background:#f7d9c9"></span> Départements déjà en orange (avis précédents, avant l’heure limite)</label>
+    <label><input type="checkbox" id="t-track" checked>
+      <span class="sw" style="background:#1e2a2b"></span> Trajectoire prévue</label>
+    <label><input type="checkbox" id="t-obsv">
+      <span class="sw" style="background:#9aa5a6"></span> Trajectoire observée</label>
+    <label><input type="checkbox" id="t-voies" checked> Voies du cadre</label>
+  </div>
+  <div id="carte"></div>
+  <div id="voies"></div>
+</div>
+
+
+<p class="legend">
+  Violet : département en orange par le vent <i>et</i> la pluie. Les avis
+  émis après l’heure limite sont affichés en transparence : ils ne peuvent
+  plus déclencher le cadre ni entrer dans le compte des départements.
+  Fond de carte OpenStreetMap ; polygones départementaux simplifiés.
+</p>
+
+<h2>9. Méthode et limites</h2>
 
 <ul>
   <li><b>Tempêtes</b> : centre analysé passé à moins de 230 km
@@ -672,5 +783,111 @@ table.matrix td{padding:.35rem .5rem;font-size:.84rem}
 </footer>
 
 </div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d=0) => (v==null ? '—' : v.toLocaleString('fr-FR',{maximumFractionDigits:d}));
+  let DATA, storm, idx = 0, timer = null;
+  const map = L.map('carte', {scrollWheelZoom:false}).setView([18.9,-72.8], 7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:12, opacity:.55}).addTo(map);
+  let deptLayer, trackLayer = L.layerGroup().addTo(map), obsvLayer = L.layerGroup();
+  const COL = {none:'#e9eef0', cum:'#f7d9c9', wind:'#ec835a', rain:'#1862d8', both:'#8a2a8a', dim:'#d9dfe2'};
+
+  function cumBefore(i){ // departments in orange on pre-cutoff advisories before i
+    const s = new Set();
+    for (let k=0;k<i;k++){ const a=storm.adv[k]; if(a.cut) continue;
+      DATA.meta.depts.forEach((d,j)=>{ if(hit(a,j).any) s.add(d); }); }
+    return s;
+  }
+  function hit(a, j){
+    const w = $('t-wind').checked && a.w[j]!=null && a.w[j] >= DATA.meta.wind_kmh;
+    const r = $('t-rain').checked && a.rp[j]!=null && a.rp[j] >= DATA.meta.rain_mm;
+    return {w, r, any: w||r};
+  }
+  function render(){
+    const a = storm.adv[idx], m = DATA.meta, cum = cumBefore(idx);
+    const d = new Date(a.t+'Z');
+    $('adv-lab').innerHTML = `Avis du ${d.toLocaleString('fr-FR',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC` +
+      ` · passage au plus près prévu dans ${fmt(a.ttc)} h` +
+      (a.cut ? '<span class="badge cut">après l’heure limite</span>' : '<span class="badge ok">avant l’heure limite</span>') +
+      ` <span style="color:#5e6a6b;font-weight:400">(${idx+1}/${storm.adv.length})</span>`;
+    // departments
+    let nNow = 0; const cumNow = new Set(cum);
+    deptLayer.eachLayer(l => {
+      const j = m.depts.indexOf(l.feature.properties.name); const h = hit(a,j);
+      let c = COL.none;
+      if (h.w && h.r) c = COL.both; else if (h.w) c = COL.wind; else if (h.r) c = COL.rain;
+      else if ($('t-cum').checked && cum.has(m.depts[j])) c = COL.cum;
+      if (h.any){ nNow++; if(!a.cut) cumNow.add(m.depts[j]); }
+      l.setStyle({fillColor:c, fillOpacity: a.cut && h.any ? .45 : .8, color:'#fff', weight:1});
+      l.setTooltipContent(`<b>${m.depts[j]}</b><br>Rafales prévues : ${fmt(a.w[j])} km/h<br>` +
+        `Pluie prévue, point : ${fmt(a.rp[j])} mm<br>Pluie prévue, moyenne : ${fmt(a.rm[j])} mm` +
+        (cum.has(m.depts[j]) ? '<br><i>déjà en orange</i>' : ''));
+    });
+    // tracks
+    trackLayer.clearLayers();
+    if ($('t-track').checked && a.track.length){
+      const pts = a.track.map(p=>[p[0],p[1]]);
+      L.polyline(pts,{color:'#1e2a2b',weight:2}).addTo(trackLayer);
+      a.track.forEach(p => L.circleMarker([p[0],p[1]],{radius: p[2]===0?5:3.5, color:'#1e2a2b',
+        fillColor: p[2]===0?'#1e2a2b':'#fff', fillOpacity:1, weight:1.5})
+        .bindTooltip(p[2]===0 ? 'Position à l’émission' : `+${p[2]} h`).addTo(trackLayer));
+    }
+    obsvLayer.clearLayers();
+    if ($('t-obsv').checked && storm.obsv.length)
+      L.polyline(storm.obsv,{color:'#9aa5a6',weight:2,dashArray:'4 4'}).addTo(obsvLayer);
+    // pathways panel
+    const v = $('voies'); v.hidden = !$('t-voies').checked;
+    const nCum = cumNow.size, off = a.cut ? ' off' : '';
+    const rainHit = !a.cut && a.rain!=null && a.rain >= m.fcast_rain_mm;
+    const expHit = !a.cut && a.exp > 0;
+    const orHit = !a.cut && nCum >= m.n_depts;
+    v.innerHTML =
+      card('Pluie prévue (moy. nationale, 2 j)', `${fmt(a.rain)} mm`, `seuil ${m.fcast_rain_mm} mm · CHIRPS-GEFS du ${a.gefs ?? '—'}`, rainHit, off) +
+      card('Exposition prévue à 64 nœuds', `${fmt(a.exp)} pers.`, 'seuil : > 0', expHit, off) +
+      card(`Orange DGPC — départements`, `${nNow} à cet avis · ${nCum} cumulés`, `proposition : ≥ ${m.n_depts} départements (avis avant l’heure limite)`, orHit, off) +
+      card('Cadre activé à cet avis ?', (rainHit||expHit||orHit) ? 'oui' : 'non',
+        a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange', (rainHit||expHit||orHit), off);
+    $('adv-range').value = idx; $('prev').disabled = idx===0; $('next').disabled = idx===storm.adv.length-1;
+  }
+  function card(t, val, sub, hit, off){
+    return `<div class="v${hit?' hit':''}${off}"><b>${t}</b><div class="val">${val}</div><div style="color:#5e6a6b;font-size:.8rem">${sub}</div></div>`;
+  }
+  function setStorm(i){
+    storm = DATA.storms[i]; idx = 0;
+    $('adv-range').max = storm.adv.length-1;
+    // start on the first advisory that puts a department in orange, if any
+    const first = storm.adv.findIndex(a => DATA.meta.depts.some((d,j)=>hit(a,j).any));
+    idx = first >= 0 ? Math.max(0, first-1) : 0;
+    render();
+  }
+  function step(k){ idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
+  fetch('assets/dgpc-departements.json').then(r=>r.json()).then(data => {
+    DATA = data;
+    deptLayer = L.geoJSON(data.depts, {style:{color:'#fff',weight:1,fillColor:COL.none,fillOpacity:.8},
+      onEachFeature:(f,l)=>l.bindTooltip('', {sticky:true, className:'dep'})}).addTo(map);
+    obsvLayer.addTo(map);
+    const sel = $('storm-sel');
+    data.storms.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label; sel.appendChild(o); });
+    const start = data.storms.findIndex(s=>s.id==='AL142016');
+    sel.value = start>=0 ? start : 0;
+    sel.onchange = e => setStorm(+e.target.value);
+    $('adv-range').oninput = e => { idx = +e.target.value; render(); };
+    $('prev').onclick = () => step(-1); $('next').onclick = () => step(1);
+    $('play').onclick = () => {
+      if (timer){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; }
+      $('play').textContent = '❚❚ Pause';
+      timer = setInterval(()=>{ if(idx>=storm.adv.length-1){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; } step(1); }, 700);
+    };
+    ['t-wind','t-rain','t-cum','t-track','t-obsv','t-voies'].forEach(id => $(id).onchange = render);
+    setStorm(+sel.value);
+  }).catch(err => { $('adv-lab').textContent = 'Données de la carte indisponibles : ' + err; });
+})();
+</script>
+
 </body>
 </html>
