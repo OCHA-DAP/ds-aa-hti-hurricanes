@@ -52,6 +52,7 @@
     background: #eaf1fd; color: var(--blue-dark);
   }
   .card .tag.draft { background: #fdf1e3; color: #9a5b12; }
+  .card .tag.archive { background: #eef2f5; color: #5e6a6b; }
   .actions { display: flex; gap: 12px; flex-wrap: wrap; }
   a.btn {
     display: inline-flex; align-items: center; gap: 9px;
@@ -106,8 +107,25 @@
       </div>
     </div>
 
-    <div class="card">
+        <div class="card">
       <span class="tag draft">Analyse</span>
+      <h2>Alerte orange de la DGPC par département</h2>
+      <p>
+        La DGPC émet ses alertes par département. Simulation historique sur
+        prévisions (CHIRPS-GEFS, NHC) : tempête par tempête, le cadre
+        aurait-il été activé, et combien de départements auraient été en
+        alerte orange — selon que la pluie est lue en moyenne ou au point le
+        plus arrosé.
+      </p>
+      <div class="actions">
+        <a class="btn primary" href="dgpc-departements.html">
+          <span class="ico">▤</span> Lire l’analyse
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag archive">Archive</span>
       <h2>Niveaux d’alerte de la DGPC : évaluation historique</h2>
       <p>
         Les seuils de pluie et de vent des alertes orange et rouge de la DGPC,
@@ -116,8 +134,8 @@
         fréquence, et ce que le résultat change selon les hypothèses.
       </p>
       <div class="actions">
-        <a class="btn primary" href="dgpc-alertes.html">
-          <span class="ico">▤</span> Lire l’analyse
+        <a class="btn secondary" href="dgpc-alertes.html">
+          <span class="ico">▤</span> Consulter l’archive
         </a>
       </div>
     </div>

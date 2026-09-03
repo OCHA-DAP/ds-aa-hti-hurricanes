@@ -61,3 +61,23 @@ SEASON_END = 2025
 
 # The 2026 framework’s overall return period, for comparison.
 FRAMEWORK_RP_YEARS = 2.4
+
+# --- Department-level alerts on forecasts ------------------------------
+# DGPC (September 2026): alerts are issued *by department*, and the wind
+# criterion is the wind in the department. Whether the rain criterion is a
+# department mean or the wettest point in the department was not settled,
+# so both readings are computed. The forecast sources are the framework's
+# own: CHIRPS-GEFS (daily, 0.05 deg) for rain and NHC advisories for wind.
+#
+# CHIRPS-GEFS issuances are considered from FCAST_LEAD_DAYS before the
+# storm's first approach (the framework's 120 h mobilisation cap) until its
+# last day within D_THRESH. Forecast valid days are attributed to the storm
+# from one day before its first approach to one day after its last, the
+# same padding the monitoring code applies to observed rain windows.
+FCAST_LEAD_DAYS = 5
+RAIN_WINDOW_PAD_DAYS = 1
+# CHIRPS-GEFS is issued once a day, around 08:50 UTC (monitoring_utils).
+GEFS_ISSUE_HOUR_UTC = 8 + 50 / 60
+# Department means are taken on a nearest-neighbour upsample of the 0.05
+# deg grid so that department boundaries are resolved.
+GEFS_UPSAMPLE_RES = 0.01

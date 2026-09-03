@@ -152,6 +152,7 @@ def render(
     rmw_note,
     chart_rain="",
     acts=None,
+    dept=None,
 ):
     """Assemble the whole page."""
     v = variant
@@ -206,6 +207,7 @@ def render(
     track_gap = _track_gap_note(df, variant)
     implications = _implications(rain, rp_o, rp_r, n_years)
     activations_table = _activations_table(acts)
+    dept_section = _dept_section(*(dept or (None, None, None)))
 
     return f"""<!doctype html>
 <html lang="fr">
@@ -230,6 +232,16 @@ def render(
     {dc.SEASON_START} et {dc.SEASON_END}.
   </p>
 </header>
+
+<div class="note">
+  <h3>Version archivée</h3>
+  <p>
+    Cette page est la première évaluation, conservée telle quelle. Depuis,
+    la DGPC a précisé que ses alertes sont émises par département : la
+    simulation à cette échelle, tempête par tempête et sur prévisions, est
+    sur <a href="dgpc-departements.html">la page dédiée</a>.
+  </p>
+</div>
 
 <p class="lead">
   La DGPC a communiqué les seuils qui définissent ses niveaux d’alerte orange
@@ -297,10 +309,11 @@ def render(
     <td>Vent soutenu (résultat principal) ; rafales en sensibilité</td>
     <td>Environ 25 % de plus pour les rafales</td></tr>
 <tr><td>Sur quelle surface ?</td>
-    <td>Pour les précipitations : moyenne nationale, moyenne départementale
-        et point de grille, présentées côte à côte. Pour le vent : maximum
-        atteint en un point du territoire, avec le détail par département —
-        une « moyenne nationale de vent » n’aurait pas de sens physique.</td>
+    <td><b>Tranché en septembre 2026 : par département</b> (section 9).
+        Les sections 6 à 8 gardent les trois échelles — nationale,
+        départementale, point de grille — côte à côte. Pour le vent :
+        maximum atteint en un point du département. Pour la pluie, reste à
+        trancher entre moyenne du département et point le plus arrosé.</td>
     <td>Le seuil de pluie peut être atteint localement sans l’être
         en moyenne nationale ; c’est le choix le plus lourd de
         conséquences de toute la liste</td></tr>
@@ -418,7 +431,11 @@ def render(
 
 {activations_table}
 
-<h2>9. Sensibilité : quelle lecture du vent ?</h2>
+<h2>9. Alerte orange par département, sur prévisions</h2>
+
+{dept_section}
+
+<h2>10. Sensibilité : quelle lecture du vent ?</h2>
 
 <p>
   La DGPC n’a pas précisé si « ≥ 200 km/h » désigne un vent soutenu ou une
@@ -447,7 +464,7 @@ def render(
   a écrit — mais c’est aussi la plus stricte des trois.
 </p>
 
-<h2>10. Périodes de retour — vent</h2>
+<h2>11. Périodes de retour — vent</h2>
 
 <p>
   Calculées par la position de Weibull sur {n_years} saisons
@@ -474,7 +491,7 @@ def render(
   </p>
 </div>
 
-<h2>11. Questions pour la DGPC</h2>
+<h2>12. Questions pour la DGPC</h2>
 
 <ol>
   <li>Les seuils s’appliquent-ils à des valeurs <b>prévues</b> ou
@@ -483,8 +500,10 @@ def render(
   <li>Les vitesses de vent désignent-elles un <b>vent soutenu</b> ou des
       <b>rafales</b>, et sur terre ou en mer ? L’écart entre ces lectures
       dépasse 40 %.</li>
-  <li>Sur quelle <b>surface</b> un seuil de pluie doit-il être atteint : un
-      point, une commune, un département, le pays ?</li>
+  <li>L’alerte est émise par <b>département</b> (précisé en septembre
+      2026). Pour la pluie, le seuil s’applique-t-il à la <b>moyenne</b> du
+      département ou au <b>point le plus arrosé</b> ? La section 9 montre
+      que l’écart entre les deux lectures est important.</li>
   <li>Le critère de <b>60–80 mm/h</b> a-t-il vocation à déclencher une
       alerte anticipée ? Il n’est pas prévisible ; s’il doit servir, ce ne
       peut être qu’en constat temps réel.</li>
@@ -494,7 +513,7 @@ def render(
       souhaite-t-elle voir utilisées ?</li>
 </ol>
 
-<h2>12. Limites</h2>
+<h2>13. Limites</h2>
 
 <ul>
   <li>Le champ de vent est un modèle paramétrique, non une simulation : il
@@ -505,7 +524,6 @@ def render(
   <li>La réduction sur terre (0,85) est une valeur conventionnelle et
       uniforme ; le relief haïtien produit en réalité de fortes variations
       locales, à la hausse comme à la baisse.</li>
-  <li>Le volet précipitations n’est pas encore calculé.</li>
   <li>Le critère de distance (230 km) est mesuré en projection Web Mercator,
       comme dans le reste du cadre : à la latitude d’Haïti cela correspond à
       environ 217 km réels. Cette convention est conservée pour rester
@@ -521,7 +539,7 @@ def render(
   <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes"
   >ds-aa-hti-hurricanes</a>.
   Données : NHC (prévisions et trajectoires), IBTrACS, WorldPop 2026,
-  IMERG (NASA GPM). Mise à jour {escape(stamp)}.
+  IMERG (NASA GPM), CHIRPS-GEFS (UCSB CHC). Mise à jour {escape(stamp)}.
 </footer>
 
 </div>
@@ -811,7 +829,7 @@ def _status_callout(has_rain):
     observées), l’échelle spatiale, et s’il s’agit de vent soutenu ou de
     rafales, les résultats doivent être lus comme un éventail de lectures
     possibles plutôt que comme un verdict unique. Les questions sont
-    rassemblées à la section 9.
+    rassemblées à la section 12.
   </p>
 </div>"""
 
@@ -969,4 +987,192 @@ def _rain_section(rain, chart_rain="", n_total=None):
   Toutes les valeurs sont des cumuls maximaux en mm, sur des fenêtres
   glissantes, dans la fenêtre d’attribution de chaque tempête.
 </p>
+"""
+
+
+def _count_cell(n, depts=""):
+    """Department count for the per-storm table, names on hover."""
+    if n is None or (np.isscalar(n) and pd.isna(n)):
+        return "<td style='text-align:center;color:#9aa5a6'>n/d</td>"
+    n = int(n)
+    if n == 0:
+        return "<td style='text-align:center;color:#9aa5a6'>0</td>"
+    shade = "#e7f4ee" if n < 4 else "#c9e9d8"
+    title = f" title='{escape(depts)}'" if depts else ""
+    return (
+        f"<td style='text-align:center;background:{shade};color:#0f8a5f;"
+        f"font-weight:700'{title}>{n}</td>"
+    )
+
+
+def _dept_section(verdicts, counts, freq):
+    """Orange alert by department, on the framework's forecasts."""
+    if verdicts is None or len(verdicts) == 0:
+        return (
+            '<div class="note"><p>Le calcul par département n’a pas encore '
+            "été exécuté (<code>pipelines/run_dgpc_dept_forecast.py</code>)."
+            "</p></div>"
+        )
+    from src.dgpc.dept_forecast import READINGS
+
+    n_years = dc.SEASON_END - dc.SEASON_START + 1
+    n_depts = verdicts["dept"].nunique()
+    n_storms = len(counts)
+
+    # --- storm-level summary: at least one department in orange --------
+    summary = []
+    for k, label in READINGS.items():
+        col = f"n_dept_{k}"
+        known = counts[col].notna()
+        hit = counts[known & (counts[col] > 0)]
+        ny = hit["season"].nunique()
+        rp = (n_years + 1) / ny if ny else np.inf
+        med = hit[col].median() if len(hit) else np.nan
+        lead = hit[f"lead_h_{k}"].median() if len(hit) else np.nan
+        summary.append(
+            f"<tr><td class='nm'>{escape(label)}</td>"
+            f"<td class='num'>{len(hit)} / {int(known.sum())}</td>"
+            f"<td class='num'>{ny}</td>"
+            f"<td class='num'>{fr_num(rp, 1) if np.isfinite(rp) else 'jamais'}"
+            "</td>"
+            f"<td class='num'>{fr_num(med) if np.isfinite(med) else '—'}</td>"
+            f"<td class='num'>{fr_num(lead) if np.isfinite(lead) else '—'}"
+            "</td></tr>"
+        )
+
+    # --- per storm ------------------------------------------------------
+    rows = []
+    for _, r in counts.iterrows():
+        cells = "".join(
+            _count_cell(r[f"n_dept_{k}"], r.get(f"depts_{k}", ""))
+            for k in READINGS
+        )
+        rows.append(
+            f"<tr><td class='nm'>{escape(str(r['label']))}</td>{cells}</tr>"
+        )
+
+    # --- per department --------------------------------------------------
+    drows = []
+    for _, r in freq.iterrows():
+        cells = []
+        for k in READINGS:
+            n = int(r[f"n_storms_{k}"])
+            rp = r[f"rp_{k}"]
+            rp_txt = f"{fr_num(rp, 1)} ans" if np.isfinite(rp) else "jamais"
+            cells.append(
+                f"<td class='num'>{n}<br>"
+                f"<span style='color:#5e6a6b;font-size:.85em'>{rp_txt}</span>"
+                "</td>"
+            )
+        drows.append(
+            f"<tr><td class='nm'>{escape(str(r['dept']))}</td>"
+            + "".join(cells)
+            + "</tr>"
+        )
+
+    heads = "".join(f"<th>{escape(v)}</th>" for v in READINGS.values())
+
+    no_rain = counts.loc[~counts["rain_available"], "label"].tolist()
+    gap = ""
+    if no_rain:
+        names = ", ".join(escape(str(s)) for s in no_rain)
+        gap = (
+            f'<div class="note"><p><b>{names}</b> : aucune prévision '
+            "CHIRPS-GEFS n’est archivée pour cette période (l’archive "
+            "s’interrompt de janvier à septembre 2020). Les colonnes de "
+            "pluie sont marquées « n/d » et non 0 : une prévision absente "
+            "n’est pas un seuil non atteint. Le vent, lui, est évalué "
+            "normalement.</p></div>"
+        )
+
+    return f"""
+<p>
+  En septembre 2026, la DGPC a précisé que ses alertes sont émises
+  <b>par département</b>, et que le critère de vent désigne le vent
+  <b>dans le département</b>. Cette section refait donc la simulation à
+  cette échelle, et uniquement sur des <b>prévisions</b> — celles que le
+  cadre utilise déjà : CHIRPS-GEFS pour la pluie, les avis du NHC pour le
+  vent. La question est : pour chaque tempête, <b>combien de départements
+  auraient été placés en alerte orange</b> sur la base des prévisions
+  disponibles pendant son approche ?
+</p>
+<p>
+  Pour la pluie, la DGPC n’a pas tranché entre la <b>moyenne</b> du
+  département et le <b>point le plus arrosé</b> du département ; les deux
+  lectures sont présentées. Pour le vent, un département est en orange si
+  le champ de vent prévu (vent soutenu sur terre) atteint 100 km/h en un
+  point du département. Un département est compté en orange pour une
+  tempête dès qu’<i>une</i> prévision émise pendant l’approche a atteint le
+  critère.
+</p>
+
+<h3>Combien de tempêtes placent au moins un département en orange</h3>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr>
+  <th>Lecture</th><th>Tempêtes<br>(sur évaluées)</th><th>Saisons</th>
+  <th>Période de<br>retour (ans)</th>
+  <th>Départements<br>par tempête (médiane)</th>
+  <th>Préavis médian<br>(h avant passage)</th>
+</tr></thead>
+<tbody>
+{chr(10).join(summary)}
+</tbody></table></div>
+
+<p>
+  Le préavis est le délai entre la première prévision atteignant le
+  critère et le passage au plus près ; il est calculé pour les tempêtes
+  qui ont atteint le critère. Le cadre lui-même a une période de retour
+  globale de {fr_num(dc.FRAMEWORK_RP_YEARS, 1)} ans.
+</p>
+
+{gap}
+
+<h3>Départements en orange, par tempête</h3>
+
+<p>
+  Nombre de départements (sur {n_depts}) atteignant le critère orange,
+  pour les {n_storms} tempêtes. Survoler une case pour lire les
+  départements concernés.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Tempête</th>{heads}</tr></thead>
+<tbody>
+{chr(10).join(rows)}
+</tbody></table></div>
+
+<h3>Fréquence par département</h3>
+
+<p>
+  Nombre de tempêtes ayant placé chaque département en orange sur
+  {dc.SEASON_START}–{dc.SEASON_END}, et période de retour correspondante
+  (saisons avec au moins une alerte).
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Département</th>{heads}</tr></thead>
+<tbody>
+{chr(10).join(drows)}
+</tbody></table></div>
+
+<div class="note">
+  <h3>Précisions de méthode</h3>
+  <ul>
+    <li>Prévisions CHIRPS-GEFS émises de {dc.FCAST_LEAD_DAYS} jours avant
+        le premier passage à moins de {D_THRESH} km jusqu’au dernier ;
+        jours de validité attribués à la tempête de la veille du premier
+        passage au lendemain du dernier.</li>
+    <li>CHIRPS-GEFS est un produit <b>journalier</b> : la valeur d’un jour
+        calendaire tient lieu du cumul sur 24 h. Un cumul glissant qui
+        chevaucherait deux jours serait un peu plus élevé ; les résultats
+        de pluie sont donc des bornes basses.</li>
+    <li>Grille CHIRPS-GEFS de 0,05° (environ 5,5 km) ; les moyennes
+        départementales sont calculées sur un ré-échantillonnage à 0,01°
+        pour respecter les limites départementales. « Point » désigne un
+        pixel de 5,5 km, non un point de mesure.</li>
+    <li>Vent : champ paramétrique reconstruit à partir de chaque avis du
+        NHC (section 4), réduit à son maximum dans chaque département.</li>
+  </ul>
+</div>
 """

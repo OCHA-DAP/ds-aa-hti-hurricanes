@@ -15,6 +15,7 @@ from src.datasources import storms_db as sdb
 from src.dgpc import constants as dc
 from src.dgpc.activations import match_to_storm_set, parse_deck_activations
 from src.dgpc.charts import grouped_barh
+from src.dgpc.dept_forecast import department_frequency, storm_counts
 from src.dgpc.page import fr_num, render
 from src.dgpc.results import (
     rp_table,
@@ -131,7 +132,12 @@ def load():
     storms = blob.load_parquet_from_blob(f"{PREFIX}/storm_set.parquet")
     # Re-resolve names at build time so a stored run predating the
     # ibtracs fallback still renders correct storm names.
-    storms = resolve_names(storms)
+    try:
+        storms = resolve_names(storms)
+    except Exception as exc:  # noqa: BLE001
+        # The stored set already carries names; a DB outage must not
+        # block the page build.
+        logger.warning("storms DB unreachable, using stored names: %s", exc)
     fcast = blob.load_parquet_from_blob(
         f"{PREFIX}/fcast_wind_by_issuance.parquet"
     )
@@ -141,11 +147,16 @@ def load():
     except Exception:
         logger.warning("no rain_stats.parquet yet — rendering rain as pending")
         rain = None
-    return storms, fcast, obsv, rain
+    try:
+        dept = blob.load_parquet_from_blob(f"{PREFIX}/dept_verdicts.parquet")
+    except Exception:
+        logger.warning("no dept_verdicts.parquet yet — rendering as pending")
+        dept = None
+    return storms, fcast, obsv, rain, dept
 
 
 def main():
-    storms, fcast, obsv, rain = load()
+    storms, fcast, obsv, rain, dept = load()
 
     df = storms.merge(
         summarise_wind_forecast(fcast), on="atcf_id", how="left"
@@ -227,8 +238,24 @@ def main():
 
     acts = build_activations(df, rain, v)
 
+    dept_bundle = None
+    if dept is not None and len(dept):
+        counts = storm_counts(dept).merge(
+            df[["atcf_id", "label"]], on="atcf_id", how="left"
+        )
+        counts["label"] = counts["label"].fillna(counts["atcf_id"])
+        dept_bundle = (dept, counts, department_frequency(dept))
+
     html = render(
-        df, chart_wind, rp, rain, v, rmw_validation_note(), chart_rain, acts
+        df,
+        chart_wind,
+        rp,
+        rain,
+        v,
+        rmw_validation_note(),
+        chart_rain,
+        acts,
+        dept=dept_bundle,
     )
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
