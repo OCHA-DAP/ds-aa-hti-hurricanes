@@ -59,10 +59,14 @@ letter-spacing:.04em;margin-bottom:.15rem}
 td.val{text-align:right;font-variant-numeric:tabular-nums;color:#5e6a6b}
 td.val.hit{background:#fdefe7;color:#a4551f;font-weight:700}
 td.val.na{color:#9aa5a6;text-align:center}
-table.act{font-size:.84rem}
-table.act th{text-align:center;vertical-align:middle;font-size:.74rem}
-table.act td{padding:.4rem .5rem}
-table.act td.nm{white-space:nowrap}
+table.act{font-size:.8rem}
+table.act th{text-align:center;vertical-align:middle;font-size:.68rem;padding:.35rem .35rem;
+letter-spacing:.02em}
+table.act td{padding:.32rem .4rem}
+table.act td.nm{white-space:nowrap;font-size:.8rem}
+table.act td.bar{background-repeat:no-repeat;background-size:100% 100%}
+table.act td.cerf{white-space:nowrap;font-size:.78rem}
+table.act td.cerf.yes{background:#c62828;color:#fff;font-weight:700}
 table.act th.g1{background:#e3ecf8}
 table.act th.g2{background:#fdefe7}
 table.act th.g3{background:#eef2f5}
@@ -298,11 +302,20 @@ def _activation_table(pdf, meta, deck_trig):
     )
     hard = flags(pdf, rf, ro, None)
     full = flags(pdf, rf, ro, n_p)
+    pop_col = pdf["pop_affected_n"]
+    pop_max = float(pop_col.max()) if pop_col.notna().any() else 1.0
+    order = pdf.sort_values(
+        ["pop_affected_n", "season"],
+        ascending=[False, True],
+        na_position="last",
+    ).index
     rows = []
-    for i, r in pdf.iterrows():
+    for i in order:
+        r = pdf.loc[i]
         h, f = hard.loc[i], full.loc[i]
         cerf = r.get("cerf")
         cerf = "" if cerf is None or pd.isna(cerf) else str(cerf)
+        cerf_yes = cerf.startswith("$") or cerf == "combined"
         if cerf.startswith("$"):
             try:
                 cerf = (
@@ -313,6 +326,21 @@ def _activation_table(pdf, meta, deck_trig):
             except ValueError:
                 pass
         pop = r.get("pop_affected_n")
+        if pop is not None and pd.notna(pop) and pop > 0:
+            # Square-root scale: Matthew and Melissa are 2 M, most storms
+            # under 50 k; a linear bar would flatten everything else.
+            w = max(1.5, 100 * (float(pop) / pop_max) ** 0.5)
+            pop_cell = (
+                "<td class='val bar' style='background-image:linear-gradient("
+                f"to right,#cfe0f7 {w:.1f}%,transparent {w:.1f}%)'>"
+                f"{fr_num(pop)}</td>"
+            )
+        else:
+            pop_cell = "<td class='val'>—</td>"
+        cerf_cell = (
+            f"<td class='cerf{' yes' if cerf_yes else ''}'>"
+            f"{escape(cerf) or '—'}</td>"
+        )
         orange_na = (not r["orange_rain_known"]) and r["n_orange"] < n_p
         rows.append(
             "<tr>"
@@ -326,9 +354,9 @@ def _activation_table(pdf, meta, deck_trig):
             + _num(r["n_orange"], n_p, na=orange_na)
             + _yes(bool(f["any"]))
             + _yes(deck_trig.get(r["atcf_id"], False))
-            + f"<td class='val'>{fr_num(pop) if pop is not None and pd.notna(pop) else '—'}</td>"
-            + f"<td>{escape(cerf) or '—'}</td>"
-            "</tr>"
+            + pop_cell
+            + cerf_cell
+            + "</tr>"
         )
     tot = {
         "hard": int(hard["any"].sum()),
@@ -345,23 +373,23 @@ def _activation_table(pdf, meta, deck_trig):
 <thead>
 <tr>
   <th rowspan="4">Tempête</th>
-  <th colspan="5" class="g1">Indicateurs de données (seuils du cadre)</th>
-  <th colspan="2" class="g2">Alerte orange DGPC (simulée)</th>
-  <th rowspan="4" class="g3">Cadre 2026<br>(registre)</th>
-  <th colspan="2" class="g3">Registre</th>
+  <th colspan="5" class="g1">Indicateurs mesurés</th>
+  <th colspan="2" class="g2">Alerte orange DGPC<br>(simulée)</th>
+  <th rowspan="4" class="g3">Cadre<br>2026</th>
+  <th colspan="2" class="g3">Historique</th>
 </tr>
 <tr>
   <th colspan="2" class="g1">Prévision</th>
   <th colspan="2" class="g1">Observation</th>
-  <th rowspan="3" class="g1">Activé<br>(données)</th>
-  <th rowspan="3" class="g2">Départements<br>en orange</th>
-  <th rowspan="3" class="g2">Activé<br>(données <i>ou</i><br>orange ≥ {n_p})</th>
-  <th rowspan="3" class="g3">Population<br>affectée</th>
+  <th rowspan="3" class="g1">Activé</th>
+  <th rowspan="3" class="g2">Dép. en<br>orange</th>
+  <th rowspan="3" class="g2">Activé<br>(mesuré <i>ou</i><br>orange ≥ {n_p})</th>
+  <th rowspan="3" class="g3">Pop.<br>affectée</th>
   <th rowspan="3" class="g3">CERF</th>
 </tr>
 <tr>
-  <th class="g1">Exposition<br>64 nœuds</th><th class="g1">Précipitations<br>2 j (mm)</th>
-  <th class="g1">Exposition<br>64 nœuds</th><th class="g1">Précipitations<br>2 j (mm)</th>
+  <th class="g1">Expo.<br>64 nds</th><th class="g1">Pluie<br>2 j (mm)</th>
+  <th class="g1">Expo.<br>64 nds</th><th class="g1">Pluie<br>2 j (mm)</th>
 </tr>
 <tr>
   <th class="g1 thr">&gt; 0</th><th class="g1 thr">≥ {rf}</th>
@@ -372,7 +400,7 @@ def _activation_table(pdf, meta, deck_trig):
 {chr(10).join(rows)}
 </tbody>
 <tfoot><tr style="background:#f7fafb;font-weight:700">
-  <td>Total ({len(pdf)} tempêtes)</td>
+  <td>Total ({len(pdf)})</td>
   <td class='val'>{tot["fe"]}</td><td class='val'>{tot["fr"]}</td>
   <td class='val'>{tot["oe"]}</td><td class='val'>{tot["or"]}</td>
   <td class='val' style='text-align:center'>{tot["hard"]}</td>
@@ -394,14 +422,16 @@ def render(n_storms, pdf=None, meta=None, deck_trig=None):
 <h2>Tempête par tempête : ce qui aurait déclenché, et pourquoi</h2>
 
 <p style="max-width:none">
-  Chaque tempête du jeu, avec la valeur de chaque indicateur sur les avis
-  émis avant l’heure limite. Cases orange : seuil atteint. La colonne
-  « activé (données) » ne regarde que les seuils du cadre — prévision ou
-  observation, exposition ou précipitations ; la colonne suivante y ajoute
-  l’alerte orange simulée dans au moins {meta["n_depts"]} départements.
-  « Cadre 2026 (registre) » est l’activation retenue dans les
-  diapositives, qui inclut la voie « alerte rouge + <i>Hurricane
-  Warning</i> ». Cliquer sur une tempête pour la charger dans la carte.
+  Chaque tempête du jeu, par population affectée décroissante, avec la
+  valeur de chaque indicateur sur les avis émis avant l’heure limite.
+  Cases orange : seuil atteint. Les <b>indicateurs mesurés</b> sont les
+  seuils purement quantitatifs — prévision ou observation, exposition ou
+  précipitations — et leur colonne « activé » ne regarde qu’eux ; la
+  colonne suivante y ajoute l’alerte orange simulée dans au moins
+  {meta["n_depts"]} départements. « Cadre 2026 » est l’activation retenue
+  dans les diapositives, qui inclut la voie « alerte rouge +
+  <i>Hurricane Warning</i> ». Cliquer sur une tempête pour la charger dans
+  la carte.
 </p>
 
 {_activation_table(pdf, meta, deck_trig or {})}
