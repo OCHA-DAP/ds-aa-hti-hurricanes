@@ -96,3 +96,70 @@ def match_to_storm_set(
         s[["atcf_id", "_name", "_season"]], on=["_name", "_season"], how="left"
     )
     return out.drop(columns=["_name", "_season"])
+
+
+def storm_label(row):
+    name = row.get("name")
+    text_name = "" if name is None else str(name).strip()
+    if text_name.lower() in ("", "nan", "none", "unnamed"):
+        text_name = str(row["atcf_id"]).upper()
+    else:
+        text_name = text_name.title()
+    return f"{text_name} {int(row['season'])}"
+
+
+def join_deck(storms: pd.DataFrame):
+    """Storm set with the deck's activation record attached.
+
+    Returns the joined table and a note for the page about any row that
+    needed a by-season match (the deck's "Unnamed (2002)").
+    """
+    deck = parse_deck_activations()
+    m = match_to_storm_set(deck, storms)
+    note = ""
+
+    # A deck row with no name match: if exactly one storm of that season
+    # is in the set, it is that storm.
+    for i, r in m[m["atcf_id"].isna()].iterrows():
+        cands = storms[storms["season"].astype(int) == int(r["season"])]
+        if len(cands) == 1 and r["name"].casefold() == "unnamed":
+            m.at[i, "atcf_id"] = cands.iloc[0]["atcf_id"]
+            note += (
+                f" La ligne « {r['storm']} » du registre est rapprochée de "
+                f"{str(cands.iloc[0]['name']).title()} "
+                f"{int(cands.iloc[0]['season'])}, seule tempête de cette "
+                "saison dans le jeu."
+            )
+
+    deck_cols = [
+        "atcf_id",
+        "storm",
+        "triggered_hit",
+        "fcast_exposure_hit",
+        "fcast_rain_hit",
+        "dgpc_red_hurricane_warning_hit",
+        "obsv_exposure_hit",
+        "obsv_rain_hit",
+        "cerf",
+        "pop_affected_n",
+    ]
+    matched = m[m["atcf_id"].notna()][deck_cols]
+    tbl = storms.merge(matched, on="atcf_id", how="left")
+    tbl["in_deck"] = tbl["storm"].notna()
+    tbl["triggered_hit"] = tbl["triggered_hit"].where(tbl["in_deck"], False)
+
+    # Deck rows outside the storm set (Ivan 2004): keep, marked n/d.
+    extra = m[m["atcf_id"].isna()].copy()
+    if len(extra):
+        extra["label"] = (
+            extra["name"].str.title() + " " + extra["season"].astype(str)
+        )
+        extra["in_deck"] = True
+        extra["first_near"] = pd.to_datetime(
+            extra["season"].astype(str) + "-12-31"
+        )
+        tbl = pd.concat(
+            [tbl, extra[[c for c in extra if c in tbl or c == "label"]]],
+            ignore_index=True,
+        )
+    return tbl, note.strip()

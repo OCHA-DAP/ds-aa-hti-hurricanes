@@ -13,10 +13,13 @@ by ``src.dgpc.map_data``.
 from datetime import date
 from html import escape
 
+import numpy as np
+import pandas as pd
+
 from src.constants import D_THRESH, LT_CUTOFF_HRS
 from src.dgpc import constants as dc
 from src.dgpc.dept_page import PROPOSED_N
-from src.dgpc.page import CSS, MONTHS_FR
+from src.dgpc.page import CSS, MONTHS_FR, fr_num
 
 MAP_CSS = """
 .wrap.wide{max-width:74rem}
@@ -53,6 +56,19 @@ letter-spacing:.04em;margin-bottom:.15rem}
 #voies .v .val{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
 .leaflet-tooltip.dep{font-size:.82rem;line-height:1.35}
 #loading{font-size:.86rem;color:var(--muted)}
+td.val{text-align:right;font-variant-numeric:tabular-nums;color:#5e6a6b}
+td.val.hit{background:#fdefe7;color:#a4551f;font-weight:700}
+td.val.na{color:#9aa5a6;text-align:center}
+table.act{font-size:.84rem}
+table.act th{text-align:center;vertical-align:middle;font-size:.74rem}
+table.act td{padding:.4rem .5rem}
+table.act td.nm{white-space:nowrap}
+table.act th.g1{background:#e3ecf8}
+table.act th.g2{background:#fdefe7}
+table.act th.g3{background:#eef2f5}
+table.act th.thr{font-weight:400;text-transform:none;letter-spacing:0;font-size:.8rem}
+table.act td.nm a{color:var(--blue);text-decoration:none}
+table.act td.nm a:hover{text-decoration:underline}
 """
 
 MAP_HTML = """
@@ -69,7 +85,7 @@ MAP_HTML = """
     <span id="loading"></span>
   </div>
   <div class="toggles">
-    <span class="grp">Alerte orange DGPC</span>
+    <span class="grp">Alerte orange DGPC (simulée)</span>
     <label><input type="checkbox" id="t-wind" checked>
       <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-wind)"/></svg> rafales ≥ 100 km/h (hachures)</label>
     <label><input type="checkbox" id="t-rain" checked>
@@ -189,7 +205,7 @@ MAP_JS = r"""
     v.innerHTML =
       card('Pluie prévue (moy. nationale, 2 j)', `${fmt(a.rain)} mm`, `seuil ${m.fcast_rain_mm} mm · CHIRPS-GEFS du ${a.gefs ?? '—'}`, rainHit, off) +
       card(`Exposition prévue à ${m.exposure_kt} nœuds`, `${fmt(a.exp)} pers.`, 'seuil : > 0 · zone prévue hors bande déjà observée', expHit, off) +
-      card('Orange DGPC — départements', `${nNow} à cet avis · ${nCum} cumulés`, `proposition : ≥ ${m.n_depts} départements (avis avant l’heure limite)`, orHit, off) +
+      card('Orange DGPC simulée — départements', `${nNow} à cet avis · ${nCum} cumulés`, `estimation d’après les seuils de la DGPC, pas son registre · proposition : ≥ ${m.n_depts} départements`, orHit, off) +
       card('Cadre activé à cet avis ?', (rainHit||expHit||orHit) ? 'oui' : 'non',
         a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange', (rainHit||expHit||orHit), off);
     $('adv-range').value = idx; $('prev').disabled = idx===0; $('next').disabled = idx===storm.adv.length-1;
@@ -233,6 +249,10 @@ MAP_JS = r"""
       $('play').textContent = '❚❚ Pause';
       timer = setInterval(()=>{ if(idx>=storm.adv.length-1){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; } step(1); }, 700);
     };
+    document.querySelectorAll('td.nm a[data-storm]').forEach(el => el.onclick = ev => {
+      ev.preventDefault(); const k = INDEX.findIndex(s=>s.id===el.dataset.storm);
+      if (k>=0){ sel.value=k; setStorm(k); $('carte-wrap').scrollIntoView({behavior:'smooth'}); }
+    });
     document.addEventListener('keydown', e => {
       if (e.target.tagName==='SELECT' || e.target.tagName==='INPUT') return;
       if (e.key==='ArrowLeft') step(-1); else if (e.key==='ArrowRight') step(1);
@@ -245,9 +265,159 @@ MAP_JS = r"""
 """
 
 
-def render(n_storms):
+def _num(v, thr, na=False, decimals=0, missing="—"):
+    if na or v is None or (np.isscalar(v) and pd.isna(v)):
+        return f"<td class='val na'>{missing}</td>"
+    cls = "val hit" if v >= thr else "val"
+    return f"<td class='{cls}'>{fr_num(v, decimals)}</td>"
+
+
+def _yes(flag):
+    if flag is None or (np.isscalar(flag) and pd.isna(flag)):
+        return "<td class='val na'>n/d</td>"
+    return (
+        "<td class='val hit' style='text-align:center'>✓</td>"
+        if flag
+        else "<td class='val' style='text-align:center'>—</td>"
+    )
+
+
+def _activation_table(pdf, meta, deck_trig):
+    """Every storm: what would have activated, and why.
+
+    Columns are grouped: the framework's own thresholds (forecast and
+    observed, each wind exposure and rain), then the simulated DGPC
+    orange count, then the record - impact and CERF.
+    """
+    from src.dgpc.pathways import flags
+
+    rf, ro, n_p = (
+        meta["fcast_rain_mm"],
+        meta["obsv_rain_mm"],
+        meta["n_depts"],
+    )
+    hard = flags(pdf, rf, ro, None)
+    full = flags(pdf, rf, ro, n_p)
+    rows = []
+    for i, r in pdf.iterrows():
+        h, f = hard.loc[i], full.loc[i]
+        cerf = r.get("cerf")
+        cerf = "" if cerf is None or pd.isna(cerf) else str(cerf)
+        if cerf.startswith("$"):
+            try:
+                cerf = (
+                    f"{float(cerf[1:].replace(',', '')) / 1e6:.1f} M$".replace(
+                        ".", ","
+                    )
+                )
+            except ValueError:
+                pass
+        pop = r.get("pop_affected_n")
+        orange_na = (not r["orange_rain_known"]) and r["n_orange"] < n_p
+        rows.append(
+            "<tr>"
+            f"<td class='nm'><a href='#{r['atcf_id']}' data-storm='{r['atcf_id']}'>"
+            f"{escape(str(r['label']))}</a></td>"
+            + _num(r["fcast_exp_64"], 1)
+            + _num(r["fcast_rain_mm"], rf)
+            + _num(r["obsv_exp_64"], 1)
+            + _num(r["obsv_rain_mm"], ro)
+            + _yes(bool(h["any"]))
+            + _num(r["n_orange"], n_p, na=orange_na)
+            + _yes(bool(f["any"]))
+            + _yes(deck_trig.get(r["atcf_id"], False))
+            + f"<td class='val'>{fr_num(pop) if pop is not None and pd.notna(pop) else '—'}</td>"
+            + f"<td>{escape(cerf) or '—'}</td>"
+            "</tr>"
+        )
+    tot = {
+        "hard": int(hard["any"].sum()),
+        "full": int(full["any"].sum()),
+        "deck": int(sum(bool(v) for v in deck_trig.values())),
+        "fe": int(hard["fcast_exp"].sum()),
+        "fr": int(hard["fcast_rain"].fillna(False).sum()),
+        "oe": int(hard["obsv_exp"].sum()),
+        "or": int(hard["obsv_rain"].fillna(False).sum()),
+        "on": int(full["orange"].sum()),
+    }
+    return f"""
+<div class="tablewrap"><table class="wraphead act">
+<thead>
+<tr>
+  <th rowspan="4">Tempête</th>
+  <th colspan="5" class="g1">Indicateurs de données (seuils du cadre)</th>
+  <th colspan="2" class="g2">Alerte orange DGPC (simulée)</th>
+  <th rowspan="4" class="g3">Cadre 2026<br>(registre)</th>
+  <th colspan="2" class="g3">Registre</th>
+</tr>
+<tr>
+  <th colspan="2" class="g1">Prévision</th>
+  <th colspan="2" class="g1">Observation</th>
+  <th rowspan="3" class="g1">Activé<br>(données)</th>
+  <th rowspan="3" class="g2">Départements<br>en orange</th>
+  <th rowspan="3" class="g2">Activé<br>(données <i>ou</i><br>orange ≥ {n_p})</th>
+  <th rowspan="3" class="g3">Population<br>affectée</th>
+  <th rowspan="3" class="g3">CERF</th>
+</tr>
+<tr>
+  <th class="g1">Exposition<br>64 nœuds</th><th class="g1">Précipitations<br>2 j (mm)</th>
+  <th class="g1">Exposition<br>64 nœuds</th><th class="g1">Précipitations<br>2 j (mm)</th>
+</tr>
+<tr>
+  <th class="g1 thr">&gt; 0</th><th class="g1 thr">≥ {rf}</th>
+  <th class="g1 thr">&gt; 0</th><th class="g1 thr">≥ {ro}</th>
+</tr>
+</thead>
+<tbody>
+{chr(10).join(rows)}
+</tbody>
+<tfoot><tr style="background:#f7fafb;font-weight:700">
+  <td>Total ({len(pdf)} tempêtes)</td>
+  <td class='val'>{tot["fe"]}</td><td class='val'>{tot["fr"]}</td>
+  <td class='val'>{tot["oe"]}</td><td class='val'>{tot["or"]}</td>
+  <td class='val' style='text-align:center'>{tot["hard"]}</td>
+  <td class='val'>{tot["on"]}</td>
+  <td class='val' style='text-align:center'>{tot["full"]}</td>
+  <td class='val' style='text-align:center'>{tot["deck"]}</td>
+  <td></td><td></td>
+</tr></tfoot>
+</table></div>
+"""
+
+
+def render(n_storms, pdf=None, meta=None, deck_trig=None):
     today = date.today()
     stamp = f"{MONTHS_FR[today.month]} {today.year}"
+    table_section = ""
+    if pdf is not None and len(pdf):
+        table_section = f"""
+<h2>Tempête par tempête : ce qui aurait déclenché, et pourquoi</h2>
+
+<p style="max-width:none">
+  Chaque tempête du jeu, avec la valeur de chaque indicateur sur les avis
+  émis avant l’heure limite. Cases orange : seuil atteint. La colonne
+  « activé (données) » ne regarde que les seuils du cadre — prévision ou
+  observation, exposition ou précipitations ; la colonne suivante y ajoute
+  l’alerte orange simulée dans au moins {meta["n_depts"]} départements.
+  « Cadre 2026 (registre) » est l’activation retenue dans les
+  diapositives, qui inclut la voie « alerte rouge + <i>Hurricane
+  Warning</i> ». Cliquer sur une tempête pour la charger dans la carte.
+</p>
+
+{_activation_table(pdf, meta, deck_trig or {})}
+
+<p class="legend" style="max-width:none">
+  Exposition en personnes ; précipitations en mm sur deux jours glissants
+  (moyenne nationale, CHIRPS-GEFS en prévision, IMERG en observation) ;
+  alerte orange en nombre de départements (sur 10). « — » en prévision :
+  aucun avis avant l’heure limite ne prévoyait de passage à moins de
+  {D_THRESH} km. Laura et Isaias 2020 n’ont pas de prévision CHIRPS-GEFS
+  archivée : leur compte de départements ne tient qu’au vent. Population
+  affectée : EM-DAT, reprise des diapositives. CERF : « pre- » = antérieur
+  à la création du CERF (2006) ; « combined » = allocation combinée
+  Fay/Gustav/Hanna/Ike (2008).
+</p>
+"""
     return f"""<!doctype html>
 <html lang="fr">
 <head>
@@ -274,6 +444,18 @@ def render(n_storms):
     moins de {D_THRESH} km d’Haïti, {dc.SEASON_START}–{dc.SEASON_END}.
   </p>
 </header>
+
+<div class="callout">
+  <h3>Les alertes orange affichées sont une simulation, pas un registre</h3>
+  <p>
+    La DGPC n’a pas fourni l’historique de ses alertes. Les départements
+    « en orange » sur cette carte et dans le tableau sont une
+    <b>estimation</b> : les seuils que la DGPC a indiqués (100 mm en 24 h,
+    rafales de 100 km/h), appliqués par nos soins aux prévisions de
+    l’époque. Ils montrent ce que ces seuils auraient donné, non ce que la
+    DGPC a réellement déclaré.
+  </p>
+</div>
 
 {MAP_HTML}
 
@@ -312,6 +494,8 @@ def render(n_storms):
         <a href="dgpc-departements.html">l’analyse par département</a>.</li>
   </ul>
 </div>
+
+{table_section}
 
 <footer>
   OCHA · Centre de données humanitaires — outil préparé pour la révision
