@@ -70,7 +70,8 @@ table.act td.cerf.yes{background:#c62828;color:#fff;font-weight:700}
 table.act th.g1{background:#e3ecf8}
 table.act th.g2{background:#fdefe7}
 table.act th.g3{background:#eef2f5}
-table.act th.thr{font-weight:400;text-transform:none;letter-spacing:0;font-size:.8rem}
+table.act th .thr{font-weight:400;text-transform:none;letter-spacing:0;font-size:.74rem;color:#5e6a6b}
+table.act th.g4{background:#e7f4ee}
 table.act td.nm a{color:var(--blue);text-decoration:none}
 table.act td.nm a:hover{text-decoration:underline}
 """
@@ -286,7 +287,7 @@ def _yes(flag):
     )
 
 
-def _activation_table(pdf, meta, deck_trig):
+def _activation_table(pdf, meta):
     """Every storm: what would have activated, and why.
 
     Columns are grouped: the framework's own thresholds (forecast and
@@ -312,7 +313,7 @@ def _activation_table(pdf, meta, deck_trig):
     rows = []
     for i in order:
         r = pdf.loc[i]
-        h, f = hard.loc[i], full.loc[i]
+        f = full.loc[i]
         cerf = r.get("cerf")
         cerf = "" if cerf is None or pd.isna(cerf) else str(cerf)
         cerf_yes = cerf.startswith("$") or cerf == "combined"
@@ -350,18 +351,14 @@ def _activation_table(pdf, meta, deck_trig):
             + _num(r["fcast_rain_mm"], rf)
             + _num(r["obsv_exp_64"], 1)
             + _num(r["obsv_rain_mm"], ro)
-            + _yes(bool(h["any"]))
             + _num(r["n_orange"], n_p, na=orange_na)
             + _yes(bool(f["any"]))
-            + _yes(deck_trig.get(r["atcf_id"], False))
             + pop_cell
             + cerf_cell
             + "</tr>"
         )
     tot = {
-        "hard": int(hard["any"].sum()),
         "full": int(full["any"].sum()),
-        "deck": int(sum(bool(v) for v in deck_trig.values())),
         "fe": int(hard["fcast_exp"].sum()),
         "fr": int(hard["fcast_rain"].fillna(False).sum()),
         "oe": int(hard["obsv_exp"].sum()),
@@ -372,28 +369,23 @@ def _activation_table(pdf, meta, deck_trig):
 <div class="tablewrap"><table class="wraphead act">
 <thead>
 <tr>
-  <th rowspan="4">Tempête</th>
-  <th colspan="5" class="g1">Indicateurs mesurés</th>
-  <th colspan="2" class="g2">Alerte orange DGPC<br>(simulée)</th>
-  <th rowspan="4" class="g3">Cadre<br>2026</th>
+  <th rowspan="3">Tempête</th>
+  <th colspan="4" class="g1">Indicateurs mesurés</th>
+  <th rowspan="3" class="g2">Alerte orange<br>DGPC (simulée)<br><span class="thr">dép. ≥ {n_p}</span></th>
+  <th rowspan="3" class="g4">Activation</th>
   <th colspan="2" class="g3">Historique</th>
 </tr>
 <tr>
   <th colspan="2" class="g1">Prévision</th>
   <th colspan="2" class="g1">Observation</th>
-  <th rowspan="3" class="g1">Activé</th>
-  <th rowspan="3" class="g2">Dép. en<br>orange</th>
-  <th rowspan="3" class="g2">Activé<br>(mesuré <i>ou</i><br>orange ≥ {n_p})</th>
-  <th rowspan="3" class="g3">Pop.<br>affectée</th>
-  <th rowspan="3" class="g3">CERF</th>
+  <th rowspan="2" class="g3">Pop.<br>affectée</th>
+  <th rowspan="2" class="g3">CERF</th>
 </tr>
 <tr>
-  <th class="g1">Expo.<br>64 nds</th><th class="g1">Pluie<br>2 j (mm)</th>
-  <th class="g1">Expo.<br>64 nds</th><th class="g1">Pluie<br>2 j (mm)</th>
-</tr>
-<tr>
-  <th class="g1 thr">&gt; 0</th><th class="g1 thr">≥ {rf}</th>
-  <th class="g1 thr">&gt; 0</th><th class="g1 thr">≥ {ro}</th>
+  <th class="g1">Expo. 64 nds<br><span class="thr">&gt; 0</span></th>
+  <th class="g1">Pluie 2 j (mm)<br><span class="thr">≥ {rf}</span></th>
+  <th class="g1">Expo. 64 nds<br><span class="thr">&gt; 0</span></th>
+  <th class="g1">Pluie 2 j (mm)<br><span class="thr">≥ {ro}</span></th>
 </tr>
 </thead>
 <tbody>
@@ -403,10 +395,8 @@ def _activation_table(pdf, meta, deck_trig):
   <td>Total ({len(pdf)})</td>
   <td class='val'>{tot["fe"]}</td><td class='val'>{tot["fr"]}</td>
   <td class='val'>{tot["oe"]}</td><td class='val'>{tot["or"]}</td>
-  <td class='val' style='text-align:center'>{tot["hard"]}</td>
   <td class='val'>{tot["on"]}</td>
   <td class='val' style='text-align:center'>{tot["full"]}</td>
-  <td class='val' style='text-align:center'>{tot["deck"]}</td>
   <td></td><td></td>
 </tr></tfoot>
 </table></div>
@@ -426,15 +416,13 @@ def render(n_storms, pdf=None, meta=None, deck_trig=None):
   valeur de chaque indicateur sur les avis émis avant l’heure limite.
   Cases orange : seuil atteint. Les <b>indicateurs mesurés</b> sont les
   seuils purement quantitatifs — prévision ou observation, exposition ou
-  précipitations — et leur colonne « activé » ne regarde qu’eux ; la
-  colonne suivante y ajoute l’alerte orange simulée dans au moins
-  {meta["n_depts"]} départements. « Cadre 2026 » est l’activation retenue
-  dans les diapositives, qui inclut la voie « alerte rouge +
-  <i>Hurricane Warning</i> ». Cliquer sur une tempête pour la charger dans
-  la carte.
+  précipitations. La colonne <b>activation</b> est le verdict d’ensemble
+  de la proposition : l’un des indicateurs mesurés atteint, <i>ou</i>
+  l’alerte orange simulée dans au moins {meta["n_depts"]} départements.
+  Cliquer sur une tempête pour la charger dans la carte.
 </p>
 
-{_activation_table(pdf, meta, deck_trig or {})}
+{_activation_table(pdf, meta)}
 
 <p class="legend" style="max-width:none">
   Exposition en personnes ; précipitations en mm sur deux jours glissants
