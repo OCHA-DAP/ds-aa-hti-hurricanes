@@ -271,6 +271,11 @@ def per_storm(storms, adv, exp_adv, obsv_max, wind_adv, rain_long, monitors):
         obs = im[(im.date >= lo) & (im.date <= hi)]
         wd = _union_depts(pre["orange_wind_depts"])
         rd = _union_depts(pre["orange_rain_depts"])
+        # The same maxima over *every* advisory, cutoff ignored: what the
+        # forecasts eventually said, even when too late to act on.
+        every = a[a.atcf_id == aid]
+        wd_all = _union_depts(every["orange_wind_depts"])
+        rd_all = _union_depts(every["orange_rain_depts"])
         calibrated = bool(a.loc[a.atcf_id == aid, "calibrated"].any())
         if aid in obs_cal.index:
             obsv_rain = float(obs_cal[aid])
@@ -299,6 +304,15 @@ def per_storm(storms, adv, exp_adv, obsv_max, wind_adv, rain_long, monitors):
                 "obsv_exp_64": float(obsv_max.get(aid, 0.0)),
                 "obsv_rain_mm": obsv_rain,
                 "calibrated": calibrated,
+                "fcast_exp_64_all": (
+                    float(every["fcast_exp_64"].max()) if len(every) else 0.0
+                ),
+                "fcast_rain_mm_all": (
+                    float(every["fcast_rain_mm"].max())
+                    if every["fcast_rain_mm"].notna().any()
+                    else np.nan
+                ),
+                "n_orange_all": len(wd_all | rd_all),
                 "n_orange_wind": len(wd),
                 "n_orange_rain": len(rd) if aid in has_rain else np.nan,
                 "n_orange": len(wd | rd),

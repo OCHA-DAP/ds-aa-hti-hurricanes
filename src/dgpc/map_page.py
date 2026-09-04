@@ -67,6 +67,8 @@ table.act td.nm{white-space:nowrap;font-size:.8rem}
 table.act td.bar{background-repeat:no-repeat;background-size:100% 100%}
 table.act td.cerf{white-space:nowrap;font-size:.78rem}
 table.act td.cerf.yes{background:#c62828;color:#fff;font-weight:700}
+table.act .also{font-size:.68rem;color:#9aa5a6;font-weight:400}
+table.act .also.over{color:#a4551f}
 table.act th.g1{background:#e3ecf8}
 table.act th.g2{background:#fdefe7}
 table.act th.g3{background:#eef2f5}
@@ -270,11 +272,28 @@ MAP_JS = r"""
 """
 
 
-def _num(v, thr, na=False, decimals=0, missing="—"):
+def _num(v, thr, na=False, decimals=0, missing="—", also=None):
+    """A value cell, shaded when the threshold is met.
+
+    ``also`` is the same indicator with the cutoff ignored; it is shown in
+    small brackets when it differs from the pre-cutoff value.
+    """
+    extra = ""
+    if also is not None and not (np.isscalar(also) and pd.isna(also)):
+        same = (
+            v is not None
+            and not (np.isscalar(v) and pd.isna(v))
+            and abs(float(also) - float(v)) < 0.5
+        )
+        if not same:
+            over = " over" if also >= thr else ""
+            extra = (
+                f" <span class='also{over}'>[{fr_num(also, decimals)}]</span>"
+            )
     if na or v is None or (np.isscalar(v) and pd.isna(v)):
-        return f"<td class='val na'>{missing}</td>"
+        return f"<td class='val na'>{missing}{extra}</td>"
     cls = "val hit" if v >= thr else "val"
-    return f"<td class='{cls}'>{fr_num(v, decimals)}</td>"
+    return f"<td class='{cls}'>{fr_num(v, decimals)}{extra}</td>"
 
 
 def _yes(flag):
@@ -347,11 +366,13 @@ def _activation_table(pdf, meta):
             "<tr>"
             f"<td class='nm'><a href='#{r['atcf_id']}' data-storm='{r['atcf_id']}'>"
             f"{escape(str(r['label']))}</a></td>"
-            + _num(r["fcast_exp_64"], 1)
-            + _num(r["fcast_rain_mm"], rf)
+            + _num(r["fcast_exp_64"], 1, also=r.get("fcast_exp_64_all"))
+            + _num(r["fcast_rain_mm"], rf, also=r.get("fcast_rain_mm_all"))
             + _num(r["obsv_exp_64"], 1)
             + _num(r["obsv_rain_mm"], ro)
-            + _num(r["n_orange"], n_p, na=orange_na)
+            + _num(
+                r["n_orange"], n_p, na=orange_na, also=r.get("n_orange_all")
+            )
             + _yes(bool(f["any"]))
             + pop_cell
             + cerf_cell
@@ -425,6 +446,10 @@ def render(n_storms, pdf=None, meta=None, deck_trig=None):
 {_activation_table(pdf, meta)}
 
 <p class="legend" style="max-width:none">
+  Entre crochets, en petit : la même valeur en ignorant l’heure limite —
+  ce que les prévisions ont fini par dire, même trop tard pour agir ;
+  en orange lorsque ce maximum tardif atteint le seuil. Sans crochets,
+  les deux valeurs sont identiques.
   Exposition en personnes ; précipitations en mm sur deux jours glissants
   (moyenne nationale, CHIRPS-GEFS en prévision, IMERG en observation) ;
   alerte orange en nombre de départements (sur 10). « — » en prévision :
