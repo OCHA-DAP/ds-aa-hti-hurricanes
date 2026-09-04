@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avis par avis — ouragans, Haïti</title>
+<style>
+:root{--blue:#1862d8;--blue-dark:#0e4aab;--ink:#1e2a2b;--muted:#5e6a6b;
+--bg:#f4f7f9;--card:#fff;--line:#dde5e8;--orange:#ec835a;--red:#d03b3b;
+--green:#0f8a5f;--amber-bg:#fdf6ec;--amber-line:#e8cfa8;--amber-ink:#8a5a12}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);
+line-height:1.62;padding:0 5vw 6rem}
+.wrap{max-width:56rem;margin:0 auto}
+header{padding:4.5rem 0 2.2rem}
+.kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;
+font-weight:700;color:var(--blue);margin-bottom:.8rem}
+h1{font-size:clamp(1.7rem,4.4vw,2.5rem);line-height:1.16;margin-bottom:1rem}
+.sub{font-size:1.08rem;color:var(--muted);max-width:44em}
+.crumb{font-size:.86rem;margin-bottom:1.6rem}
+.crumb a{color:var(--muted)}
+h2{font-size:1.42rem;margin:3.2rem 0 .9rem;line-height:1.25;
+padding-top:1.6rem;border-top:1px solid var(--line)}
+h3{font-size:1.08rem;margin:1.9rem 0 .5rem}
+p{margin-bottom:.95rem;max-width:44em}
+ul,ol{margin:0 0 1rem 1.15rem;max-width:44em}
+li{margin-bottom:.42rem}
+code{background:#eef2f5;padding:.1em .38em;border-radius:4px;font-size:.9em}
+.lead{font-size:1.05rem}
+.callout{background:var(--amber-bg);border:1px solid var(--amber-line);
+border-left:4px solid var(--orange);border-radius:8px;padding:1.1rem 1.3rem;
+margin:1.5rem 0;max-width:44em}
+.callout h3{margin-top:0;color:var(--amber-ink);font-size:1rem}
+.callout p:last-child{margin-bottom:0}
+.note{background:#fff;border:1px solid var(--line);border-radius:8px;
+padding:1.1rem 1.3rem;margin:1.5rem 0;max-width:44em;font-size:.94rem}
+.note h3{margin-top:0;font-size:1rem}
+.note p:last-child{margin-bottom:0}
+figure{margin:1.8rem 0;background:var(--card);border:1px solid var(--line);
+border-radius:10px;padding:1.2rem 1rem .8rem;overflow-x:auto}
+figcaption{font-size:.86rem;color:var(--muted);margin-top:.7rem;
+padding:0 .4rem}
+.tablewrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);
+border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--line);
+white-space:nowrap;vertical-align:top}
+table.prose th,table.prose td{white-space:normal;min-width:11rem}
+table.wraphead th{white-space:normal}
+th{background:#f7fafb;font-weight:700;font-size:.82rem;color:var(--muted);
+text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.nm{font-weight:600}
+.v-yes{color:var(--green);font-weight:600}
+.v-no{color:var(--muted)}
+.v-na{color:var(--muted)}
+.pill{display:inline-block;font-size:.72rem;text-transform:uppercase;
+letter-spacing:.08em;font-weight:700;padding:.18rem .5rem;border-radius:5px}
+.pill.orange{background:#fdefe7;color:#a4551f}
+.pill.red{background:#fbeaea;color:#a02a2a}
+.stats{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
+margin:1.6rem 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem 1.1rem}
+.stat .big{font-size:1.9rem;font-weight:700;line-height:1.1;
+font-variant-numeric:tabular-nums}
+.stat .lab{font-size:.83rem;color:var(--muted);margin-top:.3rem}
+footer{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--line);
+font-size:.86rem;color:var(--muted)}
+footer a{color:var(--muted)}
+
+.wrap.wide{max-width:74rem}
+#carte-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem;margin:1.4rem 0}
+#carte{height:min(72vh,640px);border-radius:8px;border:1px solid var(--line)}
+.ctl{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;
+margin-bottom:.6rem;font-size:.92rem}
+.ctl select,.ctl button{font:inherit;padding:.3rem .55rem;border:1px solid var(--line);
+border-radius:6px;background:#fff}
+.ctl button{cursor:pointer}
+.ctl button:disabled{opacity:.4;cursor:default}
+.ctl input[type=range]{width:min(420px,100%)}
+.ctl label{white-space:nowrap}
+.advlab{font-weight:700}
+.badge{display:inline-block;font-size:.74rem;font-weight:700;padding:.12rem .5rem;
+border-radius:5px;margin-left:.4rem;vertical-align:middle}
+.badge.ok{background:#e7f4ee;color:#0f8a5f}
+.badge.cut{background:#fbeaea;color:#a02a2a}
+.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.88rem;margin:.5rem 0}
+.toggles .grp{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;
+color:var(--muted);font-weight:700;margin-right:-.4rem}
+.toggles label{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
+.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;border:1px solid #0002;
+vertical-align:-2px}
+.sw.line{height:0;border:0;border-top:3px solid}
+#voies{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.6rem;
+margin-top:.8rem;font-size:.88rem}
+#voies .v{border:1px solid var(--line);border-radius:8px;padding:.55rem .75rem;background:#fafcfc}
+#voies .v.hit{border-color:#0f8a5f;background:#e7f4ee}
+#voies .v.off{opacity:.55}
+#voies .v b{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;
+letter-spacing:.04em;margin-bottom:.15rem}
+#voies .v .val{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
+.leaflet-tooltip.dep{font-size:.82rem;line-height:1.35}
+#loading{font-size:.86rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap wide">
+
+<header>
+  <p class="crumb"><a href="./">←
+  Action anticipatoire · Ouragans · Haïti</a></p>
+  <div class="kicker">Outil · septembre 2026</div>
+  <h1>Avis par avis : ce que les prévisions disaient, et ce que le cadre
+  et la DGPC en auraient fait</h1>
+  <p class="sub">
+    Choisir une tempête, puis faire défiler les avis du NHC. Pour chaque
+    avis : la trajectoire et les rayons de vent prévus, la bande de vents
+    déjà observée, les départements que la prévision de pluie et le champ
+    de rafales auraient placés en alerte orange, et l’état des voies de
+    déclenchement du cadre à cet instant. 42 tempêtes passées à
+    moins de 230 km d’Haïti, 2002–2025.
+  </p>
+</header>
+
+
+<div id="carte-wrap">
+  <div class="ctl">
+    <label>Tempête
+      <select id="storm-sel"></select></label>
+    <button id="prev" type="button" aria-label="Avis précédent">◀</button>
+    <input id="adv-range" type="range" min="0" max="0" value="0">
+    <button id="next" type="button" aria-label="Avis suivant">▶</button>
+    <button id="play" type="button">▶ Lecture</button>
+    <button id="fit" type="button" title="Cadrer sur Haïti">⌖ Haïti</button>
+    <span id="adv-lab" class="advlab"></span>
+    <span id="loading"></span>
+  </div>
+  <div class="toggles">
+    <span class="grp">Alerte orange DGPC</span>
+    <label><input type="checkbox" id="t-wind" checked>
+      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-wind)"/></svg> rafales ≥ 100 km/h (hachures)</label>
+    <label><input type="checkbox" id="t-rain" checked>
+      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-rain)"/></svg> pluie ≥ 100 mm au point (points)</label>
+    <label><span class="sw" style="background:#ec835a"></span> les deux (plein)</label>
+    <label><input type="checkbox" id="t-cum" checked>
+      <span class="sw" style="background:#f7d9c9"></span> déjà en orange (avis précédents, avant l’heure limite)</label>
+  </div>
+  <div class="toggles">
+    <span class="grp">Vent prévu (NHC)</span>
+    <label><input type="checkbox" id="t-b34">
+      <span class="sw" style="background:#fff3b0;border-color:#c9a800"></span> 34 nœuds</label>
+    <label><input type="checkbox" id="t-b50">
+      <span class="sw" style="background:#ffd28a;border-color:#d17a00"></span> 50 nœuds</label>
+    <label><input type="checkbox" id="t-b64" checked>
+      <span class="sw" style="background:#f4a0a0;border-color:#c0392b"></span> 64 nœuds (déclencheur d’exposition)</label>
+    <label><input type="checkbox" id="t-swath">
+      <span class="sw" style="background:#c9b3e6;border-color:#6c3fb0"></span> Bande observée à 64 nœuds (cumulée à l’émission)</label>
+  </div>
+  <div class="toggles">
+    <span class="grp">Trajectoires</span>
+    <label><input type="checkbox" id="t-track" checked>
+      <span class="sw line" style="border-color:#1e2a2b"></span> prévue</label>
+    <label><input type="checkbox" id="t-obsv">
+      <span class="sw line" style="border-color:#9aa5a6;border-top-style:dashed"></span> observée</label>
+    <label><input type="checkbox" id="t-voies" checked> Voies du cadre</label>
+  </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <pattern id="pat-wind" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+        <rect width="7" height="7" fill="#fff"/><rect width="3.5" height="7" fill="#ec835a"/>
+      </pattern>
+      <pattern id="pat-rain" patternUnits="userSpaceOnUse" width="7" height="7">
+        <rect width="7" height="7" fill="#fff"/><circle cx="3.5" cy="3.5" r="2" fill="#ec835a"/>
+      </pattern>
+    </defs>
+  </svg>
+  <div id="carte"></div>
+  <div id="voies"></div>
+</div>
+
+
+<p class="legend" style="max-width:none">
+  <b>Lecture.</b> Orange plein : département en orange par les rafales
+  <i>et</i> la pluie ; hachures : rafales seules ; points : pluie seule ;
+  orange pâle : déjà en orange sur un avis précédent émis avant l’heure
+  limite. Les rayons de vent sont les polygones du NHC à 34, 50 et
+  64 nœuds, construits comme pour le déclencheur d’exposition ; la bande
+  observée est la zone déjà balayée par des vents de 64 nœuds à
+  l’émission, que l’exposition prévue exclut. Les avis émis moins de
+  48 h avant le passage au plus près sont marqués « après
+  l’heure limite » : ils ne peuvent plus déclencher le cadre et sont
+  affichés en transparence. Flèches ← → pour changer d’avis. Le lien de
+  la page retient la tempête choisie.
+</p>
+
+<div class="note" style="max-width:none">
+  <h3>Ce qui est calculé, et comment</h3>
+  <ul>
+    <li><b>Pluie prévue</b> : prévision CHIRPS-GEFS du jour de l’avis (ou la
+        plus récente), moyenne nationale sur deux jours glissants pour la
+        voie du cadre (seuil 68 mm), et point le plus arrosé de chaque
+        département pour l’alerte orange (seuil 100 mm / 24 h), sur les
+        jours où la trajectoire prévue passe à moins de 230 km.</li>
+    <li><b>Rafales prévues</b> : champ de vent paramétrique reconstruit à
+        partir des rayons de vent de l’avis, vent soutenu réduit sur terre
+        (×0,85) puis converti en rafales (×1,25), maximum dans chaque
+        département (seuil orange 100 km/h).</li>
+    <li><b>Exposition prévue</b> : population dans le polygone de vents de
+        64 nœuds prévu, hors bande déjà observée, plus la population de
+        cette bande — la convention du déclencheur.</li>
+    <li><b>Alerte orange DGPC</b> : un département est compté dès qu’un
+        avis émis avant l’heure limite atteint l’un des deux critères ; la
+        proposition retient <b>6 départements</b>. Voir
+        <a href="dgpc-departements.html">l’analyse par département</a>.</li>
+  </ul>
+</div>
+
+<footer>
+  OCHA · Centre de données humanitaires — outil préparé pour la révision
+  2026 du cadre d’action anticipatoire pour les tempêtes et ouragans en
+  Haïti. Code et méthode :
+  <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes"
+  >ds-aa-hti-hurricanes</a>.
+  Données : NHC (avis de prévision et rayons de vent), CHIRPS-GEFS (UCSB
+  CHC), WorldPop 2026. Fond de carte OpenStreetMap. Mise à jour
+  septembre 2026.
+</footer>
+
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d=0) => (v==null ? '—' : v.toLocaleString('fr-FR',{maximumFractionDigits:d}));
+  let META, DEPTS, INDEX, storm, idx = 0, timer = null;
+  const cache = {};
+  const map = L.map('carte', {scrollWheelZoom:false}).setView([18.9,-72.8], 7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:12, opacity:.55}).addTo(map);
+  const bufLayer = L.layerGroup().addTo(map), swathLayer = L.layerGroup().addTo(map);
+  let deptLayer; const trackLayer = L.layerGroup(), obsvLayer = L.layerGroup();
+  const COL = {none:'#e9eef0', cum:'#f7d9c9', wind:'url(#pat-wind)', rain:'url(#pat-rain)', both:'#ec835a'};
+  const BUF = {34:{c:'#c9a800',f:'#fff3b0'}, 50:{c:'#d17a00',f:'#ffd28a'}, 64:{c:'#c0392b',f:'#f4a0a0'}};
+
+  function hit(a, j){
+    const w = $('t-wind').checked && a.w[j]!=null && a.w[j] >= META.wind_kmh;
+    const r = $('t-rain').checked && a.rp[j]!=null && a.rp[j] >= META.rain_mm;
+    return {w, r, any: w||r};
+  }
+  function cumBefore(i){
+    const s = new Set();
+    for (let k=0;k<i;k++){ const a=storm.adv[k]; if(a.cut) continue;
+      META.depts.forEach((d,j)=>{ if(hit(a,j).any) s.add(d); }); }
+    return s;
+  }
+  function render(){
+    if (!storm) return;
+    const a = storm.adv[idx], m = META, cum = cumBefore(idx);
+    const d = new Date(a.t+'Z');
+    $('adv-lab').innerHTML = `Avis du ${d.toLocaleString('fr-FR',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC` +
+      ` · passage au plus près prévu dans ${fmt(a.ttc)} h` +
+      (a.cut ? '<span class="badge cut">après l’heure limite</span>' : '<span class="badge ok">avant l’heure limite</span>') +
+      ` <span style="color:#5e6a6b;font-weight:400">(${idx+1}/${storm.adv.length})</span>`;
+    let nNow = 0; const cumNow = new Set(cum);
+    deptLayer.eachLayer(l => {
+      const j = m.depts.indexOf(l.feature.properties.name); const h = hit(a,j);
+      let c = COL.none;
+      if (h.w && h.r) c = COL.both; else if (h.w) c = COL.wind; else if (h.r) c = COL.rain;
+      else if ($('t-cum').checked && cum.has(m.depts[j])) c = COL.cum;
+      if (h.any){ nNow++; if(!a.cut) cumNow.add(m.depts[j]); }
+      l.setStyle({fillColor:c, fillOpacity: a.cut && h.any ? .55 : .95, color:'#fff', weight:1});
+      l.setTooltipContent(`<b>${m.depts[j]}</b><br>Rafales prévues : ${fmt(a.w[j])} km/h<br>` +
+        `Pluie prévue, point : ${fmt(a.rp[j])} mm<br>Pluie prévue, moyenne : ${fmt(a.rm[j])} mm` +
+        (cum.has(m.depts[j]) ? '<br><i>déjà en orange</i>' : ''));
+    });
+    // wind buffers, largest first so the 64 kt core sits on top
+    bufLayer.clearLayers();
+    [34,50,64].forEach(s => {
+      if (!$('t-b'+s).checked || !a.buf[s]) return;
+      L.geoJSON(a.buf[s], {style:{color:BUF[s].c, weight:1.2, fillColor:BUF[s].f, fillOpacity:.35, dashArray: a.cut?'3 3':null}})
+        .bindTooltip(`Vents prévus ≥ ${s} nœuds`, {sticky:true}).addTo(bufLayer);
+    });
+    swathLayer.clearLayers();
+    if ($('t-swath').checked && a.swath)
+      L.geoJSON(a.swath, {style:{color:'#6c3fb0', weight:1, fillColor:'#c9b3e6', fillOpacity:.45}})
+        .bindTooltip('Bande observée ≥ 64 nœuds, cumulée à l’émission', {sticky:true}).addTo(swathLayer);
+    trackLayer.clearLayers();
+    if ($('t-track').checked && a.track.length){
+      L.polyline(a.track.map(p=>[p[0],p[1]]),{color:'#1e2a2b',weight:2}).addTo(trackLayer);
+      a.track.forEach(p => L.circleMarker([p[0],p[1]],{radius: p[2]===0?5:3.5, color:'#1e2a2b',
+        fillColor: p[2]===0?'#1e2a2b':'#fff', fillOpacity:1, weight:1.5})
+        .bindTooltip((p[2]===0 ? 'Position à l’émission' : `+${p[2]} h`) + (p[3]!=null ? ` · ${fmt(p[3])} nœuds` : '')).addTo(trackLayer));
+    }
+    obsvLayer.clearLayers();
+    if ($('t-obsv').checked && storm.obsv.length)
+      L.polyline(storm.obsv,{color:'#9aa5a6',weight:2,dashArray:'4 4'}).addTo(obsvLayer);
+    const v = $('voies'); v.hidden = !$('t-voies').checked;
+    const nCum = cumNow.size, off = a.cut ? ' off' : '';
+    const rainHit = !a.cut && a.rain!=null && a.rain >= m.fcast_rain_mm;
+    const expHit = !a.cut && a.exp > 0;
+    const orHit = !a.cut && nCum >= m.n_depts;
+    v.innerHTML =
+      card('Pluie prévue (moy. nationale, 2 j)', `${fmt(a.rain)} mm`, `seuil ${m.fcast_rain_mm} mm · CHIRPS-GEFS du ${a.gefs ?? '—'}`, rainHit, off) +
+      card(`Exposition prévue à ${m.exposure_kt} nœuds`, `${fmt(a.exp)} pers.`, 'seuil : > 0 · zone prévue hors bande déjà observée', expHit, off) +
+      card('Orange DGPC — départements', `${nNow} à cet avis · ${nCum} cumulés`, `proposition : ≥ ${m.n_depts} départements (avis avant l’heure limite)`, orHit, off) +
+      card('Cadre activé à cet avis ?', (rainHit||expHit||orHit) ? 'oui' : 'non',
+        a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange', (rainHit||expHit||orHit), off);
+    $('adv-range').value = idx; $('prev').disabled = idx===0; $('next').disabled = idx===storm.adv.length-1;
+  }
+  function card(t, val, sub, hit, off){
+    return `<div class="v${hit?' hit':''}${off}"><b>${t}</b><div class="val">${val}</div><div style="color:#5e6a6b;font-size:.8rem">${sub}</div></div>`;
+  }
+  function loadStorm(i){
+    const meta = INDEX[i];
+    if (timer){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; }
+    if (cache[meta.id]) return Promise.resolve(cache[meta.id]);
+    $('loading').textContent = 'chargement…';
+    return fetch(`assets/carte/${meta.id}.json`).then(r=>r.json()).then(d => { cache[meta.id]=d; $('loading').textContent=''; return d; });
+  }
+  function setStorm(i){
+    loadStorm(i).then(d => {
+      storm = d; $('adv-range').max = storm.adv.length-1;
+      const first = storm.adv.findIndex(a => META.depts.some((d,j)=>hit(a,j).any));
+      idx = first >= 0 ? Math.max(0, first-1) : 0;
+      history.replaceState(null, '', '#'+storm.id);
+      render();
+    });
+  }
+  function step(k){ idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
+  fetch('assets/carte/index.json').then(r=>r.json()).then(data => {
+    META = data.meta; DEPTS = data.depts; INDEX = data.storms;
+    deptLayer = L.geoJSON(DEPTS, {style:{color:'#fff',weight:1,fillColor:COL.none,fillOpacity:.95},
+      onEachFeature:(f,l)=>l.bindTooltip('', {sticky:true, className:'dep'})}).addTo(map);
+    trackLayer.addTo(map); obsvLayer.addTo(map);
+    const sel = $('storm-sel');
+    INDEX.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label; sel.appendChild(o); });
+    const want = location.hash.replace('#','') || 'AL142016';
+    const start = INDEX.findIndex(s=>s.id===want);
+    sel.value = start>=0 ? start : 0;
+    sel.onchange = e => setStorm(+e.target.value);
+    $('adv-range').oninput = e => { idx = +e.target.value; render(); };
+    $('prev').onclick = () => step(-1); $('next').onclick = () => step(1);
+    $('fit').onclick = () => map.setView([18.9,-72.8], 7);
+    $('play').onclick = () => {
+      if (timer){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; }
+      $('play').textContent = '❚❚ Pause';
+      timer = setInterval(()=>{ if(idx>=storm.adv.length-1){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; } step(1); }, 700);
+    };
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName==='SELECT' || e.target.tagName==='INPUT') return;
+      if (e.key==='ArrowLeft') step(-1); else if (e.key==='ArrowRight') step(1);
+    });
+    ['t-wind','t-rain','t-cum','t-b34','t-b50','t-b64','t-swath','t-track','t-obsv','t-voies'].forEach(id => $(id).onchange = render);
+    setStorm(+sel.value);
+  }).catch(err => { $('adv-lab').textContent = 'Données de la carte indisponibles : ' + err; });
+})();
+</script>
+
+</body>
+</html>

@@ -56,185 +56,6 @@ table.matrix td{padding:.35rem .5rem;font-size:.84rem}
 """
 
 
-MAP_CSS = """
-#carte-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;
-padding:1rem;margin:1.4rem 0}
-#carte{height:520px;border-radius:8px;border:1px solid var(--line)}
-.ctl{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;
-margin-bottom:.8rem;font-size:.92rem}
-.ctl select,.ctl button{font:inherit;padding:.3rem .55rem;border:1px solid var(--line);
-border-radius:6px;background:#fff}
-.ctl button{cursor:pointer}
-.ctl button:disabled{opacity:.4;cursor:default}
-.ctl input[type=range]{width:min(360px,100%)}
-.ctl label{white-space:nowrap}
-.advlab{font-weight:700}
-.badge{display:inline-block;font-size:.74rem;font-weight:700;padding:.12rem .5rem;
-border-radius:5px;margin-left:.4rem;vertical-align:middle}
-.badge.ok{background:#e7f4ee;color:#0f8a5f}
-.badge.cut{background:#fbeaea;color:#a02a2a}
-.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.88rem;margin:.6rem 0}
-.toggles label{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
-.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;border:1px solid #0002;vertical-align:-2px}
-#voies{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.6rem;
-margin-top:.8rem;font-size:.88rem}
-#voies .v{border:1px solid var(--line);border-radius:8px;padding:.55rem .75rem;background:#fafcfc}
-#voies .v.hit{border-color:#0f8a5f;background:#e7f4ee}
-#voies .v.off{opacity:.55}
-#voies .v b{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;
-letter-spacing:.04em;margin-bottom:.15rem}
-#voies .v .val{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
-.leaflet-tooltip.dep{font-size:.82rem;line-height:1.35}
-"""
-
-MAP_HTML = """
-<div id="carte-wrap">
-  <div class="ctl">
-    <label>Tempête
-      <select id="storm-sel"></select></label>
-    <button id="prev" type="button" aria-label="Avis précédent">◀</button>
-    <input id="adv-range" type="range" min="0" max="0" value="0">
-    <button id="next" type="button" aria-label="Avis suivant">▶</button>
-    <button id="play" type="button">▶ Lecture</button>
-    <span id="adv-lab" class="advlab"></span>
-  </div>
-  <div class="toggles">
-    <label><input type="checkbox" id="t-wind" checked>
-      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-wind)"/></svg> Orange — rafales ≥ 100 km/h (hachures)</label>
-    <label><input type="checkbox" id="t-rain" checked>
-      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-rain)"/></svg> Orange — pluie ≥ 100 mm au point (points)</label>
-    <label><span class="sw" style="background:#ec835a"></span> Les deux (plein)</label>
-    <label><input type="checkbox" id="t-cum" checked>
-      <span class="sw" style="background:#f7d9c9"></span> Déjà en orange (avis précédents, avant l’heure limite)</label>
-    <label><input type="checkbox" id="t-track" checked>
-      <span class="sw" style="background:#1e2a2b"></span> Trajectoire prévue</label>
-    <label><input type="checkbox" id="t-obsv">
-      <span class="sw" style="background:#9aa5a6"></span> Trajectoire observée</label>
-    <label><input type="checkbox" id="t-voies" checked> Voies du cadre</label>
-  </div>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <pattern id="pat-wind" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
-        <rect width="7" height="7" fill="#fff"/><rect width="3.5" height="7" fill="#ec835a"/>
-      </pattern>
-      <pattern id="pat-rain" patternUnits="userSpaceOnUse" width="7" height="7">
-        <rect width="7" height="7" fill="#fff"/><circle cx="3.5" cy="3.5" r="2" fill="#ec835a"/>
-      </pattern>
-    </defs>
-  </svg>
-  <div id="carte"></div>
-  <div id="voies"></div>
-</div>
-"""
-
-MAP_JS = r"""
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script>
-(function(){
-  const $ = id => document.getElementById(id);
-  const fmt = (v, d=0) => (v==null ? '—' : v.toLocaleString('fr-FR',{maximumFractionDigits:d}));
-  let DATA, storm, idx = 0, timer = null;
-  const map = L.map('carte', {scrollWheelZoom:false}).setView([18.9,-72.8], 7);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:12, opacity:.55}).addTo(map);
-  let deptLayer, trackLayer = L.layerGroup().addTo(map), obsvLayer = L.layerGroup();
-  const COL = {none:'#e9eef0', cum:'#f7d9c9', wind:'url(#pat-wind)', rain:'url(#pat-rain)', both:'#ec835a'};
-
-  function cumBefore(i){ // departments in orange on pre-cutoff advisories before i
-    const s = new Set();
-    for (let k=0;k<i;k++){ const a=storm.adv[k]; if(a.cut) continue;
-      DATA.meta.depts.forEach((d,j)=>{ if(hit(a,j).any) s.add(d); }); }
-    return s;
-  }
-  function hit(a, j){
-    const w = $('t-wind').checked && a.w[j]!=null && a.w[j] >= DATA.meta.wind_kmh;
-    const r = $('t-rain').checked && a.rp[j]!=null && a.rp[j] >= DATA.meta.rain_mm;
-    return {w, r, any: w||r};
-  }
-  function render(){
-    const a = storm.adv[idx], m = DATA.meta, cum = cumBefore(idx);
-    const d = new Date(a.t+'Z');
-    $('adv-lab').innerHTML = `Avis du ${d.toLocaleString('fr-FR',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC` +
-      ` · passage au plus près prévu dans ${fmt(a.ttc)} h` +
-      (a.cut ? '<span class="badge cut">après l’heure limite</span>' : '<span class="badge ok">avant l’heure limite</span>') +
-      ` <span style="color:#5e6a6b;font-weight:400">(${idx+1}/${storm.adv.length})</span>`;
-    // departments
-    let nNow = 0; const cumNow = new Set(cum);
-    deptLayer.eachLayer(l => {
-      const j = m.depts.indexOf(l.feature.properties.name); const h = hit(a,j);
-      let c = COL.none;
-      if (h.w && h.r) c = COL.both; else if (h.w) c = COL.wind; else if (h.r) c = COL.rain;
-      else if ($('t-cum').checked && cum.has(m.depts[j])) c = COL.cum;
-      if (h.any){ nNow++; if(!a.cut) cumNow.add(m.depts[j]); }
-      l.setStyle({fillColor:c, fillOpacity: a.cut && h.any ? .55 : .95, color:'#fff', weight:1});
-      l.setTooltipContent(`<b>${m.depts[j]}</b><br>Rafales prévues : ${fmt(a.w[j])} km/h<br>` +
-        `Pluie prévue, point : ${fmt(a.rp[j])} mm<br>Pluie prévue, moyenne : ${fmt(a.rm[j])} mm` +
-        (cum.has(m.depts[j]) ? '<br><i>déjà en orange</i>' : ''));
-    });
-    // tracks
-    trackLayer.clearLayers();
-    if ($('t-track').checked && a.track.length){
-      const pts = a.track.map(p=>[p[0],p[1]]);
-      L.polyline(pts,{color:'#1e2a2b',weight:2}).addTo(trackLayer);
-      a.track.forEach(p => L.circleMarker([p[0],p[1]],{radius: p[2]===0?5:3.5, color:'#1e2a2b',
-        fillColor: p[2]===0?'#1e2a2b':'#fff', fillOpacity:1, weight:1.5})
-        .bindTooltip(p[2]===0 ? 'Position à l’émission' : `+${p[2]} h`).addTo(trackLayer));
-    }
-    obsvLayer.clearLayers();
-    if ($('t-obsv').checked && storm.obsv.length)
-      L.polyline(storm.obsv,{color:'#9aa5a6',weight:2,dashArray:'4 4'}).addTo(obsvLayer);
-    // pathways panel
-    const v = $('voies'); v.hidden = !$('t-voies').checked;
-    const nCum = cumNow.size, off = a.cut ? ' off' : '';
-    const rainHit = !a.cut && a.rain!=null && a.rain >= m.fcast_rain_mm;
-    const expHit = !a.cut && a.exp > 0;
-    const orHit = !a.cut && nCum >= m.n_depts;
-    v.innerHTML =
-      card('Pluie prévue (moy. nationale, 2 j)', `${fmt(a.rain)} mm`, `seuil ${m.fcast_rain_mm} mm · CHIRPS-GEFS du ${a.gefs ?? '—'}`, rainHit, off) +
-      card('Exposition prévue à 64 nœuds', `${fmt(a.exp)} pers.`, 'seuil : > 0', expHit, off) +
-      card(`Orange DGPC — départements`, `${nNow} à cet avis · ${nCum} cumulés`, `proposition : ≥ ${m.n_depts} départements (avis avant l’heure limite)`, orHit, off) +
-      card('Cadre activé à cet avis ?', (rainHit||expHit||orHit) ? 'oui' : 'non',
-        a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange', (rainHit||expHit||orHit), off);
-    $('adv-range').value = idx; $('prev').disabled = idx===0; $('next').disabled = idx===storm.adv.length-1;
-  }
-  function card(t, val, sub, hit, off){
-    return `<div class="v${hit?' hit':''}${off}"><b>${t}</b><div class="val">${val}</div><div style="color:#5e6a6b;font-size:.8rem">${sub}</div></div>`;
-  }
-  function setStorm(i){
-    storm = DATA.storms[i]; idx = 0;
-    $('adv-range').max = storm.adv.length-1;
-    // start on the first advisory that puts a department in orange, if any
-    const first = storm.adv.findIndex(a => DATA.meta.depts.some((d,j)=>hit(a,j).any));
-    idx = first >= 0 ? Math.max(0, first-1) : 0;
-    render();
-  }
-  function step(k){ idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
-  fetch('assets/dgpc-departements.json').then(r=>r.json()).then(data => {
-    DATA = data;
-    deptLayer = L.geoJSON(data.depts, {style:{color:'#fff',weight:1,fillColor:COL.none,fillOpacity:.8},
-      onEachFeature:(f,l)=>l.bindTooltip('', {sticky:true, className:'dep'})}).addTo(map);
-    obsvLayer.addTo(map);
-    const sel = $('storm-sel');
-    data.storms.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label; sel.appendChild(o); });
-    const start = data.storms.findIndex(s=>s.id==='AL142016');
-    sel.value = start>=0 ? start : 0;
-    sel.onchange = e => setStorm(+e.target.value);
-    $('adv-range').oninput = e => { idx = +e.target.value; render(); };
-    $('prev').onclick = () => step(-1); $('next').onclick = () => step(1);
-    $('play').onclick = () => {
-      if (timer){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; }
-      $('play').textContent = '❚❚ Pause';
-      timer = setInterval(()=>{ if(idx>=storm.adv.length-1){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; } step(1); }, 700);
-    };
-    ['t-wind','t-rain','t-cum','t-track','t-obsv','t-voies'].forEach(id => $(id).onchange = render);
-    setStorm(+sel.value);
-  }).catch(err => { $('adv-lab').textContent = 'Données de la carte indisponibles : ' + err; });
-})();
-</script>
-"""
-
-
 def _val_cell(v, thr, na=False, decimals=0, missing="n/d"):
     if na or v is None or (np.isscalar(v) and pd.isna(v)):
         return f"<td class='val na'>{missing}</td>"
@@ -683,7 +504,7 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None, pathways=None):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Alerte orange de la DGPC par département — simulation historique</title>
-<style>{CSS}{EXTRA_CSS}{MAP_CSS}</style>
+<style>{CSS}{EXTRA_CSS}</style>
 </head>
 <body>
 <div class="wrap">
@@ -873,23 +694,18 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None, pathways=None):
 <h2>8. Avis par avis : quand l’alerte orange serait tombée</h2>
 
 <p>
-  Choisir une tempête, puis faire défiler les avis du NHC. Pour chaque
-  avis, la carte montre les départements que la prévision associée aurait
-  placés en alerte orange (rafales, pluie au point le plus arrosé, ou les
-  deux), ceux déjà en orange sur un avis précédent émis avant l’heure
-  limite, la trajectoire prévue, et l’état des voies du cadre à cet
-  instant. Survoler un département pour lire les valeurs. Chaque couche se
-  masque d’un clic.
+  L’outil interactif <a href="carte-avis.html"><b>Avis par avis</b></a>
+  permet de choisir une tempête et de faire défiler les avis du NHC : pour
+  chacun, la carte montre les départements que la prévision associée
+  aurait placés en alerte orange, les rayons de vent prévus à 34, 50 et
+  64 nœuds, la bande déjà observée, la trajectoire, et l’état des voies du
+  cadre à cet instant. Chaque couche se masque d’un clic.
 </p>
 
-{MAP_HTML}
-
-<p class="legend">
-  Hachures : orange par les rafales ; points : orange par la pluie ; plein :
-  les deux. Les avis
-  émis après l’heure limite sont affichés en transparence : ils ne peuvent
-  plus déclencher le cadre ni entrer dans le compte des départements.
-  Fond de carte OpenStreetMap ; polygones départementaux simplifiés.
+<p>
+  <a class="btn" href="carte-avis.html" style="display:inline-block;
+  background:var(--blue);color:#fff;padding:.55rem 1rem;border-radius:8px;
+  text-decoration:none;font-weight:600">Ouvrir l’outil ▸</a>
 </p>
 
 <h2>9. Méthode et limites</h2>
@@ -937,7 +753,6 @@ def render(tbl, verdicts, counts, freq, chart="", notes=None, pathways=None):
 </footer>
 
 </div>
-{MAP_JS}
 </body>
 </html>
 """
