@@ -98,7 +98,7 @@ border-radius:5px;margin-left:.4rem;vertical-align:middle}
 .badge.cut{background:#fbeaea;color:#a02a2a}
 .toggles{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.88rem;margin:.6rem 0}
 .toggles label{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
-.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;border:1px solid #0002}
+.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;border:1px solid #0002;vertical-align:-2px}
 #voies{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.6rem;
 margin-top:.8rem;font-size:.88rem}
 #voies .v{border:1px solid var(--line);border-radius:8px;padding:.55rem .75rem;background:#fafcfc}
@@ -715,24 +715,36 @@ letter-spacing:.04em;margin-bottom:.15rem}
   </div>
   <div class="toggles">
     <label><input type="checkbox" id="t-wind" checked>
-      <span class="sw" style="background:#ec835a"></span> Orange — rafales ≥ 100 km/h</label>
+      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-wind)"/></svg> Orange — rafales ≥ 100 km/h (hachures)</label>
     <label><input type="checkbox" id="t-rain" checked>
-      <span class="sw" style="background:#1862d8"></span> Orange — pluie ≥ 100 mm (point)</label>
+      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-rain)"/></svg> Orange — pluie ≥ 100 mm au point (points)</label>
+    <label><span class="sw" style="background:#ec835a"></span> Les deux (plein)</label>
     <label><input type="checkbox" id="t-cum" checked>
-      <span class="sw" style="background:#f7d9c9"></span> Départements déjà en orange (avis précédents, avant l’heure limite)</label>
+      <span class="sw" style="background:#f7d9c9"></span> Déjà en orange (avis précédents, avant l’heure limite)</label>
     <label><input type="checkbox" id="t-track" checked>
       <span class="sw" style="background:#1e2a2b"></span> Trajectoire prévue</label>
     <label><input type="checkbox" id="t-obsv">
       <span class="sw" style="background:#9aa5a6"></span> Trajectoire observée</label>
     <label><input type="checkbox" id="t-voies" checked> Voies du cadre</label>
   </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <pattern id="pat-wind" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+        <rect width="7" height="7" fill="#fff"/><rect width="3.5" height="7" fill="#ec835a"/>
+      </pattern>
+      <pattern id="pat-rain" patternUnits="userSpaceOnUse" width="7" height="7">
+        <rect width="7" height="7" fill="#fff"/><circle cx="3.5" cy="3.5" r="2" fill="#ec835a"/>
+      </pattern>
+    </defs>
+  </svg>
   <div id="carte"></div>
   <div id="voies"></div>
 </div>
 
 
 <p class="legend">
-  Violet : département en orange par le vent <i>et</i> la pluie. Les avis
+  Hachures : orange par les rafales ; points : orange par la pluie ; plein :
+  les deux. Les avis
   émis après l’heure limite sont affichés en transparence : ils ne peuvent
   plus déclencher le cadre ni entrer dans le compte des départements.
   Fond de carte OpenStreetMap ; polygones départementaux simplifiés.
@@ -795,7 +807,7 @@ letter-spacing:.04em;margin-bottom:.15rem}
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     {attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:12, opacity:.55}).addTo(map);
   let deptLayer, trackLayer = L.layerGroup().addTo(map), obsvLayer = L.layerGroup();
-  const COL = {none:'#e9eef0', cum:'#f7d9c9', wind:'#ec835a', rain:'#1862d8', both:'#8a2a8a', dim:'#d9dfe2'};
+  const COL = {none:'#e9eef0', cum:'#f7d9c9', wind:'url(#pat-wind)', rain:'url(#pat-rain)', both:'#ec835a'};
 
   function cumBefore(i){ // departments in orange on pre-cutoff advisories before i
     const s = new Set();
@@ -823,7 +835,7 @@ letter-spacing:.04em;margin-bottom:.15rem}
       if (h.w && h.r) c = COL.both; else if (h.w) c = COL.wind; else if (h.r) c = COL.rain;
       else if ($('t-cum').checked && cum.has(m.depts[j])) c = COL.cum;
       if (h.any){ nNow++; if(!a.cut) cumNow.add(m.depts[j]); }
-      l.setStyle({fillColor:c, fillOpacity: a.cut && h.any ? .45 : .8, color:'#fff', weight:1});
+      l.setStyle({fillColor:c, fillOpacity: a.cut && h.any ? .55 : .95, color:'#fff', weight:1});
       l.setTooltipContent(`<b>${m.depts[j]}</b><br>Rafales prévues : ${fmt(a.w[j])} km/h<br>` +
         `Pluie prévue, point : ${fmt(a.rp[j])} mm<br>Pluie prévue, moyenne : ${fmt(a.rm[j])} mm` +
         (cum.has(m.depts[j]) ? '<br><i>déjà en orange</i>' : ''));
