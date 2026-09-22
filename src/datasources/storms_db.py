@@ -20,7 +20,10 @@ import ocha_stratus as stratus
 import pandas as pd
 from sqlalchemy import text
 
-STAGE = "dev"
+# "prod" since 2026-09-22: the dev DB lost public network access that day and
+# ds-storms-pipeline's prod jobs now write the prod storms.* tables
+# (OCHA-DAP/ds-storms-pipeline#50).
+STAGE = "prod"
 
 
 def naive_utc(ts) -> pd.Timestamp:

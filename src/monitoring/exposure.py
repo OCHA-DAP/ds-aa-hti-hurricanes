@@ -40,7 +40,7 @@ _ADM0_BLOB = "fieldmaps/edge-matched/humanitarian/intl/adm0/HTI.parquet"
 def load_hti_adm0() -> gpd.GeoDataFrame:
     """FieldMaps edge-matched HTI adm0 (same boundary as storms-pipeline)."""
     gdf = stratus.load_geoparquet_from_blob(
-        _ADM0_BLOB, stage="dev", container_name="global"
+        _ADM0_BLOB, stage="prod", container_name="global"
     )
     if len(gdf) > 1:
         gdf = gdf.dissolve()
