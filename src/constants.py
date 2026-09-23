@@ -108,3 +108,14 @@ LISTMONK_TEST_LIST_ID = 110
 MIN_EMAIL_DISTANCE = 1000
 
 NUMERIC_NAME_REGEX = r"\b(?:One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|Sixteen|Seventeen|Eighteen|Nineteen|Twenty)\b"  # noqa: E501
+
+# SES (direct SMTP) backend — stop-gap while Listmonk is down (it runs on the
+# dev DB, which lost public network access on 2026-09-22). Selected with
+# EMAIL_BACKEND=ses; SES_RECIPIENTS / SES_TEST_RECIPIENTS env override.
+# See src/email/ses_mail.py.
+SES_RECIPIENTS_LIVE = [
+    "tristan.downing@un.org",
+    "zachary.arno@un.org",
+    "leonardo.milano@un.org",
+]
+SES_RECIPIENTS_TEST = ["tristan.downing@un.org"]

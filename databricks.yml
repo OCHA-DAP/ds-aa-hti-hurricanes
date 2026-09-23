@@ -37,6 +37,14 @@ variables:
   dgpc_storms:
     description: 'Storms for the DGPC rain job; "" = all, else "AL142016 AL132025"'
     default: ""
+  email_backend:
+    # TEMPORARY "ses" (direct SMTP through the humdata SES account, explicit
+    # recipients in src/constants.py) while Listmonk is down — it runs on the
+    # dev DB, which lost public network access on 2026-09-22. Flip back to
+    # "listmonk" once Listmonk is migrated. Needs DSCI_AWS_EMAIL_* in the dsci
+    # secret scope (the wrapper injects them like the Listmonk creds).
+    description: '"listmonk" | "ses" — send backend (see src/email/ses_mail.py)'
+    default: "ses"
   test_email:
     # Default is the safe test list; flip to "False" at framework go-live
     # to send to the real AA Haïti Listmonk lists.
@@ -95,6 +103,8 @@ resources:
           default: ${var.test_email}
         - name: dry_run
           default: ${var.dry_run}
+        - name: email_backend
+          default: ${var.email_backend}
 
       # Ephemeral Job Compute under the team policy (000C79D951EAF0D6),
       # not a standing interactive cluster: the policy injects the
@@ -127,6 +137,7 @@ resources:
             parameters:
               - "{{job.parameters.test_email}}"
               - "{{job.parameters.dry_run}}"
+              - "{{job.parameters.email_backend}}"
           libraries:
             - pypi: { package: "ocha-stratus>=0.1.7" }
             - pypi:

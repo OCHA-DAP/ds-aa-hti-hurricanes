@@ -20,7 +20,10 @@ from src.constants import (
     LISTMONK_INFO_LIST_ID,
     LISTMONK_TEST_LIST_ID,
     LISTMONK_TRIGGER_LIST_ID,
+    SES_RECIPIENTS_LIVE,
+    SES_RECIPIENTS_TEST,
 )
+from src.email.ses_mail import recipients_from_env, send_via_ses, wrap_html
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -35,6 +38,9 @@ def _parse_bool_env(name: str, default: bool = True) -> bool:
 
 TEST_EMAIL = _parse_bool_env("TEST_EMAIL", default=True)
 DRY_RUN = _parse_bool_env("DRY_RUN", default=True)
+# "listmonk" (default) or "ses" — direct SMTP through the humdata SES
+# account with explicit recipients; see src/email/ses_mail.py.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "listmonk").strip().lower() or "listmonk"
 
 _B64_IMG_RE = re.compile(r"data:image/png;base64,([A-Za-z0-9+/=]+)")
 
@@ -61,10 +67,22 @@ def send_campaign(
         campaign_name = f"[test] {campaign_name}"
     if DRY_RUN:
         logger.info(
-            f"DRY_RUN: would send '{subject}' "
+            f"DRY_RUN ({EMAIL_BACKEND}): would send '{subject}' "
             f"({len(body) / 1000:.0f} kB body) to "
             f"{resolve_list_ids(email_type)}"
         )
+        return None
+
+    if EMAIL_BACKEND == "ses":
+        # No Listmonk lists or template chrome: explicit recipients, CID
+        # inline images, bare body in a minimal HTML shell.
+        if TEST_EMAIL:
+            recipients = recipients_from_env(
+                SES_RECIPIENTS_TEST, "SES_TEST_RECIPIENTS"
+            )
+        else:
+            recipients = recipients_from_env(SES_RECIPIENTS_LIVE)
+        send_via_ses(subject, wrap_html(body), recipients, text_fallback=subject)
         return None
 
     client = ListmonkClient.from_env()
