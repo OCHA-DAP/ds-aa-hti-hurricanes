@@ -15,6 +15,8 @@ Conventions:
 - WSP percentage is the LOWER edge of a probability band.
 """
 
+from functools import lru_cache
+
 import geopandas as gpd
 import ocha_stratus as stratus
 import pandas as pd
@@ -34,7 +36,17 @@ def naive_utc(ts) -> pd.Timestamp:
     return ts
 
 
+@lru_cache(maxsize=None)
 def get_engine():
+    """One engine (and connection pool) per process.
+
+    Every fetch_* below does ``with get_engine().connect()``; without the
+    cache each call built a NEW engine whose pooled connection was never
+    released, and a single monitoring run leaked past prod Postgres's
+    max_connections=50 (every run from 2026-09-22 21:40 UTC failed with
+    "remaining connection slots are reserved"). The dev server's higher
+    limit had hidden it.
+    """
     return stratus.get_engine(stage=STAGE)
 
 
