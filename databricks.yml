@@ -38,13 +38,14 @@ variables:
     description: 'Storms for the DGPC rain job; "" = all, else "AL142016 AL132025"'
     default: ""
   email_backend:
-    # TEMPORARY "ses" (direct SMTP through the humdata SES account, explicit
-    # recipients in src/constants.py) while Listmonk is down — it runs on the
-    # dev DB, which lost public network access on 2026-09-22. Flip back to
-    # "listmonk" once Listmonk is migrated. Needs DSCI_AWS_EMAIL_* in the dsci
-    # secret scope (the wrapper injects them like the Listmonk creds).
+    # "listmonk" (default) sends through the team's Listmonk instance. "ses"
+    # (direct SMTP through the humdata SES account, explicit recipients in
+    # src/constants.py) is the escape hatch used 2026-09-22..25 while Listmonk
+    # was down; it needs DSCI_AWS_EMAIL_* in the dsci secret scope (the wrapper
+    # injects them like the Listmonk creds). Override per deploy with
+    # --var email_backend=ses if Listmonk goes down again.
     description: '"listmonk" | "ses" — send backend (see src/email/ses_mail.py)'
-    default: "ses"
+    default: "listmonk"
   test_email:
     # Default is the safe test list; flip to "False" at framework go-live
     # to send to the real AA Haïti Listmonk lists.
