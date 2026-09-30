@@ -89,10 +89,17 @@ resources:
         git_branch: ${var.git_branch}
 
       schedule:
-        # 03:50 / 09:50 / 15:50 / 21:50 UTC — after ds-storms-pipeline's
-        # :00/:30 runs have landed the advisory's tracks/exposure/WSP.
+        # TEMPORARY (cost saving, 2026-09-30): 04:15 / 10:15 / 16:15 / 22:15
+        # UTC. ds-storms-pipeline temporarily runs NHC ONCE per advisory, at
+        # :30 of 03/09/15/21, and still kicks this job when it finishes.
+        # At :50 that run would be mid-flight: tracks in (so no deferral)
+        # but obsv exposure/WSP not yet, and the advisory then dedups.
+        # This cron is only the fallback; :15 of the next hour clears even
+        # a slow run. Revert with the NHC schedule to:
+        # "0 50 3,9,15,21 * * ?" — 03:50 / 09:50 / 15:50 / 21:50, after the
+        # pipeline's :00/:30 runs have landed tracks/exposure/WSP.
         # Advisories not yet in the DB are deferred to the next run.
-        quartz_cron_expression: "0 50 3,9,15,21 * * ?"
+        quartz_cron_expression: "0 15 4,10,16,22 * * ?"
         timezone_id: UTC
 
       max_concurrent_runs: 1
