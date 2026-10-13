@@ -124,21 +124,22 @@ resources:
         - name: email_backend
           default: ${var.email_backend}
 
-      # Ephemeral Job Compute under the team policy (000C79D951EAF0D6),
-      # not a standing interactive cluster: the policy injects the
-      # DSCI_AZ_*/IMERG_* creds, and anyone with CAN_MANAGE on the job
-      # can operate it without permissions on someone's personal
-      # cluster. Listmonk creds come from databricks/run_monitor_job.py
-      # (dbutils.secrets), not the cluster env. The policy forbids
-      # single-node and fixes num_workers=1; the monitor is plain
-      # Python on the driver, so the worker just idles.
+      # Ephemeral Job Compute under the team's single-node policy
+      # (0017962FF5D1E3B9), not a standing interactive cluster: the
+      # policy injects the DSCI_AZ_*/IMERG_* creds, and anyone with
+      # CAN_MANAGE on the job can operate it without permissions on
+      # someone's personal cluster. Listmonk creds come from
+      # databricks/run_monitor_job.py (dbutils.secrets), not the
+      # cluster env. The policy fixes num_workers=0 and the singleNode
+      # profile (one VM; the monitor is plain Python on the driver), so
+      # neither is set here.
       job_clusters:
         - job_cluster_key: monitor_cluster
           new_cluster:
-            policy_id: "000C79D951EAF0D6"
+            policy_id: "0017962FF5D1E3B9"
+            apply_policy_default_values: true
             spark_version: "18.2.x-scala2.13"
             node_type_id: "Standard_DS4_v2"
-            num_workers: 1
             data_security_mode: SINGLE_USER
             azure_attributes:
               # The policy fixes spot_bid_max_price=100; set explicitly
@@ -203,10 +204,10 @@ resources:
       job_clusters:
         - job_cluster_key: dgpc_cluster
           new_cluster:
-            policy_id: "000C79D951EAF0D6"
+            policy_id: "0017962FF5D1E3B9"
+            apply_policy_default_values: true
             spark_version: "18.2.x-scala2.13"
             node_type_id: "Standard_DS4_v2"
-            num_workers: 1
             data_security_mode: SINGLE_USER
             azure_attributes:
               availability: SPOT_WITH_FALLBACK_AZURE
