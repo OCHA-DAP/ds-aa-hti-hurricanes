@@ -42,14 +42,14 @@ Emails are sent through the team Listmonk instance (`ocha-relay` client). Lists 
 - `AA Haïti ouragans - informations` (id 116) — every advisory while a storm is within 1 000 km: stage status, WSP exceedance chart, track map.
 - `AA Haïti ouragans - déclencheurs` (id 117) — one email per storm per stage when a stage fires.
 
-Send behaviour is controlled by env vars (safe by default): `TEST_EMAIL` (default `True` → internal test list 110) and `DRY_RUN` (default `True` → build but don't send). The deployed job runs with `dry_run=False`; flip `test_email=False` at framework go-live (`databricks bundle deploy -p default --var test_email=False`).
+Send behaviour is controlled by env vars (safe by default): `TEST_EMAIL` (default `True` → internal test list 110) and `DRY_RUN` (default `True` → build but don't send). The deployed job runs with `dry_run=False`; flip `test_email=False` at framework go-live (`databricks bundle deploy -p DEFAULT --var test_email=False`).
 
 ### Deployment
 
 ```shell
-databricks bundle deploy -p default          # deploy the prod job
-databricks bundle run hti_monitoring -p default   # manual run
-databricks bundle deploy -t dev -p default --var git_branch=my-feature  # feature testing
+databricks bundle deploy -p DEFAULT          # deploy the prod job
+databricks bundle run hti_monitoring -p DEFAULT   # manual run
+databricks bundle deploy -t dev -p DEFAULT --var git_branch=my-feature  # feature testing
 ```
 
 The job clones this repo from GitHub at run time (`source: GIT`), so pushing `main` updates the next run without a redeploy.
@@ -122,9 +122,9 @@ compute policy — nobody has to hold the password (job `dgpc_rain` in
 `databricks.yml`; ~45 min for all 42 storms):
 
 ```shell
-databricks bundle deploy -p default
-databricks bundle run dgpc_rain -p default --params dgpc_storms=AL142016  # smoke test
-databricks bundle run dgpc_rain -p default                                # all storms
+databricks bundle deploy -p DEFAULT
+databricks bundle run dgpc_rain -p DEFAULT --params dgpc_storms=AL142016  # smoke test
+databricks bundle run dgpc_rain -p DEFAULT                                # all storms
 ```
 
 A `--storm`/`dgpc_storms` run **merges** into the stored table rather than

@@ -1,16 +1,16 @@
 # Databricks Asset Bundle — runs the Haiti hurricane trigger monitoring
 # as a DBX job (same conventions as ds-storms-alerts).
 #
-#   databricks bundle deploy -p default                        # deploy prod
-#   databricks bundle run hti_monitoring -p default            # manual run
-#   databricks bundle run hti_monitoring -p default --params test_email=True,dry_run=True
+#   databricks bundle deploy -p DEFAULT                        # deploy prod
+#   databricks bundle run hti_monitoring -p DEFAULT            # manual run
+#   databricks bundle run hti_monitoring -p DEFAULT --params test_email=True,dry_run=True
 #
 # The `dev` target is for feature-branch testing (auto-pauses the
 # schedule, test list only):
 #
-#   databricks bundle deploy  -t dev -p default --var git_branch=my-feature
-#   databricks bundle run     hti_monitoring -t dev -p default
-#   databricks bundle destroy -t dev -p default
+#   databricks bundle deploy  -t dev -p DEFAULT --var git_branch=my-feature
+#   databricks bundle run     hti_monitoring -t dev -p DEFAULT
+#   databricks bundle destroy -t dev -p DEFAULT
 #
 # The job clones this repo (source: GIT) at ${var.git_branch} and runs
 # databricks/run_monitor_job.py, which shells out to
@@ -57,7 +57,7 @@ targets:
     mode: production
     default: true
     workspace:
-      profile: default
+      profile: DEFAULT
       root_path: /Workspace/Users/adm.tdowning@global.un.org/.bundle/${bundle.name}/${bundle.target}
     run_as:
       # Same identity the live job already runs as; production mode requires an explicit run_as.
@@ -70,7 +70,7 @@ targets:
   dev:
     mode: development
     workspace:
-      profile: default
+      profile: DEFAULT
 
 resources:
   jobs:
@@ -171,9 +171,9 @@ resources:
     # One-off analysis job (no schedule): evaluates the DGPC rainfall
     # criteria against IMERG half-hourly for every storm in the Haiti set.
     #
-    #   databricks bundle deploy -p default
-    #   databricks bundle run dgpc_rain -p default --params dgpc_storms=AL142016
-    #   databricks bundle run dgpc_rain -p default        # all 42 storms
+    #   databricks bundle deploy -p DEFAULT
+    #   databricks bundle run dgpc_rain -p DEFAULT --params dgpc_storms=AL142016
+    #   databricks bundle run dgpc_rain -p DEFAULT        # all 42 storms
     #
     # It exists as a DBX job rather than a local script only because the
     # Earthdata credentials live in the `dsci` secret scope and are
