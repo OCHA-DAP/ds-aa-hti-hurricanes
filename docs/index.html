@@ -1,167 +1,69 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Action anticipatoire Haïti — ouragans</title>
-<style>
-  :root {
-    --blue: #1862d8;
-    --blue-dark: #0e4aab;
-    --ink: #1e2a2b;
-    --muted: #5e6a6b;
-    --bg: #f4f7f9;
-    --card: #ffffff;
-    --line: #dde5e8;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
-    color: var(--ink);
-    background: var(--bg);
-    padding: 8vh 6vw 6vh;
-    line-height: 1.55;
-  }
-  .wrap { max-width: 68rem; margin: 0 auto; }
-  .kicker {
-    text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.8rem;
-    font-weight: 700; color: var(--blue); margin-bottom: 14px;
-  }
-  h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.15; margin-bottom: 18px; }
-  p.lead {
-    font-size: clamp(1rem, 2.2vw, 1.2rem); color: var(--ink);
-    max-width: 46em; margin-bottom: 44px;
-  }
-  .cards {
-    display: grid; gap: 22px;
-    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-  }
-  .card {
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 26px 26px 22px;
-    display: flex; flex-direction: column;
-    box-shadow: 0 2px 10px rgba(20,40,60,0.05);
-  }
-  .card h2 { font-size: 1.25rem; line-height: 1.3; margin-bottom: 10px; }
-  .card p { color: var(--muted); font-size: 0.96rem; flex: 1; margin-bottom: 18px; }
-  .card .tag {
-    display: inline-block; align-self: flex-start; font-size: 0.72rem;
-    text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
-    padding: 4px 9px; border-radius: 6px; margin-bottom: 12px;
-    background: #eaf1fd; color: var(--blue-dark);
-  }
-  .card .tag.draft { background: #fdf1e3; color: #9a5b12; }
-  .card .tag.archive { background: #eef2f5; color: #5e6a6b; }
-  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
-  a.btn {
-    display: inline-flex; align-items: center; gap: 9px;
-    padding: 11px 20px; border-radius: 10px; text-decoration: none;
-    font-size: 0.97rem; font-weight: 600;
-    transition: transform 0.08s ease;
-  }
-  a.btn:hover { transform: translateY(-1px); }
-  a.btn.primary { background: var(--blue); color: #fff; }
-  a.btn.primary:hover { background: var(--blue-dark); }
-  a.btn.secondary {
-    background: var(--card); color: var(--ink); border: 1px solid var(--line);
-  }
-  a.btn.secondary:hover { border-color: var(--blue); color: var(--blue); }
-  .btn .ico { font-size: 1.1rem; line-height: 1; }
-  p.meta {
-    margin-top: 44px; font-size: 0.88rem; color: var(--muted);
-    border-top: 1px solid var(--line); padding-top: 22px;
-  }
-  p.meta a { color: var(--muted); }
-</style>
+<title>Haïti, ouragans — Action anticipatoire — OCHA Centre de données humanitaires</title>
+<meta name="description" content="Cadre d’action anticipatoire pour les tempêtes et ouragans en Haïti : le mécanisme de déclenchement de chaque version du cadre et les analyses qui l’ont fondé.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 <div class="wrap">
-  <div class="kicker">Action anticipatoire · Ouragans · Haïti</div>
-  <h1>Cadre d’action anticipatoire : tempêtes et ouragans</h1>
-  <p class="lead">
-    Documentation publique du mécanisme de déclenchement proposé pour la
-    révision 2026 du cadre, et des analyses qui l’accompagnent. Préparé par
-    le Centre de données humanitaires d’OCHA avec la DGPC et les partenaires
-    du cadre.
-  </p>
 
-  <div class="cards">
-    <div class="card">
-      <span class="tag">Proposition</span>
-      <h2>Le mécanisme de déclenchement</h2>
-      <p>
-        Les trois déclencheurs proposés (Mobilisation, Action, Réponse
-        précoce), chaque voie d’activation expliquée pas à pas avec cartes et
-        exemples (ouragan Matthew, 2016), et le registre complet des
-        activations historiques 2002–2025. Mise à jour de septembre 2026 :
-        au stade Action, la voie « alerte orange DGPC dans au moins
-        6 départements » remplace la voie « alerte rouge + Hurricane Warning ».
-      </p>
-      <div class="actions">
-        <a class="btn primary" href="slides.html">
-          <span class="ico">▶</span> Voir les diapositives
-        </a>
-        <a class="btn secondary" href="assets/declencheur-aa-haiti-ouragans.pdf"
-           download="declencheur-aa-haiti-ouragans.pdf">
-          <span class="ico">⬇</span> PDF
-        </a>
-      </div>
+  <header class="hero">
+    <canvas id="bg" aria-hidden="true"></canvas>
+    <div class="inner">
+      <p class="eyebrow">OCHA · Centre de données humanitaires</p>
+      <h1>Haïti — Action anticipatoire pour les tempêtes et ouragans</h1>
+      <p>Le mécanisme de déclenchement du cadre d’action anticipatoire pour les tempêtes et
+         ouragans en Haïti, préparé avec la DGPC et les partenaires du cadre : pour chaque
+         version, la définition du déclencheur et les analyses qui l’ont fondé — tempêtes
+         historiques, prévisions du NHC, précipitations et alertes de la DGPC.</p>
+    </div>
+  </header>
+
+  <main>
+    <p class="label">Versions du cadre</p>
+    <div class="grid">
+
+      <a class="k" href="2026/">
+        <h2>Cadre 2026</h2>
+        <p>Le mécanisme de déclenchement approuvé pour 2026 et toutes les analyses qui l’ont
+           fondé : la définition des trois déclencheurs, les diapositives, la simulation
+           historique 2002–2025 avec la carte avis par avis, l’alerte orange de la DGPC par
+           département et l’alerte rouge confirmée par un Hurricane Warning du NHC.</p>
+        <span class="foot"><em>/2026/</em></span>
+      </a>
+
     </div>
 
-        <div class="card">
-      <span class="tag draft">Analyse</span>
-      <h2>Alerte orange de la DGPC par département</h2>
-      <p>
-        La DGPC émet ses alertes par département. Simulation historique sur
-        prévisions (CHIRPS-GEFS, NHC) : tempête par tempête, le cadre
-        aurait-il été activé, et combien de départements auraient été en
-        alerte orange — selon que la pluie est lue en moyenne ou au point le
-        plus arrosé.
-      </p>
-      <div class="actions">
-        <a class="btn primary" href="dgpc-departements.html">
-          <span class="ico">▤</span> Lire l’analyse
-        </a>
-      </div>
-    </div>
+    <p class="label label-2">Code</p>
+    <div class="grid">
 
-    <div class="card">
-      <span class="tag">Outil</span>
-      <h2>Avis par avis : carte interactive</h2>
-      <p>
-        Choisir une tempête et faire défiler les avis du NHC : rayons de
-        vent prévus, bande observée, départements en alerte orange DGPC,
-        et voies de déclenchement du cadre à chaque instant.
-      </p>
-      <div class="actions">
-        <a class="btn primary" href="carte-avis.html">
-          <span class="ico">◎</span> Ouvrir la carte
-        </a>
-      </div>
-    </div>
+      <a class="k" href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">
+        <h2>Dépôt GitHub</h2>
+        <p>Le code du système de suivi et des analyses : surveillance des avis du NHC,
+           précipitations CHIRPS-GEFS et IMERG, exposition aux vents de 64 nœuds, et les
+           scripts qui produisent les pages de ce site.</p>
+        <span class="foot"><em>OCHA-DAP/ds-aa-hti-hurricanes</em><span class="chip chip-ext">Externe</span></span>
+      </a>
 
-    <div class="card">
-      <span class="tag archive">Archive</span>
-      <h2>Niveaux d’alerte de la DGPC : évaluation historique</h2>
-      <p>
-        Les seuils de pluie et de vent des alertes orange et rouge de la DGPC,
-        appliqués rétrospectivement aux tempêtes ayant approché Haïti depuis
-        2002 : quelles tempêtes auraient atteint chaque niveau, à quelle
-        fréquence, et ce que le résultat change selon les hypothèses.
-      </p>
-      <div class="actions">
-        <a class="btn secondary" href="dgpc-alertes.html">
-          <span class="ico">▤</span> Consulter l’archive
-        </a>
-      </div>
     </div>
+  </main>
+
+  <div class="note">
+    <p><strong>Ajouter une page ?</strong> Chaque version du cadre a son propre dossier sous
+       <code>docs/</code> (la version 2026 est dans <code>docs/2026/</code>) et une carte
+       ci-dessus. GitHub Pages publie <code>docs/</code> depuis la branche <code>main</code>.
+       Voir le
+       <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes#published-site">README</a>.</p>
   </div>
 
-  <p class="meta">
-    OCHA · Centre de données humanitaires —
-    <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">code source et documentation</a>
-  </p>
 </div>
+
+<script src="assets/hero.js" defer></script>
 </body>
 </html>

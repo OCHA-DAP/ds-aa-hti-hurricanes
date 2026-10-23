@@ -87,3 +87,21 @@ GEFS_UPSAMPLE_RES = 0.01
 # Simulated alerts only count if the forecast that met the criterion was
 # issued before the framework's 48 h cutoff (src.constants.LT_CUTOFF_HRS).
 ORANGE_WIND_VARIANT = "gust_land"
+
+# The 2026 framework's Action stage activates when DGPC declares orange in
+# at least this many of the 10 departments (chosen September 2026).
+ORANGE_N_DEPTS = 6
+
+# South-west to north-east, the order a reader scans a map of Haiti.
+DEPT_ORDER = [
+    "Grande'Anse",
+    "Sud",
+    "Nippes",
+    "Sud-Est",
+    "Ouest",
+    "Centre",
+    "Artibonite",
+    "Nord-Ouest",
+    "Nord",
+    "Nord-Est",
+]

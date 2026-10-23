@@ -9,5 +9,5 @@ communicated to OCHA in August 2026:
 DGPC did not specify whether these are forecast or observed values, nor
 which data sources or spatial aggregation they refer to. The assumptions
 this analysis makes are documented in ``src/dgpc/constants.py`` and on the
-published page (``docs/dgpc-alertes.html``).
+published page (``docs/2026/premiere-evaluation.html``).
 """

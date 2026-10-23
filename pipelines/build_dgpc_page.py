@@ -1,4 +1,4 @@
-"""Build docs/dgpc-alertes.html from the DGPC analysis outputs.
+"""Build docs/2026/premiere-evaluation.html, the archived first DGPC assessment.
 
 Reads the parquet written by ``run_dgpc_wind.py`` (and ``run_dgpc_rain.py``
 once Earthdata credentials allow it) and renders the published French page.
@@ -30,7 +30,7 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 PREFIX = f"{blob.PROJECT_PREFIX}/processed/dgpc"
-OUT = Path("docs/dgpc-alertes.html")
+OUT = Path("docs/2026/premiere-evaluation.html")
 
 
 def storm_label(row):

@@ -1,25 +1,23 @@
-"""Render the standalone advisory-by-advisory map (``docs/carte-avis.html``).
+"""The advisory-by-advisory map and the per-storm table of the 2026 page.
 
 Pick a storm, step through its NHC advisories, and see for each one what
 the forecasts of the moment implied: the wind buffers at 34 / 50 / 64 kt,
 the observed swath so far, the departments DGPC would have placed in
-orange on the paired CHIRPS-GEFS forecast and the gust field, and the
-framework's own pathway values. Every layer toggles.
+orange on the paired CHIRPS-GEFS forecast and the gust field, whether an
+NHC Hurricane Warning was in force, and the framework's own pathway
+values. Every layer toggles. ``src.dgpc.page_2026`` places the pieces.
 
-Data: ``docs/assets/carte/index.json`` plus one file per storm, written
-by ``src.dgpc.map_data``.
+Data: ``docs/2026/assets/carte/index.json`` plus one file per storm,
+written by ``src.dgpc.map_data``.
 """
 
-from datetime import date
+import json
 from html import escape
 
 import numpy as np
 import pandas as pd
 
-from src.constants import D_THRESH, LT_CUTOFF_HRS
-from src.dgpc import constants as dc
-from src.dgpc.dept_page import PROPOSED_N
-from src.dgpc.page import CSS, MONTHS_FR, fr_num
+from src.dgpc.page import fr_num
 
 MAP_CSS = """
 .wrap.wide{max-width:74rem}
@@ -50,6 +48,7 @@ vertical-align:-2px}
 margin-top:.8rem;font-size:.88rem}
 #voies .v{border:1px solid var(--line);border-radius:8px;padding:.55rem .75rem;background:#fafcfc}
 #voies .v.hit{border-color:#0f8a5f;background:#e7f4ee}
+#voies .v.part{border-color:#e8cfa8;background:#fdf6ec}
 #voies .v.off{opacity:.55}
 #voies .v b{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;
 letter-spacing:.04em;margin-bottom:.15rem}
@@ -142,6 +141,10 @@ MAP_JS = r"""
 (function(){
   const $ = id => document.getElementById(id);
   const fmt = (v, d=0) => (v==null ? '—' : v.toLocaleString('fr-FR',{maximumFractionDigits:d}));
+  // NHC Hurricane Warnings for Haiti, by storm: the advisory that carried
+  // it (t), its forecast hours to closest pass, and whether the replay
+  // counts that advisory as before the heure limite.
+  const HW = __HW__;
   let META, DEPTS, INDEX, storm, idx = 0, timer = null;
   const cache = {};
   const map = L.map('carte', {scrollWheelZoom:false}).setView([18.9,-72.8], 7);
@@ -209,16 +212,22 @@ MAP_JS = r"""
     const rainHit = !a.cut && a.rain!=null && a.rain >= m.fcast_rain_mm;
     const expHit = !a.cut && a.exp > 0;
     const orHit = !a.cut && nCum >= m.n_depts;
+    const hw = HW[storm.id], hwOn = !!hw && a.t >= hw.t;
+    const hwVal = hwOn ? 'Hurricane Warning émis' : (hw ? 'pas encore de Hurricane Warning' : 'aucun Hurricane Warning');
+    const hwSub = hw
+      ? `émis à ${fmt(hw.lead, 1)} h du passage prévu, ${hw.pre ? 'avant' : 'après'} l’heure limite · alerte rouge DGPC : pas d’archive`
+      : 'le NHC n’a émis aucun Hurricane Warning pour Haïti pour cette tempête';
     v.innerHTML =
       card('Pluie prévue (moy. nationale, 2 j)', `${fmt(a.rain)} mm`, `seuil ${m.fcast_rain_mm} mm · CHIRPS-GEFS du ${a.gefs ?? '—'}`, rainHit, off) +
       card(`Exposition prévue à ${m.exposure_kt} nœuds`, `${fmt(a.exp)} pers.`, 'seuil : > 0 · zone prévue hors bande déjà observée', expHit, off) +
-      card('Orange DGPC simulée — départements', `${nNow} à cet avis · ${nCum} cumulés`, `estimation d’après les seuils de la DGPC, pas son registre · proposition : ≥ ${m.n_depts} départements`, orHit, off) +
+      card('Orange DGPC simulée — départements', `${nNow} à cet avis · ${nCum} cumulés`, `estimation d’après les seuils de la DGPC, pas son registre · seuil du cadre : ≥ ${m.n_depts} départements`, orHit, off) +
+      card('Alerte rouge DGPC + Hurricane Warning', hwVal, hwSub, false, off, hwOn && !a.cut) +
       card('Cadre activé à cet avis ?', (rainHit||expHit||orHit) ? 'oui' : 'non',
-        a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange', (rainHit||expHit||orHit), off);
+        a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange · alerte rouge DGPC non archivée', (rainHit||expHit||orHit), off);
     $('adv-range').value = idx; $('prev').disabled = idx===0; $('next').disabled = idx===storm.adv.length-1;
   }
-  function card(t, val, sub, hit, off){
-    return `<div class="v${hit?' hit':''}${off}"><b>${t}</b><div class="val">${val}</div><div style="color:#5e6a6b;font-size:.8rem">${sub}</div></div>`;
+  function card(t, val, sub, hit, off, part){
+    return `<div class="v${hit?' hit':''}${part?' part':''}${off}"><b>${t}</b><div class="val">${val}</div><div style="color:#5e6a6b;font-size:.8rem">${sub}</div></div>`;
   }
   function loadStorm(i){
     const meta = INDEX[i];
@@ -227,16 +236,21 @@ MAP_JS = r"""
     $('loading').textContent = 'chargement…';
     return fetch(`assets/carte/${meta.id}.json`).then(r=>r.json()).then(d => { cache[meta.id]=d; $('loading').textContent=''; return d; });
   }
-  function setStorm(i){
+  function setStorm(i, keepUrl){
     loadStorm(i).then(d => {
       storm = d; $('adv-range').max = storm.adv.length-1;
       const first = storm.adv.findIndex(a => META.depts.some((d,j)=>hit(a,j).any));
       idx = first >= 0 ? Math.max(0, first-1) : 0;
-      history.replaceState(null, '', '#'+storm.id);
+      // The page is long: only a deliberate choice of storm goes in the URL.
+      if (!keepUrl) history.replaceState(null, '', '#carte-'+storm.id);
       render();
     });
   }
-  function step(k){ idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
+  function onScreen(){
+    const r = $('carte-wrap').getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
+  }
+  function step(k){ if (!storm) return; idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
   fetch('assets/carte/index.json').then(r=>r.json()).then(data => {
     META = data.meta; DEPTS = data.depts; INDEX = data.storms;
     deptLayer = L.geoJSON(DEPTS, {style:{color:'#fff',weight:1,fillColor:COL.none,fillOpacity:.95},
@@ -244,8 +258,9 @@ MAP_JS = r"""
     trackLayer.addTo(map); obsvLayer.addTo(map);
     const sel = $('storm-sel');
     INDEX.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label; sel.appendChild(o); });
-    const want = location.hash.replace('#','') || 'AL142016';
-    const start = INDEX.findIndex(s=>s.id===want);
+    // #carte-AL142016, or the bare #AL142016 of links to the old map page.
+    const hm = location.hash.match(/^#(?:carte-)?(AL\d{6})$/);
+    const start = INDEX.findIndex(s=>s.id===(hm ? hm[1] : 'AL142016'));
     sel.value = start>=0 ? start : 0;
     sel.onchange = e => setStorm(+e.target.value);
     $('adv-range').oninput = e => { idx = +e.target.value; render(); };
@@ -261,11 +276,12 @@ MAP_JS = r"""
       if (k>=0){ sel.value=k; setStorm(k); $('carte-wrap').scrollIntoView({behavior:'smooth'}); }
     });
     document.addEventListener('keydown', e => {
-      if (e.target.tagName==='SELECT' || e.target.tagName==='INPUT') return;
+      if (e.target.tagName==='SELECT' || e.target.tagName==='INPUT' || !onScreen()) return;
       if (e.key==='ArrowLeft') step(-1); else if (e.key==='ArrowRight') step(1);
     });
     ['t-wind','t-rain','t-cum','t-b34','t-b50','t-b64','t-swath','t-track','t-obsv','t-voies'].forEach(id => $(id).onchange = render);
-    setStorm(+sel.value);
+    setStorm(+sel.value, true);
+    if (hm) $('carte-wrap').scrollIntoView();
   }).catch(err => { $('adv-lab').textContent = 'Données de la carte indisponibles : ' + err; });
 })();
 </script>
@@ -306,12 +322,36 @@ def _yes(flag):
     )
 
 
-def _activation_table(pdf, meta):
+def map_js(warnings):
+    """The map script, with the Hurricane Warnings it needs inlined."""
+    hw = {
+        r.atcf_id: {
+            "t": r.advisory_time_utc.strftime("%Y-%m-%dT%H:%M"),
+            "lead": float(r.time_to_closest_h),
+            "pre": bool(r.pre_cutoff),
+        }
+        for r in warnings.itertuples()
+    }
+    return MAP_JS.replace("__HW__", json.dumps(hw, separators=(",", ":")))
+
+
+def _hw_cell(w):
+    """Hours to closest pass at which the Hurricane Warning was issued."""
+    if w is None:
+        return "<td class='val'>—</td>"
+    lead = float(w.time_to_closest_h)
+    txt = f"{fr_num(lead, 0 if lead.is_integer() else 1)} h"
+    cls = "val pre" if w.pre_cutoff else "val"
+    return f"<td class='{cls}'>{txt}</td>"
+
+
+def activation_table(pdf, meta, warnings):
     """Every storm: what would have activated, and why.
 
     Columns are grouped: the framework's own thresholds (forecast and
-    observed, each wind exposure and rain), then the simulated DGPC
-    orange count, then the record - impact and CERF.
+    observed, each wind exposure and rain), then the two official-alert
+    pathways (simulated DGPC orange count, NHC Hurricane Warning), then
+    the record - impact and CERF.
     """
     from src.dgpc.pathways import flags
 
@@ -322,6 +362,7 @@ def _activation_table(pdf, meta):
     )
     hard = flags(pdf, rf, ro, None)
     full = flags(pdf, rf, ro, n_p)
+    hw = {w.atcf_id: w for w in warnings.itertuples()}
     pop_col = pdf["pop_affected_n"]
     pop_max = float(pop_col.max()) if pop_col.notna().any() else 1.0
     order = pdf.sort_values(
@@ -364,8 +405,8 @@ def _activation_table(pdf, meta):
         orange_na = (not r["orange_rain_known"]) and r["n_orange"] < n_p
         rows.append(
             "<tr>"
-            f"<td class='nm'><a href='#{r['atcf_id']}' data-storm='{r['atcf_id']}'>"
-            f"{escape(str(r['label']))}</a></td>"
+            f"<td class='nm'><a href='#carte-{r['atcf_id']}' "
+            f"data-storm='{r['atcf_id']}'>{escape(str(r['label']))}</a></td>"
             + _num(r["fcast_exp_64"], 1, also=r.get("fcast_exp_64_all"))
             + _num(r["fcast_rain_mm"], rf, also=r.get("fcast_rain_mm_all"))
             + _num(r["obsv_exp_64"], 1)
@@ -373,6 +414,7 @@ def _activation_table(pdf, meta):
             + _num(
                 r["n_orange"], n_p, na=orange_na, also=r.get("n_orange_all")
             )
+            + _hw_cell(hw.get(r["atcf_id"]))
             + _yes(bool(f["any"]))
             + pop_cell
             + cerf_cell
@@ -385,6 +427,7 @@ def _activation_table(pdf, meta):
         "oe": int(hard["obsv_exp"].sum()),
         "or": int(hard["obsv_rain"].fillna(False).sum()),
         "on": int(full["orange"].sum()),
+        "hw": int(warnings["pre_cutoff"].sum()),
     }
     return f"""
 <div class="tablewrap"><table class="wraphead act">
@@ -392,13 +435,15 @@ def _activation_table(pdf, meta):
 <tr>
   <th rowspan="3">Tempête</th>
   <th colspan="4" class="g1">Indicateurs mesurés</th>
-  <th rowspan="3" class="g2">Alerte orange<br>DGPC (simulée)<br><span class="thr">dép. ≥ {n_p}</span></th>
+  <th colspan="2" class="g2">Alertes officielles<br><span class="thr">stade Action</span></th>
   <th rowspan="3" class="g4">Activation</th>
   <th colspan="2" class="g3">Historique</th>
 </tr>
 <tr>
   <th colspan="2" class="g1">Prévision</th>
   <th colspan="2" class="g1">Observation</th>
+  <th rowspan="2" class="g2">Orange DGPC<br>(simulée)<br><span class="thr">dép. ≥ {n_p}</span></th>
+  <th rowspan="2" class="g2">Hurricane<br>Warning<br><span class="thr">h avant passage</span></th>
   <th rowspan="2" class="g3">Pop.<br>affectée</th>
   <th rowspan="2" class="g3">CERF</th>
 </tr>
@@ -416,143 +461,9 @@ def _activation_table(pdf, meta):
   <td>Total ({len(pdf)})</td>
   <td class='val'>{tot["fe"]}</td><td class='val'>{tot["fr"]}</td>
   <td class='val'>{tot["oe"]}</td><td class='val'>{tot["or"]}</td>
-  <td class='val'>{tot["on"]}</td>
+  <td class='val'>{tot["on"]}</td><td class='val'>{tot["hw"]}</td>
   <td class='val' style='text-align:center'>{tot["full"]}</td>
   <td></td><td></td>
 </tr></tfoot>
 </table></div>
-"""
-
-
-def render(n_storms, pdf=None, meta=None, deck_trig=None):
-    today = date.today()
-    stamp = f"{MONTHS_FR[today.month]} {today.year}"
-    table_section = ""
-    if pdf is not None and len(pdf):
-        table_section = f"""
-<h2>Tempête par tempête : ce qui aurait déclenché, et pourquoi</h2>
-
-<p style="max-width:none">
-  Chaque tempête du jeu, par population affectée décroissante, avec la
-  valeur de chaque indicateur sur les avis émis avant l’heure limite.
-  Cases orange : seuil atteint. Les <b>indicateurs mesurés</b> sont les
-  seuils purement quantitatifs — prévision ou observation, exposition ou
-  précipitations. La colonne <b>activation</b> est le verdict d’ensemble
-  de la proposition : l’un des indicateurs mesurés atteint, <i>ou</i>
-  l’alerte orange simulée dans au moins {meta["n_depts"]} départements.
-  Cliquer sur une tempête pour la charger dans la carte.
-</p>
-
-{_activation_table(pdf, meta)}
-
-<p class="legend" style="max-width:none">
-  Entre crochets, en petit : la même valeur en ignorant l’heure limite —
-  ce que les prévisions ont fini par dire, même trop tard pour agir ;
-  en orange lorsque ce maximum tardif atteint le seuil. Sans crochets,
-  les deux valeurs sont identiques.
-  Exposition en personnes ; précipitations en mm sur deux jours glissants
-  (moyenne nationale, CHIRPS-GEFS en prévision, IMERG en observation) ;
-  alerte orange en nombre de départements (sur 10). « — » en prévision :
-  aucun avis avant l’heure limite ne prévoyait de passage à moins de
-  {D_THRESH} km. Laura et Isaias 2020 n’ont pas de prévision CHIRPS-GEFS
-  archivée : leur compte de départements ne tient qu’au vent. Population
-  affectée : EM-DAT, reprise des diapositives. CERF : « pre- » = antérieur
-  à la création du CERF (2006) ; « combined » = allocation combinée
-  Fay/Gustav/Hanna/Ike (2008).
-</p>
-"""
-    return f"""<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Avis par avis — ouragans, Haïti</title>
-<style>{CSS}{MAP_CSS}</style>
-</head>
-<body>
-<div class="wrap wide">
-
-<header>
-  <p class="crumb"><a href="./">←
-  Action anticipatoire · Ouragans · Haïti</a></p>
-  <div class="kicker">Outil · {escape(stamp)}</div>
-  <h1>Avis par avis : ce que les prévisions disaient, et ce que le cadre
-  et la DGPC en auraient fait</h1>
-  <p class="sub">
-    Choisir une tempête, puis faire défiler les avis du NHC. Pour chaque
-    avis : la trajectoire et les rayons de vent prévus, la bande de vents
-    déjà observée, les départements que la prévision de pluie et le champ
-    de rafales auraient placés en alerte orange, et l’état des voies de
-    déclenchement du cadre à cet instant. {n_storms} tempêtes passées à
-    moins de {D_THRESH} km d’Haïti, {dc.SEASON_START}–{dc.SEASON_END}.
-  </p>
-</header>
-
-<div class="callout">
-  <h3>Les alertes orange affichées sont une simulation, pas un registre</h3>
-  <p>
-    La DGPC n’a pas fourni l’historique de ses alertes. Les départements
-    « en orange » sur cette carte et dans le tableau sont une
-    <b>estimation</b> : les seuils que la DGPC a indiqués (100 mm en 24 h,
-    rafales de 100 km/h), appliqués par nos soins aux prévisions de
-    l’époque. Ils montrent ce que ces seuils auraient donné, non ce que la
-    DGPC a réellement déclaré.
-  </p>
-</div>
-
-{MAP_HTML}
-
-<p class="legend" style="max-width:none">
-  <b>Lecture.</b> Orange plein : département en orange par les rafales
-  <i>et</i> la pluie ; hachures : rafales seules ; points : pluie seule ;
-  orange pâle : déjà en orange sur un avis précédent émis avant l’heure
-  limite. Les rayons de vent sont les polygones du NHC à 34, 50 et
-  64 nœuds, construits comme pour le déclencheur d’exposition ; la bande
-  observée est la zone déjà balayée par des vents de 64 nœuds à
-  l’émission, que l’exposition prévue exclut. Les avis émis moins de
-  {LT_CUTOFF_HRS} h avant le passage au plus près sont marqués « après
-  l’heure limite » : ils ne peuvent plus déclencher le cadre et sont
-  affichés en transparence. Flèches ← → pour changer d’avis. Le lien de
-  la page retient la tempête choisie.
-</p>
-
-<div class="note" style="max-width:none">
-  <h3>Ce qui est calculé, et comment</h3>
-  <ul>
-    <li><b>Pluie prévue</b> : prévision CHIRPS-GEFS du jour de l’avis (ou la
-        plus récente), moyenne nationale sur deux jours glissants pour la
-        voie du cadre (seuil 68 mm), et point le plus arrosé de chaque
-        département pour l’alerte orange (seuil 100 mm / 24 h), sur les
-        jours où la trajectoire prévue passe à moins de {D_THRESH} km.</li>
-    <li><b>Rafales prévues</b> : champ de vent paramétrique reconstruit à
-        partir des rayons de vent de l’avis, vent soutenu réduit sur terre
-        (×0,85) puis converti en rafales (×1,25), maximum dans chaque
-        département (seuil orange 100 km/h).</li>
-    <li><b>Exposition prévue</b> : population dans le polygone de vents de
-        64 nœuds prévu, hors bande déjà observée, plus la population de
-        cette bande — la convention du déclencheur.</li>
-    <li><b>Alerte orange DGPC</b> : un département est compté dès qu’un
-        avis émis avant l’heure limite atteint l’un des deux critères ; la
-        proposition retient <b>{PROPOSED_N} départements</b>. Voir
-        <a href="dgpc-departements.html">l’analyse par département</a>.</li>
-  </ul>
-</div>
-
-{table_section}
-
-<footer>
-  OCHA · Centre de données humanitaires — outil préparé pour la révision
-  2026 du cadre d’action anticipatoire pour les tempêtes et ouragans en
-  Haïti. Code et méthode :
-  <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes"
-  >ds-aa-hti-hurricanes</a>.
-  Données : NHC (avis de prévision et rayons de vent), CHIRPS-GEFS (UCSB
-  CHC), WorldPop 2026. Fond de carte OpenStreetMap. Mise à jour
-  {escape(stamp)}.
-</footer>
-
-</div>
-{MAP_JS}
-</body>
-</html>
 """
