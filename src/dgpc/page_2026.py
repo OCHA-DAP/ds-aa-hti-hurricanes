@@ -40,7 +40,19 @@ RAIN_OBSV = TRIGGERS["obsv"]["rain_mm"]
 # précoce and the overall figure are recomputed from the replay below and
 # must agree; Mobilisation (120 h cap) is not in the replay, which reads
 # forecast rain at the Action cap, so the document's figure is quoted.
+# (src.constants.TRIGGERS, which the monitoring emails print, still holds
+# the pre-orange Action figure of 3.0; the monitoring has neither DGPC
+# pathway.)
 DOC_RP = {"mobilisation": 3.0, "action": 2.7, "obsv": 3.4}
+
+# The Haiti Hurricane Warnings the first calibration (exploration/
+# wsp_trigger.py, May-June 2026) had hand-coded; the audited list is
+# data/nhc_hurricane_warnings_hti.csv.
+HAND_CODED_HW = {"AL072008", "AL212010", "AL142016", "AL112017", "AL052021"}
+
+# The storms the orange pathway adds at ORANGE_N, which the page's prose
+# names and explains; the build stops if the replay adds others.
+ORANGE_ADDS = {"AL092008", "AL092011", "AL032013"}  # Ike, Irene, Chantal
 
 # Every pathway but red + Hurricane Warning, in the order the page lists
 # them; the stage rows that group them.
@@ -121,6 +133,13 @@ def _h(hours):
     """Hours, with a decimal only where there is one (13,5 h; 54 h)."""
     hours = float(hours)
     return fr_num(hours, 0 if hours.is_integer() else 1)
+
+
+def _and(names):
+    """'A, B et C'."""
+    if len(names) < 2:
+        return "".join(names)
+    return ", ".join(names[:-1]) + " et " + names[-1]
 
 
 def _de(name):
@@ -301,8 +320,8 @@ def _freq_table(freq):
         cells = []
         for k in READINGS:
             n = int(r[f"n_storms_{k}"])
-            rp = r[f"rp_{k}"]
-            rp_txt = f"{fr_num(rp, 1)} ans" if np.isfinite(rp) else "jamais"
+            ny = int(r[f"n_years_{k}"])
+            rp_txt = f"{_rp_txt(ny)} ans" if ny else "jamais"
             cells.append(
                 f"<td class='num'>{n}<br>"
                 f"<span style='color:#5e6a6b;font-size:.85em'>{rp_txt}</span>"
@@ -349,10 +368,14 @@ def check_record(pdf, fl):
     activation, and quotes the framework document's return periods; both
     are recomputed here rather than trusted.
     """
-    others = fl[list(OTHER_PATHWAYS)].fillna(False).any(axis=1)
-    if (fl["all"] & ~others).any():
-        names = ", ".join(pdf.loc[fl["all"] & ~others, "label"].astype(str))
-        raise RuntimeError(f"red + Hurricane Warning alone activates: {names}")
+    # Red + Hurricane Warning is an Action condition: it adds something
+    # whenever it fires for a storm the other Action pathways miss, even
+    # one that Réponse précoce would catch later.
+    action_others = fl[["fcast_exp", "fcast_rain", "orange"]].any(axis=1)
+    adds = fl["red_hw"] & ~action_others
+    if adds.any():
+        names = ", ".join(pdf.loc[adds, "label"].astype(str))
+        raise RuntimeError(f"red + Hurricane Warning adds an Action: {names}")
     got = {
         "action": round(_rp(pdf.loc[fl["action"], "season"].nunique()), 1),
         "obsv": round(_rp(pdf.loc[fl["obsv"], "season"].nunique()), 1),
@@ -377,9 +400,12 @@ def _definition_section(n_act, n_seasons):
     return f"""
 <p>
   Trois déclencheurs — <b>Mobilisation</b>, <b>Action</b> et <b>Réponse
-  précoce</b> — sont évalués automatiquement à chaque avis du National
-  Hurricane Center (quatre fois par jour). Pour chaque déclencheur, une
-  seule condition suffit.
+  précoce</b>. Pour chaque déclencheur, une seule condition suffit. Les
+  conditions de précipitations et d’exposition sont évaluées
+  automatiquement à chaque avis du National Hurricane Center (quatre fois
+  par jour) ; les deux conditions d’alertes officielles reposent sur les
+  alertes déclarées par la DGPC et, pour la seconde, sur le Hurricane
+  Warning du NHC.
 </p>
 
 <div class="tablewrap"><table class="def">
@@ -466,6 +492,9 @@ def _deck_section():
 
 
 def _map_section(pdf, meta, warnings):
+    no_gefs_list = pdf.loc[~pdf["orange_rain_known"].astype(bool), "label"]
+    no_gefs = _and(no_gefs_list.astype(str).tolist())
+    n_no_gefs = len(no_gefs_list)
     return f"""
 <p>
   Le mécanisme rejoué sur les {len(pdf)} tempêtes passées à moins de
@@ -473,8 +502,8 @@ def _map_section(pdf, meta, warnings):
   Choisir une tempête, puis faire défiler les avis du NHC : pour chaque
   avis, la trajectoire et les rayons de vent prévus, la bande de vents déjà
   observée, les départements que la prévision de pluie et le champ de
-  rafales auraient placés en alerte orange, le Hurricane Warning s’il était
-  en vigueur, et l’état des voies de déclenchement à cet instant.
+  rafales auraient placés en alerte orange, le Hurricane Warning une fois
+  émis, et l’état des voies de déclenchement à cet instant.
 </p>
 
 <div class="callout">
@@ -527,8 +556,9 @@ def _map_section(pdf, meta, warnings):
   La condition exige aussi l’alerte rouge de la DGPC, dont il n’existe pas
   d’archive (voir la <a href="#rouge">section 6</a>). « — » en prévision :
   aucun avis avant l’heure limite ne prévoyait de passage à moins de
-  {D_THRESH} km. Laura et Isaias 2020 n’ont pas de prévision CHIRPS-GEFS
-  archivée : leur compte de départements ne tient qu’au vent. Population
+  {D_THRESH} km. {no_gefs} {plural(n_no_gefs, "n’a", "n’ont")} pas de
+  prévision CHIRPS-GEFS archivée : le compte de départements ne tient
+  qu’au vent. Population
   affectée : EM-DAT ; Melissa 2025 : chiffres préliminaires. CERF :
   « pre- » = antérieur à la création du CERF (2006) ; « combined » =
   allocation combinée Fay/Gustav/Hanna/Ike (2008).
@@ -688,6 +718,15 @@ def _orange_section(tbl, verdicts, counts, freq, pdf, fl, chart, notes):
     added_n = ", ".join(pdf.loc[fl["orange"] & ~base, "label"].astype(str))
     n_base = int(base.sum())
     y_base = int(pdf.loc[base, "season"].nunique())
+    edge = (pdf["n_orange"] == ORANGE_N - 1) & ~base
+    n_edge = int(edge.sum())
+    edge_names = _and(pdf.loc[edge, "label"].astype(str).tolist())
+    got_adds = set(pdf.loc[fl["orange"] & ~base, "atcf_id"])
+    if got_adds != ORANGE_ADDS:
+        raise RuntimeError(
+            f"orange now adds {sorted(got_adds)}; update the prose naming "
+            f"Ike, Irene and Chantal, and ORANGE_ADDS"
+        )
 
     return f"""
 <p class="lead">
@@ -771,7 +810,7 @@ def _orange_section(tbl, verdicts, counts, freq, pdf, fl, chart, notes):
 </tbody></table></div>
 
 <p>
-  Dean 2007, Irma 2017 et Elsa 2021 comptent chacune
+  {edge_names} {plural(n_edge, "compte", "comptent chacune")}
   {ORANGE_N - 1} départements, si bien que le registre passe de
   {n_by[ORANGE_N - 1]} tempêtes à {ORANGE_N - 1} départements à
   {n_by[ORANGE_N]} à {ORANGE_N}. <b>Le cadre retient {ORANGE_N} départements</b> :
@@ -891,7 +930,9 @@ orange</summary>
 
 
 def _red_section(pdf, fl, warnings, verdicts, hw_chart):
-    acts = set(pdf.loc[fl["all"], "atcf_id"])
+    # Storms the mechanism activates without the red + HW pathway.
+    others = fl[list(OTHER_PATHWAYS)].fillna(False).any(axis=1)
+    acts = set(pdf.loc[others, "atcf_id"])
     labels = pdf.set_index("atcf_id")["label"]
     pre = warnings[warnings["pre_cutoff"]].sort_values(
         "time_to_closest_h", ascending=False
@@ -902,6 +943,15 @@ def _red_section(pdf, fl, warnings, verdicts, hw_chart):
     )
     late = warnings[~warnings["pre_cutoff"]]
     lo, hi = late["time_to_closest_h"].min(), late["time_to_closest_h"].max()
+    # Counted before the cutoff by the replay although the advisory's own
+    # forecast lead is under it (Isaac 2012).
+    edge = pre[pre["time_to_closest_h"] < LT_CUTOFF_HRS]
+    edge_note = " ".join(
+        f"{labels[a]} est un cas limite : son avis prévoyait le passage à "
+        f"{_h(h)}&nbsp;h, mais le rejeu de calibration le compte avant "
+        "l’heure limite ; la tempête active de toute façon le cadre."
+        for a, h in zip(edge["atcf_id"], edge["time_to_closest_h"])
+    )
     by_rain = all(
         bool(fl.loc[pdf["atcf_id"] == a, "fcast_rain"].any())
         for a in pre["atcf_id"]
@@ -920,10 +970,16 @@ def _red_section(pdf, fl, warnings, verdicts, hw_chart):
         if len(extra_list) > 1
         else "".join(extra_list)
     )
-    e_lo, e_hi = (
-        extra["time_to_closest_h"].min(),
-        extra["time_to_closest_h"].max(),
-    )
+    extra_li = ""
+    if len(extra):
+        e_lo = extra["time_to_closest_h"].min()
+        e_hi = extra["time_to_closest_h"].max()
+        extra_li = (
+            "<li>Si la voie était exemptée de l’heure limite, le Hurricane "
+            f"Warning ajouterait {extra_names}, dont les Hurricane Warnings "
+            f"sont arrivés {_h(e_lo)} à {_h(e_hi)} heures avant le passage "
+            "prévu.</li>"
+        )
 
     rows = []
     by_lead = warnings.sort_values("time_to_closest_h", ascending=False)
@@ -946,9 +1002,10 @@ def _red_section(pdf, fl, warnings, verdicts, hw_chart):
 
     gust = verdicts.groupby("atcf_id")["wind_max_kmh"].max()
     red_gust = gust[gust > 200]
-    red_names = ", ".join(
-        f"{labels.get(a, a)} ({fr_num(v)} km/h)" for a, v in red_gust.items()
+    red_names = _and(
+        [f"{labels.get(a, a)} ({fr_num(v)} km/h)" for a, v in red_gust.items()]
     )
+    red_tail = plural(len(red_gust), "qui active", "qui activent")
     red_new = [a for a in red_gust.index if a not in acts]
     if red_new:
         raise RuntimeError(f"red gust threshold adds storms: {red_new}")
@@ -1005,9 +1062,7 @@ L’heure limite est à {LT_CUTOFF_HRS} h.</figcaption></figure>
   l’avis portant l’avertissement et le passage au plus près qu’il prévoyait
   — la mesure qu’applique le système de suivi pour l’heure limite. Passage
   réel : heures entre l’émission et le passage effectivement observé.
-  Isaac 2012 est un cas limite : son avis prévoyait le passage à 43 h,
-  mais le rejeu de calibration le compte avant l’heure limite ; la tempête
-  active de toute façon le cadre.
+  {edge_note}
 </p>
 
 <h3>L’alerte rouge de la DGPC</h3>
@@ -1021,7 +1076,8 @@ L’heure limite est à {LT_CUTOFF_HRS} h.</figcaption></figure>
   décrite par le plan. Ses seuils (p. 35) — rafales de plus de 200 voire
   250 km/h, pluies de plus de 60 à 80 mm en une heure ou 300 mm en 6 à
   12 heures — ne sont atteints, en rafales prévues avant l’heure limite,
-  que par {red_names or "aucune tempête"}, qui active déjà le cadre.
+  {f"que par {red_names}, {red_tail} déjà le cadre" if len(red_gust)
+    else "par aucune tempête"}.
 </p>
 
 <div class="note">
@@ -1033,15 +1089,25 @@ L’heure limite est à {LT_CUTOFF_HRS} h.</figcaption></figure>
     <li>Dans l’historique, aucune tempête n’aurait été activée par cette
         seule voie : le registre et les périodes de retour du cadre sont
         les mêmes avec ou sans elle.</li>
-    <li>Si la voie était exemptée de l’heure limite, le Hurricane Warning
-        ajouterait {extra_names}, dont les Hurricane Warnings sont arrivés
-        {_h(e_lo)} à {_h(e_hi)} heures avant le passage prévu.</li>
+    {extra_li}
   </ul>
 </div>
 """
 
 
-def _method_section():
+def _method_section(pdf, fl, warnings):
+    labels = pdf.set_index("atcf_id")["label"]
+    others = fl[list(OTHER_PATHWAYS)].fillna(False).any(axis=1)
+    acts = set(pdf.loc[others, "atcf_id"])
+    missed = warnings[~warnings["atcf_id"].isin(HAND_CODED_HW)]
+    changes = [labels[a] for a in missed["atcf_id"] if a not in acts]
+    change_txt = (
+        f"Seul{'s' if len(changes) > 1 else ''} {_and(changes)} "
+        f"{plural(len(changes), 'change', 'changent')} le résultat, et "
+        "seulement si la voie était exemptée de l’heure limite."
+        if changes
+        else "Aucune ne change le résultat."
+    )
     return f"""
 <ul>
   <li><b>Tempêtes</b> : centre analysé passé à moins de {D_THRESH} km
@@ -1076,10 +1142,9 @@ def _method_section():
       à cinq jours.</li>
   <li><b>Hurricane Warnings</b> : liste vérifiée contre le rapport de
       cyclone tropical du NHC de chacune des tempêtes du jeu ; elle compte
-      neuf tempêtes, quatre de plus que la liste utilisée lors de la
-      première calibration (Dennis 2005, Ernesto 2006, Dean 2007,
-      Isaac 2012). Seul Dean change le résultat, et seulement si la voie
-      était exemptée de l’heure limite.</li>
+      {len(warnings)} tempêtes, {len(missed)} de plus que la liste utilisée
+      lors de la première calibration
+      ({_and([labels[a] for a in missed["atcf_id"]])}). {change_txt}</li>
   <li><b>Les alertes de la DGPC sont simulées</b> : à défaut de registre,
       les seuils de la DGPC sont appliqués aux prévisions de l’époque. Le
       résultat est une estimation de ce que ces seuils auraient donné, à
@@ -1184,7 +1249,7 @@ Warning</h2>
 {_red_section(pdf, fl, warnings, verdicts, hw_chart)}
 
 <h2 id="methode">7. Méthode et limites</h2>
-{_method_section()}
+{_method_section(pdf, fl, warnings)}
 
 <h2 id="annexe">Annexe</h2>
 <ul>

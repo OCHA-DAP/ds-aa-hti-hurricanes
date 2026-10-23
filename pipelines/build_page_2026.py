@@ -1,8 +1,9 @@
 """Build docs/2026/index.html, the page for the 2026 framework version.
 
-Reads the department-level outputs (``dept_verdicts.parquet``, written by
-``run_dgpc_dept_forecast.py``), the per-storm pathway values
-(``pathways.parquet``, from ``run_dgpc_pathways.py``), the storm set, the
+Reads the department-level verdicts and the per-storm and per-advisory
+pathway values (``dept_verdicts.parquet``, ``pathways.parquet``,
+``pathways_advisories.parquet``, all from ``run_dgpc_pathways.py``), the
+storm set, the
 audited NHC Hurricane Warnings (``data/``) and the deck's activation
 record, and renders the page. The map data it loads in the browser
 (``docs/2026/assets/carte/``) is written separately by

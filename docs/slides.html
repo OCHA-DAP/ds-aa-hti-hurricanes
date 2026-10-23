@@ -7,7 +7,10 @@
 <!-- Moved to the 2026 framework page in October 2026; kept so saved links work. -->
 <meta http-equiv="refresh" content="0; url=2026/slides.html">
 <link rel="canonical" href="2026/slides.html">
-<script>location.replace("2026/slides.html" + location.hash);</script>
+<script>// Slide 7 (red DGPC + Hurricane Warning) was added in October 2026, so
+// September links to slides 7-10 move up one.
+var n = parseInt(location.hash.slice(1), 10);
+location.replace("2026/slides.html" + (n ? "#" + (n >= 7 ? n + 1 : n) : ""));</script>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
 color:#1e2a2b;background:#f4f7f9;padding:4rem 5vw}a{color:#1862d8}</style>
 </head>

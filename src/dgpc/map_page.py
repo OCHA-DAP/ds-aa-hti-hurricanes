@@ -213,7 +213,7 @@ MAP_JS = r"""
     const expHit = !a.cut && a.exp > 0;
     const orHit = !a.cut && nCum >= m.n_depts;
     const hw = HW[storm.id], hwOn = !!hw && a.t >= hw.t;
-    const hwVal = hwOn ? 'Hurricane Warning en vigueur' : (hw ? 'pas encore de Hurricane Warning' : 'aucun Hurricane Warning');
+    const hwVal = hwOn ? 'Hurricane Warning émis' : (hw ? 'pas encore de Hurricane Warning' : 'aucun Hurricane Warning');
     const hwSub = hw
       ? `émis à ${fmt(hw.lead, 1)} h du passage prévu, ${hw.pre ? 'avant' : 'après'} l’heure limite · alerte rouge DGPC : pas d’archive`
       : 'le NHC n’a émis aucun Hurricane Warning pour Haïti pour cette tempête';
@@ -250,7 +250,7 @@ MAP_JS = r"""
     const r = $('carte-wrap').getBoundingClientRect();
     return r.bottom > 0 && r.top < window.innerHeight;
   }
-  function step(k){ idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
+  function step(k){ if (!storm) return; idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
   fetch('assets/carte/index.json').then(r=>r.json()).then(data => {
     META = data.meta; DEPTS = data.depts; INDEX = data.storms;
     deptLayer = L.geoJSON(DEPTS, {style:{color:'#fff',weight:1,fillColor:COL.none,fillOpacity:.95},
