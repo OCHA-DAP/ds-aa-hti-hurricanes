@@ -1,7 +1,7 @@
 """The framework's historical activation record, 2002-2025.
 
 The record was assembled for the explainer deck and, until now, existed
-only as hand-written rows inside ``docs/slides.html``. This module parses
+only as hand-written rows inside ``docs/2026/slides.html``. This module parses
 those rows back into a table so the DGPC analysis can sit alongside them
 without the two pages drifting apart.
 
@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pandas as pd
 
-SLIDES = Path("docs/slides.html")
+SLIDES = Path("docs/2026/slides.html")
 
 # Column order in the deck's table.hist rows.
 COLUMNS = [

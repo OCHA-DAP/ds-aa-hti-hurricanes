@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadre 2026 — ouragans, Haïti</title>
+<meta name="description" content="Le mécanisme de déclenchement 2026 du
+cadre d’action anticipatoire pour les tempêtes et ouragans en Haïti, et les
+analyses qui l’ont fondé.">
+<style>
+:root{--blue:#1862d8;--blue-dark:#0e4aab;--ink:#1e2a2b;--muted:#5e6a6b;
+--bg:#f4f7f9;--card:#fff;--line:#dde5e8;--orange:#ec835a;--red:#d03b3b;
+--green:#0f8a5f;--amber-bg:#fdf6ec;--amber-line:#e8cfa8;--amber-ink:#8a5a12}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);
+line-height:1.62;padding:0 5vw 6rem}
+.wrap{max-width:56rem;margin:0 auto}
+header{padding:4.5rem 0 2.2rem}
+.kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;
+font-weight:700;color:var(--blue);margin-bottom:.8rem}
+h1{font-size:clamp(1.7rem,4.4vw,2.5rem);line-height:1.16;margin-bottom:1rem}
+.sub{font-size:1.08rem;color:var(--muted);max-width:44em}
+.crumb{font-size:.86rem;margin-bottom:1.6rem}
+.crumb a{color:var(--muted)}
+h2{font-size:1.42rem;margin:3.2rem 0 .9rem;line-height:1.25;
+padding-top:1.6rem;border-top:1px solid var(--line)}
+h3{font-size:1.08rem;margin:1.9rem 0 .5rem}
+p{margin-bottom:.95rem;max-width:44em}
+ul,ol{margin:0 0 1rem 1.15rem;max-width:44em}
+li{margin-bottom:.42rem}
+code{background:#eef2f5;padding:.1em .38em;border-radius:4px;font-size:.9em}
+.lead{font-size:1.05rem}
+.callout{background:var(--amber-bg);border:1px solid var(--amber-line);
+border-left:4px solid var(--orange);border-radius:8px;padding:1.1rem 1.3rem;
+margin:1.5rem 0;max-width:44em}
+.callout h3{margin-top:0;color:var(--amber-ink);font-size:1rem}
+.callout p:last-child{margin-bottom:0}
+.note{background:#fff;border:1px solid var(--line);border-radius:8px;
+padding:1.1rem 1.3rem;margin:1.5rem 0;max-width:44em;font-size:.94rem}
+.note h3{margin-top:0;font-size:1rem}
+.note p:last-child{margin-bottom:0}
+figure{margin:1.8rem 0;background:var(--card);border:1px solid var(--line);
+border-radius:10px;padding:1.2rem 1rem .8rem;overflow-x:auto}
+figcaption{font-size:.86rem;color:var(--muted);margin-top:.7rem;
+padding:0 .4rem}
+.tablewrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);
+border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--line);
+white-space:nowrap;vertical-align:top}
+table.prose th,table.prose td{white-space:normal;min-width:11rem}
+table.wraphead th{white-space:normal}
+th{background:#f7fafb;font-weight:700;font-size:.82rem;color:var(--muted);
+text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.nm{font-weight:600}
+.v-yes{color:var(--green);font-weight:600}
+.v-no{color:var(--muted)}
+.v-na{color:var(--muted)}
+.pill{display:inline-block;font-size:.72rem;text-transform:uppercase;
+letter-spacing:.08em;font-weight:700;padding:.18rem .5rem;border-radius:5px}
+.pill.orange{background:#fdefe7;color:#a4551f}
+.pill.red{background:#fbeaea;color:#a02a2a}
+.stats{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
+margin:1.6rem 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem 1.1rem}
+.stat .big{font-size:1.9rem;font-weight:700;line-height:1.1;
+font-variant-numeric:tabular-nums}
+.stat .lab{font-size:.83rem;color:var(--muted);margin-top:.3rem}
+footer{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--line);
+font-size:.86rem;color:var(--muted)}
+footer a{color:var(--muted)}
+
+.wrap.wide{max-width:74rem}
+#carte-wrap{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem;margin:1.4rem 0}
+#carte{height:min(72vh,640px);border-radius:8px;border:1px solid var(--line)}
+.ctl{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;
+margin-bottom:.6rem;font-size:.92rem}
+.ctl select,.ctl button{font:inherit;padding:.3rem .55rem;border:1px solid var(--line);
+border-radius:6px;background:#fff}
+.ctl button{cursor:pointer}
+.ctl button:disabled{opacity:.4;cursor:default}
+.ctl input[type=range]{width:min(420px,100%)}
+.ctl label{white-space:nowrap}
+.advlab{font-weight:700}
+.badge{display:inline-block;font-size:.74rem;font-weight:700;padding:.12rem .5rem;
+border-radius:5px;margin-left:.4rem;vertical-align:middle}
+.badge.ok{background:#e7f4ee;color:#0f8a5f}
+.badge.cut{background:#fbeaea;color:#a02a2a}
+.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.88rem;margin:.5rem 0}
+.toggles .grp{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;
+color:var(--muted);font-weight:700;margin-right:-.4rem}
+.toggles label{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
+.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;border:1px solid #0002;
+vertical-align:-2px}
+.sw.line{height:0;border:0;border-top:3px solid}
+#voies{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.6rem;
+margin-top:.8rem;font-size:.88rem}
+#voies .v{border:1px solid var(--line);border-radius:8px;padding:.55rem .75rem;background:#fafcfc}
+#voies .v.hit{border-color:#0f8a5f;background:#e7f4ee}
+#voies .v.part{border-color:#e8cfa8;background:#fdf6ec}
+#voies .v.off{opacity:.55}
+#voies .v b{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;
+letter-spacing:.04em;margin-bottom:.15rem}
+#voies .v .val{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
+.leaflet-tooltip.dep{font-size:.82rem;line-height:1.35}
+#loading{font-size:.86rem;color:var(--muted)}
+td.val{text-align:right;font-variant-numeric:tabular-nums;color:#5e6a6b}
+td.val.hit{background:#fdefe7;color:#a4551f;font-weight:700}
+td.val.na{color:#9aa5a6;text-align:center}
+table.act{font-size:.8rem}
+table.act th{text-align:center;vertical-align:middle;font-size:.68rem;padding:.35rem .35rem;
+letter-spacing:.02em}
+table.act td{padding:.32rem .4rem}
+table.act td.nm{white-space:nowrap;font-size:.8rem}
+table.act td.bar{background-repeat:no-repeat;background-size:100% 100%}
+table.act td.cerf{white-space:nowrap;font-size:.78rem}
+table.act td.cerf.yes{background:#c62828;color:#fff;font-weight:700}
+table.act .also{font-size:.68rem;color:#9aa5a6;font-weight:400}
+table.act .also.over{color:#a4551f}
+table.act th.g1{background:#e3ecf8}
+table.act th.g2{background:#fdefe7}
+table.act th.g3{background:#eef2f5}
+table.act th .thr{font-weight:400;text-transform:none;letter-spacing:0;font-size:.74rem;color:#5e6a6b}
+table.act th.g4{background:#e7f4ee}
+table.act td.nm a{color:var(--blue);text-decoration:none}
+table.act td.nm a:hover{text-decoration:underline}
+
+td.val{text-align:right;font-variant-numeric:tabular-nums;color:#5e6a6b}
+td.val.hit{background:#fdefe7;color:#a4551f;font-weight:700}
+td.val.na{color:#9aa5a6;text-align:center}
+td.val.pre{background:#fdf6ec;color:#8a5a12;font-weight:700;
+box-shadow:inset 0 0 0 1px #e8cfa8}
+tr.dim td{color:#9aa5a6}
+tr.dim td.nm{color:#5e6a6b;font-weight:500}
+.legend{font-size:.86rem;color:var(--muted)}
+table.matrix th{font-size:.74rem}
+table.matrix td{padding:.35rem .5rem;font-size:.84rem}
+.home-link{display:inline-block;margin:0 0 1.4rem;padding:6px 12px;
+font:500 13px/1 'Roboto',system-ui,sans-serif;color:#1e795f;background:#e9f5f1;
+border:1px solid #d4eae4;border-radius:4px;text-decoration:none}
+.home-link:hover{background:#d4eae4}
+header{padding-top:2.2rem}
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:1rem 1.3rem;margin:0 0 1rem;max-width:44em;font-size:.94rem}
+nav.toc b{display:block;font-size:.76rem;text-transform:uppercase;
+letter-spacing:.08em;color:var(--muted);margin-bottom:.4rem}
+nav.toc ol{margin:0 0 0 1.2rem}
+nav.toc li{margin-bottom:.15rem}
+nav.toc a{color:var(--blue);text-decoration:none}
+nav.toc a:hover{text-decoration:underline}
+h2[id],h3[id]{scroll-margin-top:1rem}
+table.def td{white-space:normal;vertical-align:middle}
+table.def td.num{white-space:nowrap}
+table.def td.stage{font-weight:700;white-space:nowrap}
+table.def tr.overall td{background:#f7fafb;font-weight:700}
+table.def .ou{display:inline-block;background:var(--blue);color:#fff;
+font-weight:800;border-radius:999px;padding:0 .55rem;font-size:.72rem;
+margin:.25rem 0}
+table.def .et{display:inline-block;background:var(--red);color:#fff;
+font-weight:800;border-radius:999px;padding:0 .55rem;font-size:.72rem;
+margin:0 .3rem}
+table.def .cond{display:block}
+table.def .official{display:block;margin-top:.15rem;padding:.35rem .55rem;
+background:#fdf6ec;border-radius:6px}
+.deck{position:relative;width:100%;aspect-ratio:16/10;min-height:520px;
+border:1px solid var(--line);border-radius:10px;overflow:hidden;
+background:var(--card);margin:1.2rem 0 .8rem}
+.deck iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.btns{display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0 1.2rem}
+.btns a{display:inline-block;padding:.5rem 1rem;border-radius:8px;
+text-decoration:none;font-weight:600;font-size:.92rem}
+.btns a.primary{background:var(--blue);color:#fff}
+.btns a.secondary{background:var(--card);color:var(--ink);
+border:1px solid var(--line)}
+details.more{margin:1.2rem 0;border:1px solid var(--line);border-radius:10px;
+background:var(--card);padding:.2rem 1.1rem}
+details.more>summary{cursor:pointer;font-weight:700;padding:.7rem 0}
+details.more[open]>summary{border-bottom:1px solid var(--line);
+margin-bottom:.6rem}
+.answer{font-size:1.12rem;font-weight:600;max-width:40em}
+</style>
+</head>
+<body>
+<div class="wrap wide">
+
+<header>
+  <a class="home-link" href="../">← Action anticipatoire · Ouragans · Haïti</a>
+  <div class="kicker">Cadre d’action anticipatoire · Version 2026</div>
+  <h1>Tempêtes et ouragans en Haïti : le mécanisme de déclenchement 2026</h1>
+  <p class="sub">
+    Le mécanisme de déclenchement approuvé pour la version 2026 du cadre,
+    et l’ensemble des analyses qui l’ont fondé : la simulation historique
+    sur 2002–2025, l’alerte orange de la DGPC par
+    département, l’alerte rouge confirmée par un Hurricane Warning du NHC,
+    la carte avis par avis et les diapositives. Préparé par le Centre de
+    données humanitaires d’OCHA avec la DGPC et les partenaires du cadre.
+  </p>
+</header>
+
+<nav class="toc">
+  <b>Sommaire</b>
+  <ol>
+    <li><a href="#declencheur">Le déclencheur</a></li>
+    <li><a href="#diapositives">Les diapositives</a></li>
+    <li><a href="#simulation">Simulation historique, avis par avis</a></li>
+    <li><a href="#seuils">Le choix des seuils</a></li>
+    <li><a href="#orange">L’alerte orange de la DGPC par département</a></li>
+    <li><a href="#rouge">L’alerte rouge de la DGPC et le Hurricane
+        Warning</a></li>
+    <li><a href="#methode">Méthode et limites</a></li>
+    <li><a href="#annexe">Annexe</a></li>
+  </ol>
+</nav>
+
+<h2 id="declencheur">1. Le déclencheur</h2>
+
+<p>
+  Trois déclencheurs — <b>Mobilisation</b>, <b>Action</b> et <b>Réponse
+  précoce</b> — sont évalués automatiquement à chaque avis du National
+  Hurricane Center (quatre fois par jour). Pour chaque déclencheur, une
+  seule condition suffit.
+</p>
+
+<div class="tablewrap"><table class="def">
+<thead><tr><th>Déclencheur</th><th>Période<br>de retour</th>
+<th>Délai maximum<br>des prévisions</th>
+<th>Conditions de déclenchement</th></tr></thead>
+<tbody>
+<tr>
+  <td class="stage">Prévisions :<br>Mobilisation</td>
+  <td class="num">environ 3,0 ans</td>
+  <td class="num">120 heures</td>
+  <td><span class="cond">≥ 68 mm de précipitations prévues</span><span class="ou">OU</span>
+      <span class="cond">&gt; 0 personnes prévues d’être exposées aux vents de 64 nœuds</span></td>
+</tr>
+<tr>
+  <td class="stage">Prévisions :<br>Action</td>
+  <td class="num">2,7 ans</td>
+  <td class="num">72 heures</td>
+  <td><span class="cond">≥ 68 mm de précipitations prévues</span><span class="ou">OU</span>
+      <span class="cond">&gt; 0 personnes prévues d’être exposées aux vents de 64 nœuds</span><span class="ou">OU</span>
+      <span class="cond official">La DGPC déclare l’alerte orange dans au
+      moins 6 départements (sur 10)</span><span class="ou">OU</span>
+      <span class="cond official">La DGPC lance une alerte rouge
+      <span class="et">ET</span> l’alerte est confirmée par le NOAA NHC
+      avec un « Hurricane Warning »</span></td>
+</tr>
+<tr>
+  <td class="stage">Observations :<br>Réponse précoce</td>
+  <td class="num">3,4 ans</td>
+  <td class="num">—</td>
+  <td><span class="cond">≥ 57 mm de précipitations
+      observées</span><span class="ou">OU</span>
+      <span class="cond">&gt; 0 personnes observées d’être exposées aux
+      vents de 64 nœuds</span></td>
+</tr>
+<tr class="overall">
+  <td>Période de retour globale</td>
+  <td class="num">2,4 ans</td><td></td>
+  <td>13 tempêtes en 10 saisons sur
+      2002–2025</td>
+</tr>
+</tbody></table></div>
+
+<div class="note">
+  <h3>Heure limite et règles d’activation</h3>
+  <ul>
+    <li><b>Heure limite :</b> aucun déclencheur « prévisions » ne peut
+        s’activer à moins de 48 heures du passage prévu au
+        plus près d’Haïti — les deux conditions d’alertes officielles
+        comprises. Après le passage, seule la Réponse précoce
+        (observations) reste possible.</li>
+    <li>Chaque stade s’active au plus une fois par tempête ; une activation
+        est acquise pour toute la durée de la tempête. La Réponse précoce
+        est omise si le stade Action a déjà activé.</li>
+    <li><b>Précipitations :</b> cumul maximal sur 2 jours, moyenne
+        nationale — CHIRPS-GEFS pour les prévisions, IMERG (NASA) pour les
+        observations. <b>Exposition :</b> population dans la zone de vents
+        de 64 nœuds prévue par le NHC (ou effectivement traversée).</li>
+    <li><b>Périodes de retour :</b> par saison sur 2002–2025
+        (24 saisons), divisées par le nombre de saisons avec au
+        moins une activation.</li>
+  </ul>
+</div>
+
+
+<h2 id="diapositives">2. Les diapositives</h2>
+
+<p>
+  La présentation du mécanisme : chaque voie d’activation expliquée pas à
+  pas avec des exemples, l’heure limite, et le registre des activations
+  historiques. Flèches ← → ou boutons pour naviguer.
+</p>
+<div class="deck">
+  <iframe src="slides.html" title="Diapositives : le mécanisme de
+  déclenchement 2026" loading="lazy" allowfullscreen></iframe>
+</div>
+<div class="btns">
+  <a class="primary" href="slides.html">▶ Ouvrir en plein écran</a>
+  <a class="secondary" href="assets/declencheur-aa-haiti-ouragans.pdf"
+     download="declencheur-aa-haiti-ouragans-2026.pdf">⬇ Télécharger le PDF</a>
+</div>
+
+
+<h2 id="simulation">3. Simulation historique, avis par avis</h2>
+
+<p>
+  Le mécanisme rejoué sur les 42 tempêtes passées à moins de
+  230 km d’Haïti entre 2002 et 2025.
+  Choisir une tempête, puis faire défiler les avis du NHC : pour chaque
+  avis, la trajectoire et les rayons de vent prévus, la bande de vents déjà
+  observée, les départements que la prévision de pluie et le champ de
+  rafales auraient placés en alerte orange, le Hurricane Warning s’il était
+  en vigueur, et l’état des voies de déclenchement à cet instant.
+</p>
+
+<div class="callout">
+  <h3>Les alertes de la DGPC affichées sont une simulation, pas un registre</h3>
+  <p>
+    La DGPC ne dispose pas d’un historique de ses alertes. Les départements
+    « en orange » sur cette carte et dans le tableau sont une
+    <b>estimation</b> : les seuils de la DGPC (100 mm en 24 h, rafales de
+    100 km/h), appliqués par nos soins aux prévisions de l’époque. Pour la
+    voie rouge, seul le Hurricane Warning du NHC peut être rejoué.
+  </p>
+</div>
+
+
+<div id="carte-wrap">
+  <div class="ctl">
+    <label>Tempête
+      <select id="storm-sel"></select></label>
+    <button id="prev" type="button" aria-label="Avis précédent">◀</button>
+    <input id="adv-range" type="range" min="0" max="0" value="0">
+    <button id="next" type="button" aria-label="Avis suivant">▶</button>
+    <button id="play" type="button">▶ Lecture</button>
+    <button id="fit" type="button" title="Cadrer sur Haïti">⌖ Haïti</button>
+    <span id="adv-lab" class="advlab"></span>
+    <span id="loading"></span>
+  </div>
+  <div class="toggles">
+    <span class="grp">Alerte orange DGPC (simulée)</span>
+    <label><input type="checkbox" id="t-wind" checked>
+      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-wind)"/></svg> rafales ≥ 100 km/h (hachures)</label>
+    <label><input type="checkbox" id="t-rain" checked>
+      <svg class="sw" viewBox="0 0 14 14"><rect width="14" height="14" fill="url(#pat-rain)"/></svg> pluie ≥ 100 mm au point (points)</label>
+    <label><span class="sw" style="background:#ec835a"></span> les deux (plein)</label>
+    <label><input type="checkbox" id="t-cum" checked>
+      <span class="sw" style="background:#f7d9c9"></span> déjà en orange (avis précédents, avant l’heure limite)</label>
+  </div>
+  <div class="toggles">
+    <span class="grp">Vent prévu (NHC)</span>
+    <label><input type="checkbox" id="t-b34">
+      <span class="sw" style="background:#fff3b0;border-color:#c9a800"></span> 34 nœuds</label>
+    <label><input type="checkbox" id="t-b50">
+      <span class="sw" style="background:#ffd28a;border-color:#d17a00"></span> 50 nœuds</label>
+    <label><input type="checkbox" id="t-b64" checked>
+      <span class="sw" style="background:#f4a0a0;border-color:#c0392b"></span> 64 nœuds (déclencheur d’exposition)</label>
+    <label><input type="checkbox" id="t-swath">
+      <span class="sw" style="background:#c9b3e6;border-color:#6c3fb0"></span> Bande observée à 64 nœuds (cumulée à l’émission)</label>
+  </div>
+  <div class="toggles">
+    <span class="grp">Trajectoires</span>
+    <label><input type="checkbox" id="t-track" checked>
+      <span class="sw line" style="border-color:#1e2a2b"></span> prévue</label>
+    <label><input type="checkbox" id="t-obsv">
+      <span class="sw line" style="border-color:#9aa5a6;border-top-style:dashed"></span> observée</label>
+    <label><input type="checkbox" id="t-voies" checked> Voies du cadre</label>
+  </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <pattern id="pat-wind" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+        <rect width="7" height="7" fill="#fff"/><rect width="3.5" height="7" fill="#ec835a"/>
+      </pattern>
+      <pattern id="pat-rain" patternUnits="userSpaceOnUse" width="7" height="7">
+        <rect width="7" height="7" fill="#fff"/><circle cx="3.5" cy="3.5" r="2" fill="#ec835a"/>
+      </pattern>
+    </defs>
+  </svg>
+  <div id="carte"></div>
+  <div id="voies"></div>
+</div>
+
+
+<p class="legend" style="max-width:none">
+  <b>Lecture.</b> Orange plein : département en orange par les rafales
+  <i>et</i> la pluie ; hachures : rafales seules ; points : pluie seule ;
+  orange pâle : déjà en orange sur un avis précédent émis avant l’heure
+  limite. Les rayons de vent sont les polygones du NHC à 34, 50 et
+  64 nœuds, construits comme pour le déclencheur d’exposition ; la bande
+  observée est la zone déjà balayée par des vents de 64 nœuds à
+  l’émission, que l’exposition prévue exclut. Les avis émis moins de
+  48 h avant le passage au plus près sont marqués « après
+  l’heure limite » : ils ne peuvent plus déclencher le cadre et sont
+  affichés en transparence. Flèches ← → pour changer d’avis.
+</p>
+
+<h3 id="registre">Tempête par tempête : ce qui aurait déclenché, et pourquoi</h3>
+
+<p style="max-width:none">
+  Chaque tempête du jeu, par population affectée décroissante, avec la
+  valeur de chaque indicateur sur les avis émis avant l’heure limite.
+  Cases orange : seuil atteint. La colonne <b>activation</b> est le
+  verdict d’ensemble du mécanisme 2026. Cliquer sur une tempête pour la
+  charger dans la carte.
+</p>
+
+
+<div class="tablewrap"><table class="wraphead act">
+<thead>
+<tr>
+  <th rowspan="3">Tempête</th>
+  <th colspan="4" class="g1">Indicateurs mesurés</th>
+  <th colspan="2" class="g2">Alertes officielles<br><span class="thr">stade Action</span></th>
+  <th rowspan="3" class="g4">Activation</th>
+  <th colspan="2" class="g3">Historique</th>
+</tr>
+<tr>
+  <th colspan="2" class="g1">Prévision</th>
+  <th colspan="2" class="g1">Observation</th>
+  <th rowspan="2" class="g2">Orange DGPC<br>(simulée)<br><span class="thr">dép. ≥ 6</span></th>
+  <th rowspan="2" class="g2">Hurricane<br>Warning<br><span class="thr">h avant passage</span></th>
+  <th rowspan="2" class="g3">Pop.<br>affectée</th>
+  <th rowspan="2" class="g3">CERF</th>
+</tr>
+<tr>
+  <th class="g1">Expo. 64 nds<br><span class="thr">&gt; 0</span></th>
+  <th class="g1">Pluie 2 j (mm)<br><span class="thr">≥ 68</span></th>
+  <th class="g1">Expo. 64 nds<br><span class="thr">&gt; 0</span></th>
+  <th class="g1">Pluie 2 j (mm)<br><span class="thr">≥ 57</span></th>
+</tr>
+</thead>
+<tbody>
+<tr><td class='nm'><a href='#carte-AL132025' data-storm='AL132025'>Melissa 2025</a></td><td class='val'>0</td><td class='val hit'>82 <span class='also over'>[95]</span></td><td class='val'>0</td><td class='val hit'>80</td><td class='val'>3</td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 100.0%,transparent 100.0%)'>2 300 021</td><td class='cerf yes'>4,0 M$</td></tr>
+<tr><td class='nm'><a href='#carte-AL142016' data-storm='AL142016'>Matthew 2016</a></td><td class='val hit'>1 202 447</td><td class='val hit'>139</td><td class='val hit'>1 202 447</td><td class='val hit'>125</td><td class='val hit'>8</td><td class='val pre'>54 h</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 95.6%,transparent 95.6%)'>2 100 439</td><td class='cerf yes'>10,1 M$</td></tr>
+<tr><td class='nm'><a href='#carte-AL112004' data-storm='AL112004'>Jeanne 2004</a></td><td class='val'>0</td><td class='val'>30 <span class='also'>[43]</span></td><td class='val'>0</td><td class='val'>25</td><td class='val'>0 <span class='also'>[3]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 37.0%,transparent 37.0%)'>315 594</td><td class='cerf'>pre-</td></tr>
+<tr><td class='nm'><a href='#carte-AL182012' data-storm='AL182012'>Sandy 2012</a></td><td class='val'>0</td><td class='val hit'>142</td><td class='val'>0</td><td class='val hit'>85</td><td class='val'>1 <span class='also over'>[6]</span></td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 29.6%,transparent 29.6%)'>201 850</td><td class='cerf yes'>4,0 M$</td></tr>
+<tr><td class='nm'><a href='#carte-AL092008' data-storm='AL092008'>Ike 2008</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[36]</span></td><td class='val'>0</td><td class='val'>36</td><td class='val hit'>6 <span class='also over'>[7]</span></td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 23.3%,transparent 23.3%)'>125 050</td><td class='cerf yes'>combined</td></tr>
+<tr><td class='nm'><a href='#carte-AL162007' data-storm='AL162007'>Noel 2007</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[53]</span></td><td class='val'>0</td><td class='val'>53</td><td class='val'>0 <span class='also over'>[8]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 21.7%,transparent 21.7%)'>108 763</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL072008' data-storm='AL072008'>Gustav 2008</a></td><td class='val'>0 <span class='also over'>[1 224 699]</span></td><td class='val na'>— <span class='also over'>[93]</span></td><td class='val hit'>931 571</td><td class='val hit'>93</td><td class='val'>0 <span class='also over'>[7]</span></td><td class='val'>22 h</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 17.8%,transparent 17.8%)'>73 006</td><td class='cerf yes'>combined</td></tr>
+<tr><td class='nm'><a href='#carte-AL082008' data-storm='AL082008'>Hanna 2008</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[57]</span></td><td class='val'>0</td><td class='val hit'>57</td><td class='val'>0 <span class='also over'>[6]</span></td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 14.4%,transparent 14.4%)'>48 000</td><td class='cerf yes'>combined</td></tr>
+<tr><td class='nm'><a href='#carte-AL132020' data-storm='AL132020'>Laura 2020</a></td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val na'>—</td><td class='val na'>— <span class='also'>[4]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 13.9%,transparent 13.9%)'>44 175</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL112017' data-storm='AL112017'>Irma 2017</a></td><td class='val'>0</td><td class='val'>34 <span class='also'>[37]</span></td><td class='val'>0</td><td class='val'>37</td><td class='val'>5</td><td class='val'>39,5 h</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 13.2%,transparent 13.2%)'>40 092</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL042005' data-storm='AL042005'>Dennis 2005</a></td><td class='val'>0</td><td class='val hit'>69</td><td class='val'>0</td><td class='val'>37</td><td class='val hit'>6</td><td class='val'>23 h</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 8.1%,transparent 8.1%)'>15 036</td><td class='cerf'>pre-</td></tr>
+<tr><td class='nm'><a href='#carte-AL062006' data-storm='AL062006'>Ernesto 2006</a></td><td class='val'>0 <span class='also over'>[131 703]</span></td><td class='val'>44 <span class='also'>[63]</span></td><td class='val'>0</td><td class='val hit'>63</td><td class='val'>3 <span class='also over'>[7]</span></td><td class='val'>13,5 h</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 8.1%,transparent 8.1%)'>15 000</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL092012' data-storm='AL092012'>Isaac 2012</a></td><td class='val'>0 <span class='also over'>[226 292]</span></td><td class='val hit'>104 <span class='also over'>[133]</span></td><td class='val'>0</td><td class='val hit'>133</td><td class='val hit'>8 <span class='also over'>[10]</span></td><td class='val pre'>43 h</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 5.9%,transparent 5.9%)'>8 007</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL212010' data-storm='AL212010'>Tomas 2010</a></td><td class='val hit'>13 161 <span class='also over'>[124 643]</span></td><td class='val hit'>107</td><td class='val'>0</td><td class='val hit'>87</td><td class='val hit'>10</td><td class='val'>31 h</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 4.7%,transparent 4.7%)'>5 020</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL042007' data-storm='AL042007'>Dean 2007</a></td><td class='val'>0 <span class='also over'>[29 853]</span></td><td class='val'>39</td><td class='val'>0</td><td class='val'>21</td><td class='val'>5</td><td class='val'>33 h</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 4.2%,transparent 4.2%)'>3 966</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL172007' data-storm='AL172007'>Olga 2007</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[35]</span></td><td class='val'>0</td><td class='val'>35</td><td class='val'>0 <span class='also'>[4]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 3.2%,transparent 3.2%)'>2 352</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL052015' data-storm='AL052015'>Erika 2015</a></td><td class='val'>0</td><td class='val'>19 <span class='also'>[20]</span></td><td class='val'>0</td><td class='val'>20</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 2.9%,transparent 2.9%)'>1 969</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL092011' data-storm='AL092011'>Irene 2011</a></td><td class='val'>0</td><td class='val'>68</td><td class='val'>0</td><td class='val'>53</td><td class='val hit'>10</td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 2.6%,transparent 2.6%)'>1 544</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL062008' data-storm='AL062008'>Fay 2008</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[45]</span></td><td class='val'>0</td><td class='val'>45</td><td class='val'>0 <span class='also'>[4]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 1.5%,transparent 1.5%)'>220</td><td class='cerf yes'>combined</td></tr>
+<tr><td class='nm'><a href='#carte-AL052021' data-storm='AL052021'>Elsa 2021</a></td><td class='val'>0 <span class='also over'>[1 168 275]</span></td><td class='val'>27 <span class='also'>[41]</span></td><td class='val'>0</td><td class='val'>41</td><td class='val'>5</td><td class='val'>37,5 h</td><td class='val' style='text-align:center'>—</td><td class='val bar' style='background-image:linear-gradient(to right,#cfe0f7 1.5%,transparent 1.5%)'>3</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL132002' data-storm='AL132002'>Lili 2002</a></td><td class='val'>0</td><td class='val'>48 <span class='also'>[64]</span></td><td class='val'>0</td><td class='val hit'>64</td><td class='val hit'>9</td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val'>—</td><td class='cerf'>pre-</td></tr>
+<tr><td class='nm'><a href='#carte-AL202003' data-storm='AL202003'>Odette 2003</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[32]</span></td><td class='val'>0</td><td class='val'>11</td><td class='val'>0 <span class='also'>[3]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL032004' data-storm='AL032004'>Charley 2004</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[6]</span></td><td class='val'>0</td><td class='val'>6</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL182005' data-storm='AL182005'>Rita 2005</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[8]</span></td><td class='val'>0</td><td class='val'>8</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL262005' data-storm='AL262005'>Alpha 2005</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[41]</span></td><td class='val'>0</td><td class='val'>41</td><td class='val'>0 <span class='also'>[2]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL042006' data-storm='AL042006'>Chris 2006</a></td><td class='val'>0</td><td class='val'>22 <span class='also'>[33]</span></td><td class='val'>0</td><td class='val'>33</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL052011' data-storm='AL052011'>Emily 2011</a></td><td class='val'>0</td><td class='val'>19 <span class='also'>[55]</span></td><td class='val'>0</td><td class='val'>28</td><td class='val'>1 <span class='also over'>[7]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL032013' data-storm='AL032013'>Chantal 2013</a></td><td class='val'>0</td><td class='val'>10</td><td class='val'>0</td><td class='val'>10</td><td class='val hit'>10</td><td class='val'>—</td><td class='val hit' style='text-align:center'>✓</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL032014' data-storm='AL032014'>Bertha 2014</a></td><td class='val'>0</td><td class='val'>7</td><td class='val'>0</td><td class='val'>6</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL042014' data-storm='AL042014'>Cristobal 2014</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[25]</span></td><td class='val'>0</td><td class='val'>23</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL122015' data-storm='AL122015'>Kate 2015</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[5]</span></td><td class='val'>0</td><td class='val'>5</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL052016' data-storm='AL052016'>Earl 2016</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[7]</span></td><td class='val'>0</td><td class='val'>17</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL092016' data-storm='AL092016'>Hermine 2016</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[24]</span></td><td class='val'>0</td><td class='val'>39</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL092020' data-storm='AL092020'>Isaias 2020</a></td><td class='val'>0</td><td class='val na'>—</td><td class='val'>0</td><td class='val na'>—</td><td class='val na'>— <span class='also'>[1]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL062021' data-storm='AL062021'>Fred 2021</a></td><td class='val'>0</td><td class='val'>15 <span class='also'>[21]</span></td><td class='val'>0</td><td class='val'>21</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL072021' data-storm='AL072021'>Grace 2021</a></td><td class='val'>0</td><td class='val'>32 <span class='also'>[50]</span></td><td class='val'>0</td><td class='val'>50</td><td class='val'>1 <span class='also'>[4]</span></td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL072022' data-storm='AL072022'>Fiona 2022</a></td><td class='val'>0</td><td class='val'>26</td><td class='val'>0</td><td class='val'>19</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL082023' data-storm='AL082023'>Franklin 2023</a></td><td class='val'>0</td><td class='val'>20 <span class='also'>[29]</span></td><td class='val'>0</td><td class='val'>23</td><td class='val'>2</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL022024' data-storm='AL022024'>Beryl 2024</a></td><td class='val'>0</td><td class='val'>27</td><td class='val'>0</td><td class='val'>45</td><td class='val'>1</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL042024' data-storm='AL042024'>Debby 2024</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[21]</span></td><td class='val'>0</td><td class='val'>30</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL162024' data-storm='AL162024'>Oscar 2024</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[23]</span></td><td class='val'>0</td><td class='val'>34</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+<tr><td class='nm'><a href='#carte-AL092025' data-storm='AL092025'>Imelda 2025</a></td><td class='val'>0</td><td class='val na'>— <span class='also'>[34]</span></td><td class='val'>0</td><td class='val'>40</td><td class='val'>0</td><td class='val'>—</td><td class='val' style='text-align:center'>—</td><td class='val'>—</td><td class='cerf'>—</td></tr>
+</tbody>
+<tfoot><tr style="background:#f7fafb;font-weight:700">
+  <td>Total (42)</td>
+  <td class='val'>2</td><td class='val'>6</td>
+  <td class='val'>2</td><td class='val'>9</td>
+  <td class='val'>8</td><td class='val'>2</td>
+  <td class='val' style='text-align:center'>13</td>
+  <td></td><td></td>
+</tr></tfoot>
+</table></div>
+
+
+<p class="legend" style="max-width:none">
+  Entre crochets, en petit : la même valeur en ignorant l’heure limite —
+  ce que les prévisions ont fini par dire, même trop tard pour agir ; en
+  orange lorsque ce maximum tardif atteint le seuil. Exposition en
+  personnes ; précipitations en mm sur deux jours glissants (moyenne
+  nationale, CHIRPS-GEFS en prévision, IMERG en observation) ; alerte
+  orange en nombre de départements (sur 10). <b>Hurricane Warning</b> :
+  heures entre l’avis du NHC qui l’a émis pour Haïti et le passage au plus
+  près qu’il prévoyait ; encadré lorsque l’avis précède l’heure limite.
+  La condition exige aussi l’alerte rouge de la DGPC, dont il n’existe pas
+  d’archive (voir la <a href="#rouge">section 6</a>). « — » en prévision :
+  aucun avis avant l’heure limite ne prévoyait de passage à moins de
+  230 km. Laura et Isaias 2020 n’ont pas de prévision CHIRPS-GEFS
+  archivée : leur compte de départements ne tient qu’au vent. Population
+  affectée : EM-DAT ; Melissa 2025 : chiffres préliminaires. CERF :
+  « pre- » = antérieur à la création du CERF (2006) ; « combined » =
+  allocation combinée Fay/Gustav/Hanna/Ike (2008).
+</p>
+
+
+<h2 id="seuils">4. Le choix des seuils</h2>
+
+<p>
+  Les seuils ont été fixés sur une simulation historique : chaque avis du
+  NHC émis pour les 42 tempêtes passées à moins de 230 km
+  d’Haïti entre 2002 et 2025, rejoué avec le code
+  du système de suivi — prévisions de précipitations CHIRPS-GEFS associées
+  à chaque avis, précipitations observées IMERG, et population exposée aux
+  vents de 64 nœuds dans les rayons de vent du NHC. Seuls les avis émis
+  avant l’heure limite comptent pour les voies de prévision.
+</p>
+<ul>
+  <li><b>Exposition :</b> le seuil retenu est la plus petite valeur non
+      nulle observée dans l’historique, soit en pratique « plus de
+      0 personne » exposée aux vents de 64 nœuds.</li>
+  <li><b>Précipitations :</b> les seuils de 68 mm (prévus) et
+      57 mm (observés) ont été choisis en mai–juin 2026 par un
+      balayage de toutes les combinaisons de seuils, en visant une
+      douzaine de tempêtes activées sur la période et, parmi les
+      combinaisons possibles, celle qui retient le plus de tempêtes ayant
+      reçu une allocation CERF, puis le plus de population affectée.</li>
+  <li><b>Alerte orange :</b> ajoutée en septembre 2026 au stade Action,
+      seuils de précipitations et d’exposition inchangés ; le nombre de
+      départements est discuté à la <a href="#orange">section 5</a>.</li>
+  <li><b>Alerte rouge + Hurricane Warning :</b> vérifiée en octobre 2026
+      contre l’heure limite ; elle n’ajoute aucune tempête
+      (<a href="#rouge">section 6</a>).</li>
+</ul>
+
+<h3>Période de retour de chaque voie</h3>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Voie</th><th>Tempêtes</th><th>Saisons</th>
+<th>Période de<br>retour (ans)</th><th>Tempêtes concernées</th></tr></thead>
+<tbody>
+<tr><td style='white-space:normal'>Prévision — exposition à 64 nœuds</td><td class='num'>2</td><td class='num'>2</td><td class='num'>12,0</td><td style='white-space:normal'>Tomas 2010, Matthew 2016</td></tr>
+<tr><td style='white-space:normal'>Prévision — précipitations</td><td class='num'>6</td><td class='num'>5</td><td class='num'>4,8</td><td style='white-space:normal'>Dennis 2005, Tomas 2010, Isaac 2012, Sandy 2012, Matthew 2016, Melissa 2025</td></tr>
+<tr><td style='white-space:normal'>Alerte orange DGPC (≥ 6 départements)</td><td class='num'>8</td><td class='num'>8</td><td class='num'>3,0</td><td style='white-space:normal'>Lili 2002, Dennis 2005, Ike 2008, Tomas 2010, Irene 2011, Isaac 2012, Chantal 2013, Matthew 2016</td></tr>
+<tr><td style='white-space:normal'>Alerte rouge DGPC + Hurricane Warning (avant l’heure limite)</td><td class='num'>2</td><td class='num'>2</td><td class='num'>12,0</td><td style='white-space:normal'>Isaac 2012, Matthew 2016</td></tr>
+<tr style='background:#f7fafb'><td style='white-space:normal'><b>Stade Action</b> (l’une des quatre voies)</td><td class='num'>10</td><td class='num'>9</td><td class='num'>2,7</td><td style='white-space:normal'>Lili 2002, Dennis 2005, Ike 2008, Tomas 2010, Irene 2011, Isaac 2012, Sandy 2012, Chantal 2013, Matthew 2016, Melissa 2025</td></tr>
+<tr><td style='white-space:normal'>Observation — exposition à 64 nœuds</td><td class='num'>2</td><td class='num'>2</td><td class='num'>12,0</td><td style='white-space:normal'>Gustav 2008, Matthew 2016</td></tr>
+<tr><td style='white-space:normal'>Observation — précipitations</td><td class='num'>9</td><td class='num'>7</td><td class='num'>3,4</td><td style='white-space:normal'>Lili 2002, Ernesto 2006, Gustav 2008, Hanna 2008, Tomas 2010, Isaac 2012, Sandy 2012, Matthew 2016, Melissa 2025</td></tr>
+<tr style='background:#f7fafb'><td style='white-space:normal'><b>Réponse précoce</b> (l’une des deux voies)</td><td class='num'>9</td><td class='num'>7</td><td class='num'>3,4</td><td style='white-space:normal'>Lili 2002, Ernesto 2006, Gustav 2008, Hanna 2008, Tomas 2010, Isaac 2012, Sandy 2012, Matthew 2016, Melissa 2025</td></tr>
+<tr style='background:#f7fafb'><td style='white-space:normal'><b>Mécanisme complet</b></td><td class='num'>13</td><td class='num'>10</td><td class='num'>2,4</td><td style='white-space:normal'>Lili 2002, Dennis 2005, Ernesto 2006, Gustav 2008, Hanna 2008, Ike 2008, Tomas 2010, Irene 2011, Isaac 2012, Sandy 2012, Chantal 2013, Matthew 2016, Melissa 2025</td></tr>
+</tbody></table></div>
+
+<p class="legend">
+  Période de retour : 24 saisons divisées par le nombre de saisons
+  avec au moins une tempête concernée ; la formule de Weibull,
+  (24 + 1) / k, donnerait des valeurs légèrement plus longues
+  (2,5 ans pour le mécanisme
+  complet). La ligne « alerte rouge + Hurricane Warning » compte les
+  tempêtes dont le Hurricane Warning précède l’heure limite : un majorant,
+  l’alerte rouge de la DGPC n’étant pas archivée. Sans la voie orange, le mécanisme
+  retiendrait 10 tempêtes en 8 saisons (3,0 ans). La
+  Mobilisation (échéance de 120 h) n’est pas reprise de ce rejeu, qui lit
+  les précipitations prévues à l’échéance Action ; sa période de retour
+  est celle du document du cadre.
+</p>
+
+
+<h2 id="orange">5. L’alerte orange de la DGPC par département</h2>
+
+<p class="lead">
+  En septembre 2026, la DGPC a précisé que ses alertes sont émises
+  <b>par département</b> et que le critère de vent désigne le vent
+  <b>dans le département</b>. La simulation est donc faite à cette
+  échelle, uniquement sur les <b>prévisions</b> que le cadre utilise déjà :
+  CHIRPS-GEFS pour la pluie, les avis du NHC pour le vent. Une première
+  évaluation, plus large, est conservée
+  <a href="premiere-evaluation.html">en annexe</a>.
+</p>
+
+<div class="stats">
+  <div class="stat"><div class="big">13</div>
+    <div class="lab">tempêtes avec au moins un
+    département en orange <b>vent</b> (≥ 100 km/h prévu)</div></div>
+  <div class="stat"><div class="big">7</div>
+    <div class="lab">tempêtes avec au moins un
+    département en orange <b>pluie</b>, moyenne du département
+    (≥ 100 mm/24 h prévu ; 24 évaluées)</div></div>
+  <div class="stat"><div class="big">16</div>
+    <div class="lab">tempêtes avec au moins un
+    département en orange <b>pluie</b>, point le plus arrosé
+    (24 évaluées)</div></div>
+  <div class="stat"><div class="big">8</div>
+    <div class="lab">tempêtes avec au moins 6 départements en
+    orange, vent ou pluie au point — le seuil du cadre</div></div>
+</div>
+
+<h3>Les lectures comparées</h3>
+
+<p>
+  Le critère orange de la DGPC est « 100 mm/24 h de pluie <i>ou</i>
+  100–120 km/h de vent » (Plan SAPMAH Cyclone 2025, p. 32). Appliqué par
+  département et sur prévisions, il laisse une question ouverte : la pluie
+  s’entend-elle en moyenne sur le département ou au point le plus arrosé ?
+  Les deux lectures sont présentées, seules et combinées au vent. Le cadre
+  retient les rafales et le point le plus arrosé, la lecture que la DGPC
+  applique.
+</p>
+
+<div class="tablewrap"><table class="prose">
+<thead><tr><th>Lecture</th><th>Un département est en orange si…</th>
+<th>Source</th></tr></thead>
+<tbody>
+<tr><td class="nm">Vent</td>
+    <td>les <b>rafales</b> prévues (vent soutenu sur terre ×0,85, facteur de
+        rafale ×1,25) atteignent 100 km/h en un point du département, pour
+        au moins un avis du NHC émis avant l’heure limite</td>
+    <td>Avis du NHC, champ paramétrique</td></tr>
+<tr><td class="nm">Pluie — moyenne du département</td>
+    <td>la moyenne du département d’une prévision journalière atteint
+        100 mm, pour la prévision CHIRPS-GEFS associée à un avis émis avant
+        l’heure limite</td>
+    <td>CHIRPS-GEFS, 0,05°</td></tr>
+<tr><td class="nm">Pluie — point le plus arrosé</td>
+    <td>un pixel (5,5 km) du département atteint 100 mm dans cette même
+        prévision journalière — la lecture que la DGPC applique</td>
+    <td>CHIRPS-GEFS, 0,05°</td></tr>
+<tr><td class="nm">Vent <i>ou</i> pluie</td>
+    <td>l’une des deux conditions ci-dessus — c’est la définition
+        complète du niveau orange</td>
+    <td>—</td></tr>
+</tbody></table></div>
+
+<h3>Combien de départements ?</h3>
+
+<p>
+  Sans la voie orange, les seuils de précipitations et d’exposition
+  retiennent 10 tempêtes en 8 saisons. Le tableau donne,
+  pour chaque nombre minimal de départements en orange, le registre
+  obtenu en gardant ces seuils tels quels.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Orange dans<br>≥ N départements</th><th>Tempêtes</th>
+<th>Saisons</th><th>Période de<br>retour (ans)</th>
+<th>Tempêtes ajoutées par la voie orange</th></tr></thead>
+<tbody>
+<tr><td class='num'>1</td><td class='num'>21</td><td class='num'>16</td><td class='num'>1,5</td><td style='white-space:normal'>Dean 2007, Ike 2008, Emily 2011, Irene 2011, Chantal 2013, Irma 2017, Laura 2020, Elsa 2021, Grace 2021, Franklin 2023, Beryl 2024</td></tr>
+<tr><td class='num'>2</td><td class='num'>18</td><td class='num'>15</td><td class='num'>1,6</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Laura 2020, Elsa 2021, Franklin 2023</td></tr>
+<tr><td class='num'>3</td><td class='num'>17</td><td class='num'>14</td><td class='num'>1,7</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Laura 2020, Elsa 2021</td></tr>
+<tr><td class='num'>4</td><td class='num'>16</td><td class='num'>13</td><td class='num'>1,8</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Elsa 2021</td></tr>
+<tr><td class='num'>5</td><td class='num'>16</td><td class='num'>13</td><td class='num'>1,8</td><td style='white-space:normal'>Dean 2007, Ike 2008, Irene 2011, Chantal 2013, Irma 2017, Elsa 2021</td></tr>
+<tr style='background:#fdefe7;font-weight:700'><td class='num'>6 <span class='pill orange'>retenu</span></td><td class='num'>13</td><td class='num'>10</td><td class='num'>2,4</td><td style='white-space:normal'>Ike 2008, Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>7</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,4</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>8</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,4</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>9</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,4</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+<tr><td class='num'>10</td><td class='num'>12</td><td class='num'>10</td><td class='num'>2,4</td><td style='white-space:normal'>Irene 2011, Chantal 2013</td></tr>
+</tbody></table></div>
+
+<p>
+  Dean 2007, Irma 2017 et Elsa 2021 comptent chacune
+  5 départements, si bien que le registre passe de
+  16 tempêtes à 5 départements à
+  13 à 6. <b>Le cadre retient 6 départements</b> :
+  13 tempêtes en 10 saisons, période de retour
+  2,4 ans, la voie orange ajoutant Ike 2008, Irene 2011, Chantal 2013. Ike 2008 est
+  la tempête à fort impact que les autres voies manquent ; Irene et
+  Chantal sont le coût de la lecture en rafales.
+</p>
+
+<details class="more">
+<summary>Le cadre et l’alerte orange, tempête par tempête (toutes les
+lectures)</summary>
+
+<p>
+  Toutes les tempêtes du jeu, dans l’ordre chronologique. La colonne
+  « déclenchement du cadre » reprend le registre des activations des
+  diapositives ; les tempêtes absentes de ce registre (en gris) n’ont ni
+  déclenché, ni causé d’impact recensé, ni reçu d’allocation CERF. Les
+  colonnes DGPC donnent le <b>nombre de départements</b> (sur 10) qui
+  auraient été en alerte orange ; survoler une case pour lire lesquels.
+  <b>Odette 2003, Charley 2004, Rita 2005, Alpha 2005, Olga 2007, Noel 2007, Fay 2008, Gustav 2008, Hanna 2008, Cristobal 2014, Kate 2015, Earl 2016, Hermine 2016, Laura 2020, Isaias 2020, Debby 2024, Oscar 2024, Imelda 2025</b> : aucune prévision CHIRPS-GEFS archivée (l’archive s’interrompt de janvier à septembre 2020) ; les cases de pluie sont « n/d », pas 0.
+  
+</p>
+
+
+<div class="tablewrap"><table class="wraphead">
+<thead>
+<tr>
+  <th rowspan="2">Tempête</th>
+  <th rowspan="2">Distance<br>min. (km)</th>
+  <th rowspan="2">Déclenchement<br>du cadre</th>
+  <th colspan="5" style="text-align:center">
+    Départements en alerte orange DGPC (sur 10), selon la lecture</th>
+  <th rowspan="2">Pop.<br>affectée</th>
+  <th rowspan="2">CERF</th>
+</tr>
+<tr><th style='text-align:center'>Vent</th><th style='text-align:center'>Pluie<br>moy. dép.</th><th style='text-align:center'>Pluie<br>point</th><th style='text-align:center'>Vent <i>ou</i><br>pluie moy.</th><th style='text-align:center'>Vent <i>ou</i><br>pluie point</th></tr>
+</thead>
+<tbody>
+<tr><td class='nm'>Lili 2002</td><td class='num'>124</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Ouest, Ouest, Sud, Sud-Est'>9</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Sud'>2</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Ouest, Ouest, Sud, Sud-Est'>9</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Ouest, Ouest, Sud, Sud-Est'>9</td><td class='num'>—</td><td>pre-</td></tr>
+<tr class='dim'><td class='nm'>Odette 2003</td><td class='num'>40</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Charley 2004</td><td class='num'>177</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Jeanne 2004</td><td class='num'>50</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>315 594</td><td>pre-</td></tr>
+<tr><td class='nm'>Ivan 2004</td><td class='num'>—</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td class='num'>6 500</td><td>pre-</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='num'>107</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Sud'>2</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes'>2</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>6</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>6</td><td class='num'>15 036</td><td>pre-</td></tr>
+<tr class='dim'><td class='nm'>Rita 2005</td><td class='num'>221</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Alpha 2005</td><td class='num'>0</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Chris 2006</td><td class='num'>159</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td class='num'>12</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest, Sud, Sud-Est'>3</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest, Sud, Sud-Est'>3</td><td class='num'>15 000</td><td>—</td></tr>
+<tr><td class='nm'>Dean 2007</td><td class='num'>150</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Ouest, Sud, Sud-Est'>4</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td class='num'>3 966</td><td>—</td></tr>
+<tr><td class='nm'>Noel 2007</td><td class='num'>0</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>108 763</td><td>—</td></tr>
+<tr><td class='nm'>Olga 2007</td><td class='num'>0</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>2 352</td><td>—</td></tr>
+<tr><td class='nm'>Fay 2008</td><td class='num'>3</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>220</td><td>combined</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td class='num'>0</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>73 006</td><td>combined</td></tr>
+<tr><td class='nm'>Hanna 2008</td><td class='num'>18</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>48 000</td><td>combined</td></tr>
+<tr><td class='nm'>Ike 2008</td><td class='num'>108</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Centre, Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>6</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Centre, Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>6</td><td class='num'>125 050</td><td>combined</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='num'>32</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td class='num'>5 020</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Emily 2011</td><td class='num'>5</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nord-Est'>1</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nord-Est'>1</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nord-Est'>1</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Irene 2011</td><td class='num'>134</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud-Est'>8</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nippes, Sud'>2</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>9</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td class='num'>1 544</td><td>—</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='num'>8</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord-Ouest, Ouest, Sud, Sud-Est'>8</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud, Sud-Est'>4</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>6</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord-Ouest, Ouest, Sud, Sud-Est'>8</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord-Ouest, Ouest, Sud, Sud-Est'>8</td><td class='num'>8 007</td><td>—</td></tr>
+<tr><td class='nm'>Sandy 2012</td><td class='num'>216</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest'>1</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest'>1</td><td class='num'>201 850</td><td>$4,000,000</td></tr>
+<tr><td class='nm'>Chantal 2013</td><td class='num'>186</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Centre, Grande&#x27;Anse, Nippes, Nord, Nord-Est, Nord-Ouest, Ouest, Sud, Sud-Est'>10</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Bertha 2014</td><td class='num'>152</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Cristobal 2014</td><td class='num'>106</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Erika 2015</td><td class='num'>1</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>1 969</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Kate 2015</td><td class='num'>204</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Earl 2016</td><td class='num'>194</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Hermine 2016</td><td class='num'>166</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Matthew 2016</td><td class='num'>0</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Nord-Ouest, Ouest, Sud, Sud-Est'>7</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Nord, Nord-Ouest, Ouest, Sud, Sud-Est'>8</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Nord-Ouest, Ouest, Sud, Sud-Est'>7</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Grande&#x27;Anse, Nippes, Nord, Nord-Ouest, Ouest, Sud, Sud-Est'>8</td><td class='num'>2 100 439</td><td>$10,100,000</td></tr>
+<tr><td class='nm'>Irma 2017</td><td class='num'>159</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Nord, Nord-Est, Nord-Ouest'>4</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Sud'>1</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Nord, Nord-Est, Nord-Ouest'>4</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Artibonite, Nord, Nord-Est, Nord-Ouest, Sud'>5</td><td class='num'>40 092</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Isaias 2020</td><td class='num'>50</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Laura 2020</td><td class='num'>0</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nord, Nord-Est, Nord-Ouest'>3</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;color:#9aa5a6'>n/d</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nord, Nord-Est, Nord-Ouest'>3</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Nord, Nord-Est, Nord-Ouest'>3</td><td class='num'>44 175</td><td>—</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='num'>79</td><td style="text-align:center;color:#9aa5a6">—</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td style='text-align:center;background:#c9e9d8;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Ouest, Sud, Sud-Est'>5</td><td class='num'>3</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Fred 2021</td><td class='num'>0</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Grace 2021</td><td class='num'>20</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Sud'>1</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Sud'>1</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Fiona 2022</td><td class='num'>176</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Franklin 2023</td><td class='num'>66</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest, Sud-Est'>2</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest, Sud-Est'>2</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest, Sud-Est'>2</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Ouest, Sud-Est'>2</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Beryl 2024</td><td class='num'>203</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Sud'>1</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Sud'>1</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Debby 2024</td><td class='num'>3</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Oscar 2024</td><td class='num'>112</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr class='dim'><td class='nm'>Imelda 2025</td><td class='num'>150</td><td style='text-align:center;color:#c2cacc' title='Absente du registre : pas d’activation'>—</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;color:#9aa5a6'>0</td><td class='num'>—</td><td>—</td></tr>
+<tr><td class='nm'>Melissa 2025</td><td class='num'>218</td><td style="text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700">✓</td><td style='text-align:center;color:#9aa5a6'>0</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td style='text-align:center;background:#e7f4ee;color:#0f8a5f;font-weight:700' title='Grande&#x27;Anse, Nippes, Sud'>3</td><td class='num'>2 300 021</td><td>$4,000,000</td></tr>
+</tbody>
+<tfoot><tr style="background:#f7fafb;font-weight:700">
+  <td>Total (43 lignes)</td><td></td>
+  <td style="text-align:center">13</td>
+  <td style='text-align:center'>13</td><td style='text-align:center'>7</td><td style='text-align:center'>16</td><td style='text-align:center'>14</td><td style='text-align:center'>19</td>
+  <td></td><td></td>
+</tr></tfoot>
+</table></div>
+
+
+<p class="legend">
+  ✓ = cadre activé ; — = non activé ; n/d = hors du jeu analysé ou
+  prévision indisponible. Population affectée : EM-DAT, reprise des
+  diapositives. CERF : « pre- » = antérieur à la création du CERF (2006) ;
+  « combined » = allocation combinée Fay/Gustav/Hanna/Ike (2008).
+</p>
+
+<div class="callout">
+  <h3>Où les deux systèmes se rejoignent, et où ils divergent</h3>
+  <p>
+    Sous la lecture « vent <i>ou</i> pluie en moyenne départementale »,
+    <b>8</b> tempêtes
+    auraient à la fois activé
+    le cadre et placé au moins un département en orange (Lili 2002, Dennis 2005, Tomas 2010, Irene 2011, Isaac 2012, Chantal 2013, Matthew 2016, Melissa 2025).
+  </p>
+  <p>
+    Le cadre se serait activé <b>sans</b> qu’aucun département ne soit en
+    orange pour 5 tempêtes
+    (Ernesto 2006, Gustav 2008, Hanna 2008, Ike 2008, Sandy 2012) ; à l’inverse, au moins un département
+    aurait été en orange <b>sans</b> activation du cadre pour
+    6 tempêtes
+    (Dean 2007, Emily 2011, Irma 2017, Laura 2020, Elsa 2021, Franklin 2023).
+  </p>
+</div>
+
+<figure><svg viewBox="0 0 760 894" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;max-width:100%;height:auto"><rect width="760" height="894" fill="#ffffff"/><line x1="132.0" y1="54" x2="132.0" y2="860" stroke="#dde5e8" stroke-width="1"/><text x="132.0" y="875" fill="#5e6a6b" font-size="10" text-anchor="middle">0</text><line x1="244.8" y1="54" x2="244.8" y2="860" stroke="#dde5e8" stroke-width="1"/><text x="244.8" y="875" fill="#5e6a6b" font-size="10" text-anchor="middle">2</text><line x1="357.6" y1="54" x2="357.6" y2="860" stroke="#dde5e8" stroke-width="1"/><text x="357.6" y="875" fill="#5e6a6b" font-size="10" text-anchor="middle">4</text><line x1="470.4" y1="54" x2="470.4" y2="860" stroke="#dde5e8" stroke-width="1"/><text x="470.4" y="875" fill="#5e6a6b" font-size="10" text-anchor="middle">6</text><line x1="583.2" y1="54" x2="583.2" y2="860" stroke="#dde5e8" stroke-width="1"/><text x="583.2" y="875" fill="#5e6a6b" font-size="10" text-anchor="middle">8</text><line x1="696.0" y1="54" x2="696.0" y2="860" stroke="#dde5e8" stroke-width="1"/><text x="696.0" y="875" fill="#5e6a6b" font-size="10" text-anchor="middle">10</text><text x="414.0" y="888" fill="#5e6a6b" font-size="10.5" text-anchor="middle">Départements en alerte orange (sur 10)</text><text x="122" y="81.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Tomas 2010</text><rect x="132" y="62.0" width="564.0" height="9" rx="3.5" fill="#1baf7a"/><text x="702.0" y="70.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">10</text><rect x="132" y="73.0" width="169.2" height="9" rx="3.5" fill="#4a3aa7"/><text x="307.2" y="81.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><rect x="132" y="84.0" width="564.0" height="9" rx="3.5" fill="#2a78d6"/><text x="702.0" y="92.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">10</text><text x="122" y="123.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Chantal 2013</text><rect x="132" y="104.0" width="564.0" height="9" rx="3.5" fill="#1baf7a"/><text x="702.0" y="112.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">10</text><rect x="132" y="115.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="123.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="126.0" width="1.5" height="9" rx="3.5" fill="#2a78d6"/><text x="139.5" y="134.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><text x="122" y="165.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Irene 2011</text><rect x="132" y="146.0" width="451.2" height="9" rx="3.5" fill="#1baf7a"/><text x="589.2" y="154.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">8</text><rect x="132" y="157.0" width="112.8" height="9" rx="3.5" fill="#4a3aa7"/><text x="250.8" y="165.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">2</text><rect x="132" y="168.0" width="282.0" height="9" rx="3.5" fill="#2a78d6"/><text x="420.0" y="176.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">5</text><text x="122" y="207.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Lili 2002</text><rect x="132" y="188.0" width="507.6" height="9" rx="3.5" fill="#1baf7a"/><text x="645.6" y="196.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">9</text><rect x="132" y="199.0" width="112.8" height="9" rx="3.5" fill="#4a3aa7"/><text x="250.8" y="207.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">2</text><rect x="132" y="210.0" width="169.2" height="9" rx="3.5" fill="#2a78d6"/><text x="307.2" y="218.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><text x="122" y="249.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Matthew 2016</text><rect x="132" y="230.0" width="394.8" height="9" rx="3.5" fill="#1baf7a"/><text x="532.8" y="238.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">7</text><rect x="132" y="241.0" width="169.2" height="9" rx="3.5" fill="#4a3aa7"/><text x="307.2" y="249.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><rect x="132" y="252.0" width="451.2" height="9" rx="3.5" fill="#2a78d6"/><text x="589.2" y="260.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">8</text><text x="122" y="291.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Isaac 2012</text><rect x="132" y="272.0" width="451.2" height="9" rx="3.5" fill="#1baf7a"/><text x="589.2" y="280.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">8</text><rect x="132" y="283.0" width="225.6" height="9" rx="3.5" fill="#4a3aa7"/><text x="363.6" y="291.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">4</text><rect x="132" y="294.0" width="338.4" height="9" rx="3.5" fill="#2a78d6"/><text x="476.4" y="302.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">6</text><text x="122" y="333.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Ike 2008</text><rect x="132" y="314.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="322.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="325.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="333.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="336.0" width="338.4" height="9" rx="3.5" fill="#2a78d6"/><text x="476.4" y="344.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">6</text><text x="122" y="375.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Dennis 2005</text><rect x="132" y="356.0" width="112.8" height="9" rx="3.5" fill="#1baf7a"/><text x="250.8" y="364.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">2</text><rect x="132" y="367.0" width="112.8" height="9" rx="3.5" fill="#4a3aa7"/><text x="250.8" y="375.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">2</text><rect x="132" y="378.0" width="338.4" height="9" rx="3.5" fill="#2a78d6"/><text x="476.4" y="386.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">6</text><text x="122" y="417.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Dean 2007</text><rect x="132" y="398.0" width="282.0" height="9" rx="3.5" fill="#1baf7a"/><text x="420.0" y="406.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">5</text><rect x="132" y="409.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="417.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="420.0" width="225.6" height="9" rx="3.5" fill="#2a78d6"/><text x="363.6" y="428.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">4</text><text x="122" y="459.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Irma 2017</text><rect x="132" y="440.0" width="225.6" height="9" rx="3.5" fill="#1baf7a"/><text x="363.6" y="448.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">4</text><rect x="132" y="451.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="459.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="462.0" width="56.4" height="9" rx="3.5" fill="#2a78d6"/><text x="194.4" y="470.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">1</text><text x="122" y="501.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Elsa 2021</text><rect x="132" y="482.0" width="282.0" height="9" rx="3.5" fill="#1baf7a"/><text x="420.0" y="490.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">5</text><rect x="132" y="493.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="501.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="504.0" width="169.2" height="9" rx="3.5" fill="#2a78d6"/><text x="307.2" y="512.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><text x="122" y="543.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Ernesto 2006</text><rect x="132" y="524.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="532.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="535.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="543.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="546.0" width="169.2" height="9" rx="3.5" fill="#2a78d6"/><text x="307.2" y="554.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><text x="122" y="585.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Laura 2020</text><rect x="132" y="566.0" width="169.2" height="9" rx="3.5" fill="#1baf7a"/><text x="307.2" y="574.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><rect x="132" y="577.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="585.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="588.0" width="1.5" height="9" rx="3.5" fill="#2a78d6"/><text x="139.5" y="596.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><text x="122" y="627.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Melissa 2025</text><rect x="132" y="608.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="616.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="619.0" width="169.2" height="9" rx="3.5" fill="#4a3aa7"/><text x="307.2" y="627.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><rect x="132" y="630.0" width="169.2" height="9" rx="3.5" fill="#2a78d6"/><text x="307.2" y="638.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">3</text><text x="122" y="669.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Franklin 2023</text><rect x="132" y="650.0" width="112.8" height="9" rx="3.5" fill="#1baf7a"/><text x="250.8" y="658.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">2</text><rect x="132" y="661.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="669.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="672.0" width="112.8" height="9" rx="3.5" fill="#2a78d6"/><text x="250.8" y="680.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">2</text><text x="122" y="711.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Emily 2011</text><rect x="132" y="692.0" width="56.4" height="9" rx="3.5" fill="#1baf7a"/><text x="194.4" y="700.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">1</text><rect x="132" y="703.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="711.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="714.0" width="1.5" height="9" rx="3.5" fill="#2a78d6"/><text x="139.5" y="722.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><text x="122" y="753.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Sandy 2012</text><rect x="132" y="734.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="742.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="745.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="753.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="756.0" width="56.4" height="9" rx="3.5" fill="#2a78d6"/><text x="194.4" y="764.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">1</text><text x="122" y="795.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Grace 2021</text><rect x="132" y="776.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="784.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="787.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="795.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="798.0" width="56.4" height="9" rx="3.5" fill="#2a78d6"/><text x="194.4" y="806.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">1</text><text x="122" y="837.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Beryl 2024</text><rect x="132" y="818.0" width="1.5" height="9" rx="3.5" fill="#1baf7a"/><text x="139.5" y="826.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="829.0" width="1.5" height="9" rx="3.5" fill="#4a3aa7"/><text x="139.5" y="837.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">0</text><rect x="132" y="840.0" width="56.4" height="9" rx="3.5" fill="#2a78d6"/><text x="194.4" y="848.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">1</text><line x1="132" y1="54" x2="132" y2="860" stroke="#5e6a6b" stroke-width="1"/><rect x="132" y="6" width="19" height="8" rx="3" fill="#1baf7a"/><text x="157" y="13.5" fill="#1e2a2b" font-size="11">Vent</text><rect x="188.4" y="6" width="19" height="8" rx="3" fill="#4a3aa7"/><text x="213.4" y="13.5" fill="#1e2a2b" font-size="11">Pluie — moyenne dép.</text><rect x="342.4" y="6" width="19" height="8" rx="3" fill="#2a78d6"/><text x="367.4" y="13.5" fill="#1e2a2b" font-size="11">Pluie — point</text></svg><figcaption>Nombre de départements en alerte orange par tempête, selon la lecture, pour les tempêtes qui en placent au moins un.</figcaption></figure>
+</details>
+
+<details class="more">
+<summary>Combien de tempêtes placent au moins un département en
+orange</summary>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr>
+  <th>Lecture</th><th>Tempêtes<br>(sur évaluées)</th><th>Saisons</th>
+  <th>Période de<br>retour (ans)</th>
+  <th>Départements<br>par tempête (médiane)</th>
+  <th>Préavis médian<br>(h avant passage)</th>
+</tr></thead>
+<tbody>
+<tr><td class='nm'>Vent ≥ 100 km/h dans le département</td><td class='num'>13 / 42</td><td class='num'>12</td><td class='num'>2,0</td><td class='num'>5</td><td class='num'>104</td></tr>
+<tr><td class='nm'>Pluie — moyenne du département</td><td class='num'>7 / 40</td><td class='num'>7</td><td class='num'>3,4</td><td class='num'>3</td><td class='num'>83</td></tr>
+<tr><td class='nm'>Pluie — point le plus arrosé du département</td><td class='num'>16 / 40</td><td class='num'>14</td><td class='num'>1,7</td><td class='num'>3</td><td class='num'>82</td></tr>
+<tr><td class='nm'>Vent OU pluie (moyenne)</td><td class='num'>14 / 41</td><td class='num'>13</td><td class='num'>1,8</td><td class='num'>5</td><td class='num'>102</td></tr>
+<tr><td class='nm'>Vent OU pluie (point)</td><td class='num'>19 / 41</td><td class='num'>16</td><td class='num'>1,5</td><td class='num'>5</td><td class='num'>104</td></tr>
+</tbody></table></div>
+
+<p class="legend">
+  Période de retour : 24 saisons divisées par le nombre de saisons
+  avec au moins une tempête concernée. Le préavis est le délai entre la
+  première prévision atteignant le critère et le passage au plus près.
+</p>
+</details>
+
+<details class="more">
+<summary>Le détail par département : rafales et pluie prévues</summary>
+
+<p>
+  Pour chaque tempête et chaque département, la valeur maximale prévue
+  pendant l’approche. Les cases orange atteignent le seuil. Départements
+  du sud-ouest au nord-est.
+</p>
+
+<h3>Rafales prévues maximales dans le département (km/h)</h3>
+
+<div class="tablewrap"><table class="matrix">
+<thead><tr><th>Tempête</th><th>Grande&#x27;Anse</th><th>Sud</th><th>Nippes</th><th>Sud-Est</th><th>Ouest</th><th>Centre</th><th>Artibonite</th><th>Nord-Ouest</th><th>Nord</th><th>Nord-Est</th></tr></thead>
+<tbody>
+<tr><td class='nm'>Lili 2002</td><td class='val hit'>167</td><td class='val hit'>167</td><td class='val hit'>167</td><td class='val hit'>167</td><td class='val hit'>167</td><td class='val hit'>141</td><td class='val hit'>142</td><td class='val hit'>143</td><td class='val hit'>104</td><td class='val'>95</td></tr>
+<tr><td class='nm'>Odette 2003</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Charley 2004</td><td class='val'>57</td><td class='val'>58</td><td class='val'>55</td><td class='val'>55</td><td class='val'>55</td><td class='val'>53</td><td class='val'>53</td><td class='val'>51</td><td class='val'>52</td><td class='val'>52</td></tr>
+<tr><td class='nm'>Jeanne 2004</td><td class='val'>46</td><td class='val'>46</td><td class='val'>47</td><td class='val'>48</td><td class='val'>53</td><td class='val'>60</td><td class='val'>67</td><td class='val'>74</td><td class='val'>70</td><td class='val'>69</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='val hit'>106</td><td class='val hit'>106</td><td class='val'>73</td><td class='val'>68</td><td class='val'>66</td><td class='val'>56</td><td class='val'>57</td><td class='val'>55</td><td class='val'>52</td><td class='val'>51</td></tr>
+<tr><td class='nm'>Rita 2005</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Alpha 2005</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Chris 2006</td><td class='val'>40</td><td class='val'>38</td><td class='val'>39</td><td class='val'>40</td><td class='val'>43</td><td class='val'>49</td><td class='val'>52</td><td class='val'>60</td><td class='val'>54</td><td class='val'>55</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td class='val'>65</td><td class='val'>67</td><td class='val'>61</td><td class='val'>61</td><td class='val'>60</td><td class='val'>58</td><td class='val'>57</td><td class='val'>56</td><td class='val'>56</td><td class='val'>56</td></tr>
+<tr><td class='nm'>Dean 2007</td><td class='val hit'>108</td><td class='val hit'>136</td><td class='val hit'>103</td><td class='val hit'>129</td><td class='val hit'>109</td><td class='val'>89</td><td class='val'>80</td><td class='val'>67</td><td class='val'>73</td><td class='val'>74</td></tr>
+<tr><td class='nm'>Noel 2007</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Olga 2007</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Fay 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Hanna 2008</td><td class='val'>43</td><td class='val'>45</td><td class='val'>46</td><td class='val'>49</td><td class='val'>50</td><td class='val'>52</td><td class='val'>52</td><td class='val'>53</td><td class='val'>53</td><td class='val'>54</td></tr>
+<tr><td class='nm'>Ike 2008</td><td class='val'>59</td><td class='val'>56</td><td class='val'>58</td><td class='val'>56</td><td class='val'>62</td><td class='val'>66</td><td class='val'>75</td><td class='val'>82</td><td class='val'>76</td><td class='val'>73</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='val hit'>166</td><td class='val hit'>166</td><td class='val hit'>159</td><td class='val hit'>177</td><td class='val hit'>177</td><td class='val hit'>157</td><td class='val hit'>154</td><td class='val hit'>157</td><td class='val hit'>151</td><td class='val hit'>150</td></tr>
+<tr><td class='nm'>Emily 2011</td><td class='val'>68</td><td class='val'>71</td><td class='val'>74</td><td class='val'>89</td><td class='val'>89</td><td class='val'>93</td><td class='val'>91</td><td class='val'>89</td><td class='val'>92</td><td class='val hit'>102</td></tr>
+<tr><td class='nm'>Irene 2011</td><td class='val'>96</td><td class='val'>98</td><td class='val hit'>122</td><td class='val hit'>139</td><td class='val hit'>139</td><td class='val hit'>135</td><td class='val hit'>129</td><td class='val hit'>111</td><td class='val hit'>109</td><td class='val hit'>107</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='val hit'>187</td><td class='val hit'>187</td><td class='val hit'>177</td><td class='val hit'>173</td><td class='val hit'>173</td><td class='val hit'>136</td><td class='val hit'>134</td><td class='val hit'>116</td><td class='val'>99</td><td class='val'>92</td></tr>
+<tr><td class='nm'>Sandy 2012</td><td class='val'>72</td><td class='val'>71</td><td class='val'>68</td><td class='val'>64</td><td class='val'>67</td><td class='val'>64</td><td class='val'>69</td><td class='val'>71</td><td class='val'>66</td><td class='val'>64</td></tr>
+<tr><td class='nm'>Chantal 2013</td><td class='val hit'>108</td><td class='val hit'>108</td><td class='val hit'>100</td><td class='val hit'>107</td><td class='val hit'>107</td><td class='val hit'>107</td><td class='val hit'>105</td><td class='val hit'>102</td><td class='val hit'>105</td><td class='val hit'>106</td></tr>
+<tr><td class='nm'>Bertha 2014</td><td class='val'>46</td><td class='val'>46</td><td class='val'>46</td><td class='val'>47</td><td class='val'>48</td><td class='val'>59</td><td class='val'>55</td><td class='val'>59</td><td class='val'>60</td><td class='val'>61</td></tr>
+<tr><td class='nm'>Cristobal 2014</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Erika 2015</td><td class='val'>51</td><td class='val'>51</td><td class='val'>51</td><td class='val'>53</td><td class='val'>54</td><td class='val'>57</td><td class='val'>57</td><td class='val'>59</td><td class='val'>59</td><td class='val'>60</td></tr>
+<tr><td class='nm'>Kate 2015</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Earl 2016</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Hermine 2016</td><td class='val'>34</td><td class='val'>37</td><td class='val'>38</td><td class='val'>47</td><td class='val'>47</td><td class='val'>49</td><td class='val'>45</td><td class='val'>45</td><td class='val'>46</td><td class='val'>49</td></tr>
+<tr><td class='nm'>Matthew 2016</td><td class='val hit'>220</td><td class='val hit'>219</td><td class='val hit'>154</td><td class='val hit'>102</td><td class='val hit'>113</td><td class='val'>82</td><td class='val hit'>105</td><td class='val hit'>120</td><td class='val'>90</td><td class='val'>77</td></tr>
+<tr><td class='nm'>Irma 2017</td><td class='val'>72</td><td class='val'>70</td><td class='val'>72</td><td class='val'>71</td><td class='val'>79</td><td class='val'>91</td><td class='val hit'>101</td><td class='val hit'>113</td><td class='val hit'>105</td><td class='val hit'>107</td></tr>
+<tr><td class='nm'>Isaias 2020</td><td class='val'>52</td><td class='val'>53</td><td class='val'>53</td><td class='val'>60</td><td class='val'>64</td><td class='val'>88</td><td class='val'>89</td><td class='val'>90</td><td class='val'>89</td><td class='val'>89</td></tr>
+<tr><td class='nm'>Laura 2020</td><td class='val'>57</td><td class='val'>53</td><td class='val'>56</td><td class='val'>58</td><td class='val'>74</td><td class='val'>98</td><td class='val'>98</td><td class='val hit'>112</td><td class='val hit'>118</td><td class='val hit'>118</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='val hit'>121</td><td class='val hit'>123</td><td class='val hit'>121</td><td class='val hit'>114</td><td class='val hit'>106</td><td class='val'>81</td><td class='val'>80</td><td class='val'>73</td><td class='val'>71</td><td class='val'>69</td></tr>
+<tr><td class='nm'>Fred 2021</td><td class='val'>49</td><td class='val'>49</td><td class='val'>50</td><td class='val'>52</td><td class='val'>64</td><td class='val'>82</td><td class='val'>82</td><td class='val'>89</td><td class='val'>89</td><td class='val'>89</td></tr>
+<tr><td class='nm'>Grace 2021</td><td class='val'>58</td><td class='val'>56</td><td class='val'>58</td><td class='val'>64</td><td class='val'>90</td><td class='val'>91</td><td class='val'>87</td><td class='val'>89</td><td class='val'>89</td><td class='val'>94</td></tr>
+<tr><td class='nm'>Fiona 2022</td><td class='val'>44</td><td class='val'>46</td><td class='val'>47</td><td class='val'>52</td><td class='val'>60</td><td class='val'>64</td><td class='val'>58</td><td class='val'>60</td><td class='val'>64</td><td class='val'>71</td></tr>
+<tr><td class='nm'>Franklin 2023</td><td class='val'>46</td><td class='val'>53</td><td class='val'>53</td><td class='val hit'>108</td><td class='val hit'>108</td><td class='val'>89</td><td class='val'>64</td><td class='val'>52</td><td class='val'>65</td><td class='val'>76</td></tr>
+<tr><td class='nm'>Beryl 2024</td><td class='val'>83</td><td class='val'>89</td><td class='val'>74</td><td class='val'>74</td><td class='val'>71</td><td class='val'>60</td><td class='val'>59</td><td class='val'>54</td><td class='val'>55</td><td class='val'>54</td></tr>
+<tr><td class='nm'>Debby 2024</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Oscar 2024</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Imelda 2025</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Melissa 2025</td><td class='val'>93</td><td class='val'>94</td><td class='val'>80</td><td class='val'>72</td><td class='val'>72</td><td class='val'>66</td><td class='val'>80</td><td class='val'>88</td><td class='val'>75</td><td class='val'>67</td></tr>
+</tbody></table></div>
+
+
+<h3>Pluie prévue — moyenne du département (mm / jour)</h3>
+
+<div class="tablewrap"><table class="matrix">
+<thead><tr><th>Tempête</th><th>Grande&#x27;Anse</th><th>Sud</th><th>Nippes</th><th>Sud-Est</th><th>Ouest</th><th>Centre</th><th>Artibonite</th><th>Nord-Ouest</th><th>Nord</th><th>Nord-Est</th></tr></thead>
+<tbody>
+<tr><td class='nm'>Lili 2002</td><td class='val hit'>102</td><td class='val hit'>104</td><td class='val'>81</td><td class='val'>23</td><td class='val'>22</td><td class='val'>18</td><td class='val'>12</td><td class='val'>11</td><td class='val'>22</td><td class='val'>28</td></tr>
+<tr><td class='nm'>Odette 2003</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Charley 2004</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Jeanne 2004</td><td class='val'>19</td><td class='val'>10</td><td class='val'>19</td><td class='val'>11</td><td class='val'>13</td><td class='val'>16</td><td class='val'>23</td><td class='val'>42</td><td class='val'>50</td><td class='val'>50</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='val hit'>122</td><td class='val'>91</td><td class='val hit'>103</td><td class='val'>69</td><td class='val'>74</td><td class='val'>39</td><td class='val'>46</td><td class='val'>38</td><td class='val'>20</td><td class='val'>12</td></tr>
+<tr><td class='nm'>Rita 2005</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Alpha 2005</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Chris 2006</td><td class='val'>8</td><td class='val'>5</td><td class='val'>7</td><td class='val'>8</td><td class='val'>12</td><td class='val'>19</td><td class='val'>17</td><td class='val'>11</td><td class='val'>13</td><td class='val'>13</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td class='val'>27</td><td class='val'>41</td><td class='val'>45</td><td class='val'>59</td><td class='val'>48</td><td class='val'>31</td><td class='val'>35</td><td class='val'>22</td><td class='val'>24</td><td class='val'>18</td></tr>
+<tr><td class='nm'>Dean 2007</td><td class='val'>38</td><td class='val'>64</td><td class='val'>54</td><td class='val'>56</td><td class='val'>40</td><td class='val'>15</td><td class='val'>13</td><td class='val'>11</td><td class='val'>15</td><td class='val'>11</td></tr>
+<tr><td class='nm'>Noel 2007</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Olga 2007</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Fay 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Hanna 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Ike 2008</td><td class='val'>60</td><td class='val'>76</td><td class='val'>58</td><td class='val'>57</td><td class='val'>52</td><td class='val'>56</td><td class='val'>26</td><td class='val'>30</td><td class='val'>26</td><td class='val'>40</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='val hit'>203</td><td class='val hit'>108</td><td class='val hit'>127</td><td class='val'>86</td><td class='val'>84</td><td class='val'>54</td><td class='val'>49</td><td class='val'>65</td><td class='val'>66</td><td class='val'>63</td></tr>
+<tr><td class='nm'>Emily 2011</td><td class='val'>15</td><td class='val'>13</td><td class='val'>14</td><td class='val'>14</td><td class='val'>17</td><td class='val'>14</td><td class='val'>17</td><td class='val'>8</td><td class='val'>15</td><td class='val'>11</td></tr>
+<tr><td class='nm'>Irene 2011</td><td class='val'>82</td><td class='val hit'>119</td><td class='val hit'>140</td><td class='val'>29</td><td class='val'>28</td><td class='val'>25</td><td class='val'>19</td><td class='val'>31</td><td class='val'>34</td><td class='val'>33</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='val hit'>156</td><td class='val hit'>160</td><td class='val hit'>161</td><td class='val hit'>105</td><td class='val'>99</td><td class='val'>38</td><td class='val'>38</td><td class='val'>36</td><td class='val'>25</td><td class='val'>22</td></tr>
+<tr><td class='nm'>Sandy 2012</td><td class='val'>48</td><td class='val'>47</td><td class='val'>63</td><td class='val'>52</td><td class='val'>45</td><td class='val'>35</td><td class='val'>35</td><td class='val'>29</td><td class='val'>41</td><td class='val'>41</td></tr>
+<tr><td class='nm'>Chantal 2013</td><td class='val'>8</td><td class='val'>8</td><td class='val'>9</td><td class='val'>13</td><td class='val'>10</td><td class='val'>9</td><td class='val'>7</td><td class='val'>4</td><td class='val'>5</td><td class='val'>4</td></tr>
+<tr><td class='nm'>Bertha 2014</td><td class='val'>4</td><td class='val'>3</td><td class='val'>4</td><td class='val'>2</td><td class='val'>3</td><td class='val'>4</td><td class='val'>7</td><td class='val'>3</td><td class='val'>7</td><td class='val'>5</td></tr>
+<tr><td class='nm'>Cristobal 2014</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Erika 2015</td><td class='val'>8</td><td class='val'>7</td><td class='val'>6</td><td class='val'>6</td><td class='val'>12</td><td class='val'>18</td><td class='val'>14</td><td class='val'>14</td><td class='val'>20</td><td class='val'>15</td></tr>
+<tr><td class='nm'>Kate 2015</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Earl 2016</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Hermine 2016</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Matthew 2016</td><td class='val hit'>313</td><td class='val hit'>278</td><td class='val hit'>190</td><td class='val'>61</td><td class='val'>56</td><td class='val'>33</td><td class='val'>59</td><td class='val'>88</td><td class='val'>71</td><td class='val'>27</td></tr>
+<tr><td class='nm'>Irma 2017</td><td class='val'>72</td><td class='val'>41</td><td class='val'>41</td><td class='val'>16</td><td class='val'>23</td><td class='val'>36</td><td class='val'>37</td><td class='val'>63</td><td class='val'>44</td><td class='val'>57</td></tr>
+<tr><td class='nm'>Isaias 2020</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Laura 2020</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='val'>65</td><td class='val'>76</td><td class='val'>66</td><td class='val'>19</td><td class='val'>20</td><td class='val'>16</td><td class='val'>13</td><td class='val'>11</td><td class='val'>11</td><td class='val'>11</td></tr>
+<tr><td class='nm'>Fred 2021</td><td class='val'>10</td><td class='val'>10</td><td class='val'>11</td><td class='val'>5</td><td class='val'>8</td><td class='val'>13</td><td class='val'>10</td><td class='val'>9</td><td class='val'>11</td><td class='val'>13</td></tr>
+<tr><td class='nm'>Grace 2021</td><td class='val'>24</td><td class='val'>42</td><td class='val'>33</td><td class='val'>24</td><td class='val'>24</td><td class='val'>28</td><td class='val'>23</td><td class='val'>18</td><td class='val'>24</td><td class='val'>27</td></tr>
+<tr><td class='nm'>Fiona 2022</td><td class='val'>16</td><td class='val'>15</td><td class='val'>14</td><td class='val'>11</td><td class='val'>12</td><td class='val'>17</td><td class='val'>14</td><td class='val'>23</td><td class='val'>22</td><td class='val'>22</td></tr>
+<tr><td class='nm'>Franklin 2023</td><td class='val'>10</td><td class='val'>8</td><td class='val'>13</td><td class='val'>19</td><td class='val'>17</td><td class='val'>21</td><td class='val'>10</td><td class='val'>9</td><td class='val'>11</td><td class='val'>16</td></tr>
+<tr><td class='nm'>Beryl 2024</td><td class='val'>53</td><td class='val'>48</td><td class='val'>27</td><td class='val'>13</td><td class='val'>15</td><td class='val'>13</td><td class='val'>13</td><td class='val'>10</td><td class='val'>15</td><td class='val'>17</td></tr>
+<tr><td class='nm'>Debby 2024</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Oscar 2024</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Imelda 2025</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Melissa 2025</td><td class='val hit'>159</td><td class='val hit'>120</td><td class='val hit'>127</td><td class='val'>48</td><td class='val'>43</td><td class='val'>33</td><td class='val'>28</td><td class='val'>29</td><td class='val'>40</td><td class='val'>35</td></tr>
+</tbody></table></div>
+
+
+<h3>Pluie prévue — point le plus arrosé du département (mm / jour)</h3>
+
+<div class="tablewrap"><table class="matrix">
+<thead><tr><th>Tempête</th><th>Grande&#x27;Anse</th><th>Sud</th><th>Nippes</th><th>Sud-Est</th><th>Ouest</th><th>Centre</th><th>Artibonite</th><th>Nord-Ouest</th><th>Nord</th><th>Nord-Est</th></tr></thead>
+<tbody>
+<tr><td class='nm'>Lili 2002</td><td class='val hit'>173</td><td class='val hit'>217</td><td class='val hit'>169</td><td class='val'>43</td><td class='val'>41</td><td class='val'>35</td><td class='val'>31</td><td class='val'>30</td><td class='val'>38</td><td class='val'>41</td></tr>
+<tr><td class='nm'>Odette 2003</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Charley 2004</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Jeanne 2004</td><td class='val'>30</td><td class='val'>34</td><td class='val'>31</td><td class='val'>24</td><td class='val'>40</td><td class='val'>30</td><td class='val'>62</td><td class='val'>78</td><td class='val'>83</td><td class='val'>68</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='val hit'>176</td><td class='val hit'>203</td><td class='val hit'>163</td><td class='val hit'>114</td><td class='val hit'>218</td><td class='val'>92</td><td class='val hit'>152</td><td class='val'>74</td><td class='val'>36</td><td class='val'>23</td></tr>
+<tr><td class='nm'>Rita 2005</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Alpha 2005</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Chris 2006</td><td class='val'>12</td><td class='val'>12</td><td class='val'>11</td><td class='val'>22</td><td class='val'>45</td><td class='val'>38</td><td class='val'>41</td><td class='val'>21</td><td class='val'>22</td><td class='val'>21</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td class='val'>82</td><td class='val hit'>110</td><td class='val'>82</td><td class='val hit'>123</td><td class='val hit'>114</td><td class='val'>67</td><td class='val'>92</td><td class='val'>36</td><td class='val'>38</td><td class='val'>28</td></tr>
+<tr><td class='nm'>Dean 2007</td><td class='val hit'>124</td><td class='val hit'>200</td><td class='val'>74</td><td class='val hit'>128</td><td class='val hit'>111</td><td class='val'>34</td><td class='val'>53</td><td class='val'>19</td><td class='val'>24</td><td class='val'>15</td></tr>
+<tr><td class='nm'>Noel 2007</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Olga 2007</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Fay 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Hanna 2008</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Ike 2008</td><td class='val hit'>101</td><td class='val hit'>172</td><td class='val hit'>101</td><td class='val hit'>122</td><td class='val hit'>185</td><td class='val hit'>113</td><td class='val'>58</td><td class='val'>42</td><td class='val'>51</td><td class='val'>67</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='val hit'>478</td><td class='val hit'>361</td><td class='val hit'>300</td><td class='val hit'>138</td><td class='val hit'>220</td><td class='val hit'>102</td><td class='val hit'>109</td><td class='val hit'>139</td><td class='val hit'>161</td><td class='val hit'>116</td></tr>
+<tr><td class='nm'>Emily 2011</td><td class='val'>22</td><td class='val'>29</td><td class='val'>23</td><td class='val'>23</td><td class='val'>44</td><td class='val'>27</td><td class='val'>36</td><td class='val'>14</td><td class='val'>28</td><td class='val'>18</td></tr>
+<tr><td class='nm'>Irene 2011</td><td class='val hit'>258</td><td class='val hit'>336</td><td class='val hit'>258</td><td class='val hit'>124</td><td class='val hit'>122</td><td class='val'>44</td><td class='val'>57</td><td class='val'>59</td><td class='val'>59</td><td class='val'>45</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='val hit'>253</td><td class='val hit'>344</td><td class='val hit'>252</td><td class='val hit'>215</td><td class='val hit'>220</td><td class='val'>85</td><td class='val hit'>202</td><td class='val'>69</td><td class='val'>37</td><td class='val'>36</td></tr>
+<tr><td class='nm'>Sandy 2012</td><td class='val'>93</td><td class='val'>89</td><td class='val'>86</td><td class='val'>84</td><td class='val hit'>106</td><td class='val'>84</td><td class='val'>58</td><td class='val'>67</td><td class='val'>70</td><td class='val'>76</td></tr>
+<tr><td class='nm'>Chantal 2013</td><td class='val'>13</td><td class='val'>17</td><td class='val'>13</td><td class='val'>20</td><td class='val'>27</td><td class='val'>17</td><td class='val'>31</td><td class='val'>9</td><td class='val'>9</td><td class='val'>8</td></tr>
+<tr><td class='nm'>Bertha 2014</td><td class='val'>6</td><td class='val'>7</td><td class='val'>6</td><td class='val'>4</td><td class='val'>11</td><td class='val'>10</td><td class='val'>15</td><td class='val'>8</td><td class='val'>12</td><td class='val'>8</td></tr>
+<tr><td class='nm'>Cristobal 2014</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Erika 2015</td><td class='val'>13</td><td class='val'>18</td><td class='val'>11</td><td class='val'>15</td><td class='val'>43</td><td class='val'>31</td><td class='val'>31</td><td class='val'>31</td><td class='val'>30</td><td class='val'>27</td></tr>
+<tr><td class='nm'>Kate 2015</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Earl 2016</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Hermine 2016</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Matthew 2016</td><td class='val hit'>504</td><td class='val hit'>546</td><td class='val hit'>462</td><td class='val hit'>110</td><td class='val hit'>113</td><td class='val'>69</td><td class='val hit'>174</td><td class='val hit'>153</td><td class='val hit'>120</td><td class='val'>55</td></tr>
+<tr><td class='nm'>Irma 2017</td><td class='val'>94</td><td class='val hit'>114</td><td class='val'>79</td><td class='val'>28</td><td class='val'>73</td><td class='val'>74</td><td class='val'>80</td><td class='val'>87</td><td class='val'>75</td><td class='val'>82</td></tr>
+<tr><td class='nm'>Isaias 2020</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Laura 2020</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='val hit'>145</td><td class='val hit'>180</td><td class='val hit'>138</td><td class='val'>40</td><td class='val'>51</td><td class='val'>31</td><td class='val'>44</td><td class='val'>20</td><td class='val'>19</td><td class='val'>18</td></tr>
+<tr><td class='nm'>Fred 2021</td><td class='val'>17</td><td class='val'>23</td><td class='val'>17</td><td class='val'>11</td><td class='val'>24</td><td class='val'>22</td><td class='val'>23</td><td class='val'>15</td><td class='val'>17</td><td class='val'>20</td></tr>
+<tr><td class='nm'>Grace 2021</td><td class='val'>56</td><td class='val hit'>143</td><td class='val'>65</td><td class='val'>75</td><td class='val'>99</td><td class='val'>55</td><td class='val'>53</td><td class='val'>37</td><td class='val'>38</td><td class='val'>40</td></tr>
+<tr><td class='nm'>Fiona 2022</td><td class='val'>25</td><td class='val'>36</td><td class='val'>25</td><td class='val'>33</td><td class='val'>40</td><td class='val'>29</td><td class='val'>27</td><td class='val'>33</td><td class='val'>33</td><td class='val'>30</td></tr>
+<tr><td class='nm'>Franklin 2023</td><td class='val'>23</td><td class='val'>22</td><td class='val'>20</td><td class='val hit'>122</td><td class='val hit'>105</td><td class='val'>62</td><td class='val'>29</td><td class='val'>14</td><td class='val'>23</td><td class='val'>25</td></tr>
+<tr><td class='nm'>Beryl 2024</td><td class='val'>80</td><td class='val hit'>105</td><td class='val'>76</td><td class='val'>26</td><td class='val'>37</td><td class='val'>24</td><td class='val'>27</td><td class='val'>21</td><td class='val'>26</td><td class='val'>27</td></tr>
+<tr><td class='nm'>Debby 2024</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Oscar 2024</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Imelda 2025</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Melissa 2025</td><td class='val hit'>338</td><td class='val hit'>309</td><td class='val hit'>275</td><td class='val'>80</td><td class='val'>91</td><td class='val'>57</td><td class='val'>50</td><td class='val'>78</td><td class='val'>88</td><td class='val'>66</td></tr>
+</tbody></table></div>
+
+</details>
+
+<details class="more">
+<summary>Préavis, et fréquence par département</summary>
+
+<h3>Préavis</h3>
+<p>
+  Pour les tempêtes ayant placé au moins un département en orange : heures
+  entre la première prévision atteignant le critère (dans n’importe quel
+  département) et le passage au plus près. Une valeur négative (en rouge)
+  signifie que le seuil n’a été prévu qu’après le passage — l’alerte
+  aurait été tardive.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Tempête</th><th>Vent</th><th>Pluie — moyenne dép.</th>
+<th>Pluie — point</th></tr></thead>
+<tbody>
+<tr><td class='nm'>Lili 2002</td><td class='val'>104</td><td class='val'>48</td><td class='val'>48</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td class='val'>50</td><td class='val'>50</td><td class='val'>50</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td class='val'>—</td><td class='val'>—</td><td class='val'>57</td></tr>
+<tr><td class='nm'>Dean 2007</td><td class='val'>120</td><td class='val'>—</td><td class='val'>120</td></tr>
+<tr><td class='nm'>Ike 2008</td><td class='val'>—</td><td class='val'>—</td><td class='val'>120</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td class='val'>117</td><td class='val'>120</td><td class='val'>120</td></tr>
+<tr><td class='nm'>Emily 2011</td><td class='val'>85</td><td class='val'>—</td><td class='val'>—</td></tr>
+<tr><td class='nm'>Irene 2011</td><td class='val'>83</td><td class='val'>83</td><td class='val'>83</td></tr>
+<tr><td class='nm'>Sandy 2012</td><td class='val'>—</td><td class='val'>—</td><td class='val'>114</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td class='val'>128</td><td class='val'>43</td><td class='val'>71</td></tr>
+<tr><td class='nm'>Chantal 2013</td><td class='val'>133</td><td class='val'>—</td><td class='val'>—</td></tr>
+<tr><td class='nm'>Matthew 2016</td><td class='val'>158</td><td class='val'>86</td><td class='val'>108</td></tr>
+<tr><td class='nm'>Irma 2017</td><td class='val'>99</td><td class='val'>—</td><td class='val'>100</td></tr>
+<tr><td class='nm'>Laura 2020</td><td class='val'>120</td><td class='val na'>n/d</td><td class='val na'>n/d</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td class='val'>70</td><td class='val'>—</td><td class='val'>72</td></tr>
+<tr><td class='nm'>Grace 2021</td><td class='val'>—</td><td class='val'>—</td><td class='val'>52</td></tr>
+<tr><td class='nm'>Franklin 2023</td><td class='val'>48</td><td class='val'>—</td><td class='val'>48</td></tr>
+<tr><td class='nm'>Beryl 2024</td><td class='val'>—</td><td class='val'>—</td><td class='val'>80</td></tr>
+<tr><td class='nm'>Melissa 2025</td><td class='val'>—</td><td class='val'>98</td><td class='val'>120</td></tr>
+</tbody></table></div>
+
+
+<h3>Fréquence par département</h3>
+<p>
+  Nombre de tempêtes ayant placé chaque département en orange sur
+  2002–2025, et période de retour correspondante.
+</p>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Département</th><th>Vent</th><th>Pluie<br>moy. dép.</th><th>Pluie<br>point</th><th>Vent <i>ou</i><br>pluie moy.</th><th>Vent <i>ou</i><br>pluie point</th></tr></thead>
+<tbody>
+<tr><td class='nm'>Grande&#x27;Anse</td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>4,2 ans</span></td><td class='num'>10<br><span style='color:#5e6a6b;font-size:.85em'>2,5 ans</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>11<br><span style='color:#5e6a6b;font-size:.85em'>2,3 ans</span></td></tr>
+<tr><td class='nm'>Sud</td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>4,2 ans</span></td><td class='num'>14<br><span style='color:#5e6a6b;font-size:.85em'>1,9 ans</span></td><td class='num'>10<br><span style='color:#5e6a6b;font-size:.85em'>2,5 ans</span></td><td class='num'>15<br><span style='color:#5e6a6b;font-size:.85em'>1,8 ans</span></td></tr>
+<tr><td class='nm'>Nippes</td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>4,2 ans</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>10<br><span style='color:#5e6a6b;font-size:.85em'>2,5 ans</span></td><td class='num'>11<br><span style='color:#5e6a6b;font-size:.85em'>2,3 ans</span></td></tr>
+<tr><td class='nm'>Sud-Est</td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>1<br><span style='color:#5e6a6b;font-size:.85em'>25,0 ans</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>12<br><span style='color:#5e6a6b;font-size:.85em'>2,1 ans</span></td></tr>
+<tr><td class='nm'>Ouest</td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>10<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>9<br><span style='color:#5e6a6b;font-size:.85em'>2,8 ans</span></td><td class='num'>13<br><span style='color:#5e6a6b;font-size:.85em'>2,1 ans</span></td></tr>
+<tr><td class='nm'>Centre</td><td class='num'>5<br><span style='color:#5e6a6b;font-size:.85em'>5,0 ans</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5 ans</span></td><td class='num'>5<br><span style='color:#5e6a6b;font-size:.85em'>5,0 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>4,2 ans</span></td></tr>
+<tr><td class='nm'>Artibonite</td><td class='num'>7<br><span style='color:#5e6a6b;font-size:.85em'>3,6 ans</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>4<br><span style='color:#5e6a6b;font-size:.85em'>6,2 ans</span></td><td class='num'>7<br><span style='color:#5e6a6b;font-size:.85em'>3,6 ans</span></td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td></tr>
+<tr><td class='nm'>Nord-Ouest</td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5 ans</span></td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td><td class='num'>8<br><span style='color:#5e6a6b;font-size:.85em'>3,1 ans</span></td></tr>
+<tr><td class='nm'>Nord</td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>4,2 ans</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>2<br><span style='color:#5e6a6b;font-size:.85em'>12,5 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>4,2 ans</span></td><td class='num'>7<br><span style='color:#5e6a6b;font-size:.85em'>3,6 ans</span></td></tr>
+<tr><td class='nm'>Nord-Est</td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0 ans</span></td><td class='num'>0<br><span style='color:#5e6a6b;font-size:.85em'>jamais</span></td><td class='num'>1<br><span style='color:#5e6a6b;font-size:.85em'>25,0 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0 ans</span></td><td class='num'>6<br><span style='color:#5e6a6b;font-size:.85em'>5,0 ans</span></td></tr>
+</tbody></table></div>
+
+</details>
+
+
+<h2 id="rouge">6. L’alerte rouge de la DGPC confirmée par un Hurricane
+Warning</h2>
+
+<p class="answer">
+  Tenue à l’heure limite, cette voie n’ajoute aucune activation sur
+  2002–2025. Elle reste dans le cadre pour une
+  tempête exceptionnelle que la DGPC et le NHC signaleraient tous deux plus
+  de 48 heures avant son passage.
+</p>
+
+<p>
+  La condition exige deux choses <b>avant l’heure limite</b>, c’est-à-dire
+  plus de 48 heures avant le passage prévu : une alerte rouge
+  de la DGPC <i>et</i> un Hurricane Warning du NHC pour Haïti. La DGPC ne
+  dispose pas d’un historique de ses alertes ; on peut en revanche rejouer
+  le Hurricane Warning, et confronter l’alerte rouge à la définition qu’en
+  donne la DGPC.
+</p>
+
+<h3>Le Hurricane Warning du NHC</h3>
+
+<p>
+  Un Hurricane Warning annonce des conditions d’ouragan sur la zone
+  concernée ; le NHC l’émet en principe 36 heures avant l’arrivée attendue
+  des vents de force tempête tropicale, donc le plus souvent à moins de
+  48 heures du passage. Entre 2002 et
+  2025, <b>9 tempêtes</b> ont porté un Hurricane
+  Warning pour une partie d’Haïti. Seuls ceux de Matthew 2016 (54&nbsp;h) et d’Isaac 2012 (43&nbsp;h) ont été émis
+  sur un avis antérieur à l’heure limite, et
+  ces tempêtes activent déjà
+  le cadre par les précipitations prévues. Les 7 autres
+  sont arrivés 13,5 à 39,5 heures avant le passage prévu, après
+  l’heure limite.
+</p>
+
+<figure><svg viewBox="0 0 760 276" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;max-width:100%;height:auto"><rect width="760" height="276" fill="#ffffff"/><line x1="132.0" y1="54" x2="132.0" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="132.0" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">0</text><line x1="210.3" y1="54" x2="210.3" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="210.3" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">10</text><line x1="288.7" y1="54" x2="288.7" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="288.7" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">20</text><line x1="367.0" y1="54" x2="367.0" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="367.0" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">30</text><line x1="445.3" y1="54" x2="445.3" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="445.3" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">40</text><line x1="523.7" y1="54" x2="523.7" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="523.7" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">50</text><line x1="602.0" y1="54" x2="602.0" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="602.0" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">60</text><line x1="680.3" y1="54" x2="680.3" y2="242" stroke="#dde5e8" stroke-width="1"/><text x="680.3" y="257" fill="#5e6a6b" font-size="10" text-anchor="middle">70</text><text x="414.0" y="270" fill="#5e6a6b" font-size="10.5" text-anchor="middle">Heures avant le passage prévu au plus près</text><line x1="508.0" y1="32" x2="508.0" y2="242" stroke="#d03b3b" stroke-width="1.5" stroke-dasharray="4 3"/><text x="502.0" y="29" fill="#d03b3b" font-size="10.5" font-weight="700" text-anchor="end">heure limite</text><text x="122" y="70.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Matthew 2016</text><rect x="132" y="62.0" width="423.0" height="9" rx="3.5" fill="#2a78d6"/><text x="561.0" y="70.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">54 h</text><text x="122" y="90.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Isaac 2012</text><rect x="132" y="82.0" width="336.8" height="9" rx="3.5" fill="#2a78d6"/><text x="474.8" y="90.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">43 h</text><text x="122" y="110.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Irma 2017</text><rect x="132" y="102.0" width="309.4" height="9" rx="3.5" fill="#2a78d6"/><text x="447.4" y="110.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">39,5 h</text><text x="122" y="130.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Elsa 2021</text><rect x="132" y="122.0" width="293.8" height="9" rx="3.5" fill="#2a78d6"/><text x="431.8" y="130.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">37,5 h</text><text x="122" y="150.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Dean 2007</text><rect x="132" y="142.0" width="258.5" height="9" rx="3.5" fill="#2a78d6"/><text x="396.5" y="150.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">33 h</text><text x="122" y="170.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Tomas 2010</text><rect x="132" y="162.0" width="242.8" height="9" rx="3.5" fill="#2a78d6"/><text x="380.8" y="170.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">31 h</text><text x="122" y="190.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Dennis 2005</text><rect x="132" y="182.0" width="180.2" height="9" rx="3.5" fill="#2a78d6"/><text x="318.2" y="190.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">23 h</text><text x="122" y="210.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Gustav 2008</text><rect x="132" y="202.0" width="172.3" height="9" rx="3.5" fill="#2a78d6"/><text x="310.3" y="210.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">22 h</text><text x="122" y="230.0" fill="#1e2a2b" font-size="11.5" text-anchor="end">Ernesto 2006</text><rect x="132" y="222.0" width="105.8" height="9" rx="3.5" fill="#2a78d6"/><text x="243.8" y="230.2" fill="#5e6a6b" font-size="9.8" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">13,5 h</text><line x1="132" y1="54" x2="132" y2="242" stroke="#5e6a6b" stroke-width="1"/><rect x="132" y="6" width="19" height="8" rx="3" fill="#2a78d6"/><text x="157" y="13.5" fill="#1e2a2b" font-size="11">Hurricane Warning pour Haïti</text></svg><figcaption>Heures entre l’avis du NHC portant le
+Hurricane Warning pour Haïti et le passage au plus près qu’il prévoyait.
+L’heure limite est à 48 h.</figcaption></figure>
+
+<div class="tablewrap"><table class="wraphead">
+<thead><tr><th>Tempête</th><th>Zone sous Hurricane Warning</th>
+<th>Émis (UTC)</th><th>Passage prévu</th><th>Passage réel</th>
+<th>Avant l’heure<br>limite</th><th>Cadre activé<br>par une autre voie</th>
+</tr></thead>
+<tbody>
+<tr><td class='nm'>Matthew 2016</td><td style='white-space:normal'>Frontière sud → Le Môle-Saint-Nicolas</td><td>1 octobre 21&nbsp;h</td><td class='val pre'>54&nbsp;h</td><td class='num'>63&nbsp;h</td><td>oui</td><td>oui</td></tr>
+<tr><td class='nm'>Isaac 2012</td><td style='white-space:normal'>Toute la côte d’Haïti</td><td>23 août 03&nbsp;h</td><td class='val pre'>43&nbsp;h</td><td class='num'>51&nbsp;h</td><td>oui</td><td>oui</td></tr>
+<tr><td class='nm'>Irma 2017</td><td style='white-space:normal'>Côte nord, Le Môle-Saint-Nicolas → frontière dominicaine</td><td>6 septembre 15&nbsp;h</td><td class='val'>39,5&nbsp;h</td><td class='num'>33&nbsp;h</td><td>non</td><td>non</td></tr>
+<tr><td class='nm'>Elsa 2021</td><td style='white-space:normal'>Frontière dominicaine → Port-au-Prince</td><td>2 juillet 15&nbsp;h</td><td class='val'>37,5&nbsp;h</td><td class='num'>33&nbsp;h</td><td>non</td><td>non</td></tr>
+<tr><td class='nm'>Dean 2007</td><td style='white-space:normal'>Frontière dominicaine → Port-au-Prince</td><td>18 août 03&nbsp;h</td><td class='val'>33&nbsp;h</td><td class='num'>33&nbsp;h</td><td>non</td><td>non</td></tr>
+<tr><td class='nm'>Tomas 2010</td><td style='white-space:normal'>Toute la côte d’Haïti</td><td>4 novembre 03&nbsp;h</td><td class='val'>31&nbsp;h</td><td class='num'>33&nbsp;h</td><td>non</td><td>oui</td></tr>
+<tr><td class='nm'>Dennis 2005</td><td style='white-space:normal'>Péninsule sud-ouest</td><td>6 juillet 09&nbsp;h</td><td class='val'>23&nbsp;h</td><td class='num'>27&nbsp;h</td><td>non</td><td>oui</td></tr>
+<tr><td class='nm'>Gustav 2008</td><td style='white-space:normal'>Frontière dominicaine → Port-au-Prince</td><td>25 août 18&nbsp;h</td><td class='val'>22&nbsp;h</td><td class='num'>24&nbsp;h</td><td>non</td><td>oui</td></tr>
+<tr><td class='nm'>Ernesto 2006</td><td style='white-space:normal'>Frontière dominicaine → pointe sud-ouest</td><td>27 août 09&nbsp;h</td><td class='val'>13,5&nbsp;h</td><td class='num'>15&nbsp;h</td><td>non</td><td>oui</td></tr>
+</tbody></table></div>
+
+<p class="legend">
+  Source : tableau des veilles et avertissements du rapport de cyclone
+  tropical (TCR) du NHC de chaque tempête. Passage prévu : heures entre
+  l’avis portant l’avertissement et le passage au plus près qu’il prévoyait
+  — la mesure qu’applique le système de suivi pour l’heure limite. Passage
+  réel : heures entre l’émission et le passage effectivement observé.
+  Isaac 2012 est un cas limite : son avis prévoyait le passage à 43 h,
+  mais le rejeu de calibration le compte avant l’heure limite ; la tempête
+  active de toute façon le cadre.
+</p>
+
+<h3>L’alerte rouge de la DGPC</h3>
+
+<p>
+  Le Plan SAPMAH Cyclone (2025) place l’alerte rouge tard, par
+  construction : « au moins 24 heures, max 2 jours » avant l’impact
+  (tableau 7, p. 30), et, en cas de menace extrême, « au moins 36 heures
+  avant l’impact attendu » (p. 29). Une alerte rouge émise plus de
+  48 heures avant le passage sortirait donc de la pratique
+  décrite par le plan. Ses seuils (p. 35) — rafales de plus de 200 voire
+  250 km/h, pluies de plus de 60 à 80 mm en une heure ou 300 mm en 6 à
+  12 heures — ne sont atteints, en rafales prévues avant l’heure limite,
+  que par Matthew 2016 (220 km/h), qui active déjà le cadre.
+</p>
+
+<div class="note">
+  <h3>En résumé</h3>
+  <ul>
+    <li>Les deux moitiés de la condition arrivent, en règle générale, à
+        moins de 48 heures du passage : l’alerte rouge par la
+        règle de la DGPC, le Hurricane Warning par celle du NHC.</li>
+    <li>Dans l’historique, aucune tempête n’aurait été activée par cette
+        seule voie : le registre et les périodes de retour du cadre sont
+        les mêmes avec ou sans elle.</li>
+    <li>Si la voie était exemptée de l’heure limite, le Hurricane Warning
+        ajouterait Dean 2007 (3 966 personnes affectées), Irma 2017 (40 092) et Elsa 2021 (3), dont les Hurricane Warnings sont arrivés
+        33 à 39,5 heures avant le passage prévu.</li>
+  </ul>
+</div>
+
+
+<h2 id="methode">7. Méthode et limites</h2>
+
+<ul>
+  <li><b>Tempêtes</b> : centre analysé passé à moins de 230 km
+      d’Haïti, 2002–2025. Le registre des
+      diapositives retient aussi des tempêtes plus lointaines ayant causé
+      des impacts (Ivan 2004), marquées n/d.</li>
+  <li><b>Avis considérés</b> : chaque avis du NHC dont le passage au plus
+      près prévu est à 48 h ou plus — l’heure limite des voies
+      de prévision. Les indicateurs d’heure limite et de pluie prévue sont
+      repris du rejeu historique qui a servi à calibrer les seuils 2026
+      (Melissa 2025 : valeurs du registre).</li>
+  <li><b>Prévisions de pluie</b> : pour chaque avis, la prévision
+      CHIRPS-GEFS du jour (ou la plus récente), sur les jours où la
+      trajectoire prévue passe à moins de 230 km d’Haïti. Produit
+      <b>journalier</b> : la valeur d’un jour calendaire tient lieu du
+      cumul sur 24 h pour l’alerte orange, ce qui sous-estime légèrement un
+      cumul glissant. Moyennes départementales sur un ré-échantillonnage à
+      0.01°.</li>
+  <li><b>Prévisions de vent</b> : champ de vent paramétrique reconstruit à
+      partir des rayons de vent de chaque avis du NHC, vent soutenu réduit
+      sur terre (×0,85) puis converti en rafales (×1,25, facteur
+      conventionnel en terrain dégagé), maximum dans chaque département.
+      Méthode et validation dans l’évaluation en annexe.</li>
+  <li><b>Exposition</b> : population dans le polygone de vents de
+      64 nœuds prévu, hors bande déjà observée, plus la population de
+      cette bande ; en observation, la population de la bande observée.</li>
+  <li><b>Alerte orange simulée</b> : un département est compté dès qu’un
+      avis émis avant l’heure limite atteint le critère, quelle que soit
+      l’échéance. La lecture en rafales est plus permissive que celle en
+      vent soutenu : Chantal 2013, simple tempête tropicale passée au
+      large, place ainsi les dix départements en orange sur ses prévisions
+      à cinq jours.</li>
+  <li><b>Hurricane Warnings</b> : liste vérifiée contre le rapport de
+      cyclone tropical du NHC de chacune des tempêtes du jeu ; elle compte
+      neuf tempêtes, quatre de plus que la liste utilisée lors de la
+      première calibration (Dennis 2005, Ernesto 2006, Dean 2007,
+      Isaac 2012). Seul Dean change le résultat, et seulement si la voie
+      était exemptée de l’heure limite.</li>
+  <li><b>Les alertes de la DGPC sont simulées</b> : à défaut de registre,
+      les seuils de la DGPC sont appliqués aux prévisions de l’époque. Le
+      résultat est une estimation de ce que ces seuils auraient donné, à
+      vérifier sur les alertes réellement émises si elles deviennent
+      disponibles.</li>
+  <li><b>24 saisons</b> est un historique court : une ou deux tempêtes de
+      plus ou de moins déplacent sensiblement les périodes de retour.</li>
+</ul>
+
+
+<h2 id="annexe">Annexe</h2>
+<ul>
+  <li><a href="premiere-evaluation.html"><b>Niveaux d’alerte de la DGPC :
+      première évaluation historique</b></a> (août 2026, archivée) — les
+      seuils orange et rouge de la DGPC appliqués aux tempêtes depuis 2002
+      à trois échelles spatiales, en vent observé comme prévu, avant que la
+      DGPC ne précise que ses alertes sont émises par département.</li>
+  <li><a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes"><b>Code
+      source</b></a> du système de suivi et de ces analyses
+      (ds-aa-hti-hurricanes).</li>
+</ul>
+
+<footer>
+  OCHA · Centre de données humanitaires — cadre d’action anticipatoire pour
+  les tempêtes et ouragans en Haïti, version 2026. Données : NHC (avis de
+  prévision, rayons de vent et rapports de cyclone tropical), CHIRPS-GEFS
+  (UCSB CHC), IMERG (NASA), WorldPop 2026, EM-DAT ; Plan SAPMAH Cyclone
+  2025 (DGPC). Fond de carte OpenStreetMap. Mise à jour octobre 2026.
+</footer>
+
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d=0) => (v==null ? '—' : v.toLocaleString('fr-FR',{maximumFractionDigits:d}));
+  // NHC Hurricane Warnings for Haiti, by storm: the advisory that carried
+  // it (t), its forecast hours to closest pass, and whether the replay
+  // counts that advisory as before the heure limite.
+  const HW = {"AL042005":{"t":"2005-07-06T06:00","lead":23.0,"pre":false},"AL062006":{"t":"2006-08-27T06:00","lead":13.5,"pre":false},"AL042007":{"t":"2007-08-18T00:00","lead":33.0,"pre":false},"AL072008":{"t":"2008-08-25T18:00","lead":22.0,"pre":false},"AL212010":{"t":"2010-11-04T00:00","lead":31.0,"pre":false},"AL092012":{"t":"2012-08-23T00:00","lead":43.0,"pre":true},"AL142016":{"t":"2016-10-01T18:00","lead":54.0,"pre":true},"AL112017":{"t":"2017-09-06T12:00","lead":39.5,"pre":false},"AL052021":{"t":"2021-07-02T12:00","lead":37.5,"pre":false}};
+  let META, DEPTS, INDEX, storm, idx = 0, timer = null;
+  const cache = {};
+  const map = L.map('carte', {scrollWheelZoom:false}).setView([18.9,-72.8], 7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:12, opacity:.55}).addTo(map);
+  const bufLayer = L.layerGroup().addTo(map), swathLayer = L.layerGroup().addTo(map);
+  let deptLayer; const trackLayer = L.layerGroup(), obsvLayer = L.layerGroup();
+  const COL = {none:'#e9eef0', cum:'#f7d9c9', wind:'url(#pat-wind)', rain:'url(#pat-rain)', both:'#ec835a'};
+  const BUF = {34:{c:'#c9a800',f:'#fff3b0'}, 50:{c:'#d17a00',f:'#ffd28a'}, 64:{c:'#c0392b',f:'#f4a0a0'}};
+
+  function hit(a, j){
+    const w = $('t-wind').checked && a.w[j]!=null && a.w[j] >= META.wind_kmh;
+    const r = $('t-rain').checked && a.rp[j]!=null && a.rp[j] >= META.rain_mm;
+    return {w, r, any: w||r};
+  }
+  function cumBefore(i){
+    const s = new Set();
+    for (let k=0;k<i;k++){ const a=storm.adv[k]; if(a.cut) continue;
+      META.depts.forEach((d,j)=>{ if(hit(a,j).any) s.add(d); }); }
+    return s;
+  }
+  function render(){
+    if (!storm) return;
+    const a = storm.adv[idx], m = META, cum = cumBefore(idx);
+    const d = new Date(a.t+'Z');
+    $('adv-lab').innerHTML = `Avis du ${d.toLocaleString('fr-FR',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC` +
+      ` · passage au plus près prévu dans ${fmt(a.ttc)} h` +
+      (a.cut ? '<span class="badge cut">après l’heure limite</span>' : '<span class="badge ok">avant l’heure limite</span>') +
+      ` <span style="color:#5e6a6b;font-weight:400">(${idx+1}/${storm.adv.length})</span>`;
+    let nNow = 0; const cumNow = new Set(cum);
+    deptLayer.eachLayer(l => {
+      const j = m.depts.indexOf(l.feature.properties.name); const h = hit(a,j);
+      let c = COL.none;
+      if (h.w && h.r) c = COL.both; else if (h.w) c = COL.wind; else if (h.r) c = COL.rain;
+      else if ($('t-cum').checked && cum.has(m.depts[j])) c = COL.cum;
+      if (h.any){ nNow++; if(!a.cut) cumNow.add(m.depts[j]); }
+      l.setStyle({fillColor:c, fillOpacity: a.cut && h.any ? .55 : .95, color:'#fff', weight:1});
+      l.setTooltipContent(`<b>${m.depts[j]}</b><br>Rafales prévues : ${fmt(a.w[j])} km/h<br>` +
+        `Pluie prévue, point : ${fmt(a.rp[j])} mm<br>Pluie prévue, moyenne : ${fmt(a.rm[j])} mm` +
+        (cum.has(m.depts[j]) ? '<br><i>déjà en orange</i>' : ''));
+    });
+    // wind buffers, largest first so the 64 kt core sits on top
+    bufLayer.clearLayers();
+    [34,50,64].forEach(s => {
+      if (!$('t-b'+s).checked || !a.buf[s]) return;
+      L.geoJSON(a.buf[s], {style:{color:BUF[s].c, weight:1.2, fillColor:BUF[s].f, fillOpacity:.35, dashArray: a.cut?'3 3':null}})
+        .bindTooltip(`Vents prévus ≥ ${s} nœuds`, {sticky:true}).addTo(bufLayer);
+    });
+    swathLayer.clearLayers();
+    if ($('t-swath').checked && a.swath)
+      L.geoJSON(a.swath, {style:{color:'#6c3fb0', weight:1, fillColor:'#c9b3e6', fillOpacity:.45}})
+        .bindTooltip('Bande observée ≥ 64 nœuds, cumulée à l’émission', {sticky:true}).addTo(swathLayer);
+    trackLayer.clearLayers();
+    if ($('t-track').checked && a.track.length){
+      L.polyline(a.track.map(p=>[p[0],p[1]]),{color:'#1e2a2b',weight:2}).addTo(trackLayer);
+      a.track.forEach(p => L.circleMarker([p[0],p[1]],{radius: p[2]===0?5:3.5, color:'#1e2a2b',
+        fillColor: p[2]===0?'#1e2a2b':'#fff', fillOpacity:1, weight:1.5})
+        .bindTooltip((p[2]===0 ? 'Position à l’émission' : `+${p[2]} h`) + (p[3]!=null ? ` · ${fmt(p[3])} nœuds` : '')).addTo(trackLayer));
+    }
+    obsvLayer.clearLayers();
+    if ($('t-obsv').checked && storm.obsv.length)
+      L.polyline(storm.obsv,{color:'#9aa5a6',weight:2,dashArray:'4 4'}).addTo(obsvLayer);
+    const v = $('voies'); v.hidden = !$('t-voies').checked;
+    const nCum = cumNow.size, off = a.cut ? ' off' : '';
+    const rainHit = !a.cut && a.rain!=null && a.rain >= m.fcast_rain_mm;
+    const expHit = !a.cut && a.exp > 0;
+    const orHit = !a.cut && nCum >= m.n_depts;
+    const hw = HW[storm.id], hwOn = !!hw && a.t >= hw.t;
+    const hwVal = hwOn ? 'Hurricane Warning en vigueur' : (hw ? 'pas encore de Hurricane Warning' : 'aucun Hurricane Warning');
+    const hwSub = hw
+      ? `émis à ${fmt(hw.lead, 1)} h du passage prévu, ${hw.pre ? 'avant' : 'après'} l’heure limite · alerte rouge DGPC : pas d’archive`
+      : 'le NHC n’a émis aucun Hurricane Warning pour Haïti pour cette tempête';
+    v.innerHTML =
+      card('Pluie prévue (moy. nationale, 2 j)', `${fmt(a.rain)} mm`, `seuil ${m.fcast_rain_mm} mm · CHIRPS-GEFS du ${a.gefs ?? '—'}`, rainHit, off) +
+      card(`Exposition prévue à ${m.exposure_kt} nœuds`, `${fmt(a.exp)} pers.`, 'seuil : > 0 · zone prévue hors bande déjà observée', expHit, off) +
+      card('Orange DGPC simulée — départements', `${nNow} à cet avis · ${nCum} cumulés`, `estimation d’après les seuils de la DGPC, pas son registre · seuil du cadre : ≥ ${m.n_depts} départements`, orHit, off) +
+      card('Alerte rouge DGPC + Hurricane Warning', hwVal, hwSub, false, off, hwOn && !a.cut) +
+      card('Cadre activé à cet avis ?', (rainHit||expHit||orHit) ? 'oui' : 'non',
+        a.cut ? 'avis après l’heure limite : aucun déclenchement possible' : 'pluie prévue OU exposition OU orange · alerte rouge DGPC non archivée', (rainHit||expHit||orHit), off);
+    $('adv-range').value = idx; $('prev').disabled = idx===0; $('next').disabled = idx===storm.adv.length-1;
+  }
+  function card(t, val, sub, hit, off, part){
+    return `<div class="v${hit?' hit':''}${part?' part':''}${off}"><b>${t}</b><div class="val">${val}</div><div style="color:#5e6a6b;font-size:.8rem">${sub}</div></div>`;
+  }
+  function loadStorm(i){
+    const meta = INDEX[i];
+    if (timer){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; }
+    if (cache[meta.id]) return Promise.resolve(cache[meta.id]);
+    $('loading').textContent = 'chargement…';
+    return fetch(`assets/carte/${meta.id}.json`).then(r=>r.json()).then(d => { cache[meta.id]=d; $('loading').textContent=''; return d; });
+  }
+  function setStorm(i, keepUrl){
+    loadStorm(i).then(d => {
+      storm = d; $('adv-range').max = storm.adv.length-1;
+      const first = storm.adv.findIndex(a => META.depts.some((d,j)=>hit(a,j).any));
+      idx = first >= 0 ? Math.max(0, first-1) : 0;
+      // The page is long: only a deliberate choice of storm goes in the URL.
+      if (!keepUrl) history.replaceState(null, '', '#carte-'+storm.id);
+      render();
+    });
+  }
+  function onScreen(){
+    const r = $('carte-wrap').getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
+  }
+  function step(k){ idx = Math.min(Math.max(idx+k,0), storm.adv.length-1); render(); }
+  fetch('assets/carte/index.json').then(r=>r.json()).then(data => {
+    META = data.meta; DEPTS = data.depts; INDEX = data.storms;
+    deptLayer = L.geoJSON(DEPTS, {style:{color:'#fff',weight:1,fillColor:COL.none,fillOpacity:.95},
+      onEachFeature:(f,l)=>l.bindTooltip('', {sticky:true, className:'dep'})}).addTo(map);
+    trackLayer.addTo(map); obsvLayer.addTo(map);
+    const sel = $('storm-sel');
+    INDEX.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label; sel.appendChild(o); });
+    // #carte-AL142016, or the bare #AL142016 of links to the old map page.
+    const hm = location.hash.match(/^#(?:carte-)?(AL\d{6})$/);
+    const start = INDEX.findIndex(s=>s.id===(hm ? hm[1] : 'AL142016'));
+    sel.value = start>=0 ? start : 0;
+    sel.onchange = e => setStorm(+e.target.value);
+    $('adv-range').oninput = e => { idx = +e.target.value; render(); };
+    $('prev').onclick = () => step(-1); $('next').onclick = () => step(1);
+    $('fit').onclick = () => map.setView([18.9,-72.8], 7);
+    $('play').onclick = () => {
+      if (timer){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; }
+      $('play').textContent = '❚❚ Pause';
+      timer = setInterval(()=>{ if(idx>=storm.adv.length-1){ clearInterval(timer); timer=null; $('play').textContent='▶ Lecture'; return; } step(1); }, 700);
+    };
+    document.querySelectorAll('td.nm a[data-storm]').forEach(el => el.onclick = ev => {
+      ev.preventDefault(); const k = INDEX.findIndex(s=>s.id===el.dataset.storm);
+      if (k>=0){ sel.value=k; setStorm(k); $('carte-wrap').scrollIntoView({behavior:'smooth'}); }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName==='SELECT' || e.target.tagName==='INPUT' || !onScreen()) return;
+      if (e.key==='ArrowLeft') step(-1); else if (e.key==='ArrowRight') step(1);
+    });
+    ['t-wind','t-rain','t-cum','t-b34','t-b50','t-b64','t-swath','t-track','t-obsv','t-voies'].forEach(id => $(id).onchange = render);
+    setStorm(+sel.value, true);
+    if (hm) $('carte-wrap').scrollIntoView();
+  }).catch(err => { $('adv-lab').textContent = 'Données de la carte indisponibles : ' + err; });
+})();
+</script>
+
+</body>
+</html>

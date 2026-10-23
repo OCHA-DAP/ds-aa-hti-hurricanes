@@ -222,7 +222,7 @@ def render(
 
 <header>
   <p class="crumb"><a href="./">←
-  Action anticipatoire · Ouragans · Haïti</a></p>
+  Cadre 2026 · Ouragans · Haïti</a></p>
   <div class="kicker">Analyse · {escape(stamp)}</div>
   <h1>Niveaux d’alerte de la DGPC : évaluation historique</h1>
   <p class="sub">
@@ -239,7 +239,7 @@ def render(
     Cette page est la première évaluation, conservée telle quelle. Depuis,
     la DGPC a précisé que ses alertes sont émises par département : la
     simulation à cette échelle, tempête par tempête et sur prévisions, est
-    sur <a href="dgpc-departements.html">la page dédiée</a>.
+    sur <a href="./#orange">la page du cadre 2026</a>.
   </p>
 </div>
 

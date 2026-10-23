@@ -1,4 +1,4 @@
-"""Data behind the advisory-by-advisory map (``docs/carte-avis.html``).
+"""Data behind the advisory-by-advisory map on the 2026 page (``docs/2026/``).
 
 An index file - department polygons, thresholds, the storm list - and one
 file per storm with every NHC advisory: forecast track, wind buffers at
@@ -24,7 +24,6 @@ from src.datasources import codab
 from src.datasources import storms_db as sdb
 from src.dgpc import constants as dc
 from src.dgpc import pathways as pw
-from src.dgpc.dept_page import DEPT_ORDER, PROPOSED_N
 from src.utils import blob
 from src.utils.logging import get_logger
 
@@ -128,10 +127,12 @@ def _storm_file(s, adv, fc, rain_long, wcols, variant, engine):
         key = (aid, a.issued_time)
         if key in fc.index:
             row = fc.loc[key]
-            w = [_r(row.get(wcols[d], np.nan) * 1.852, 0) for d in DEPT_ORDER]
+            w = [
+                _r(row.get(wcols[d], np.nan) * 1.852, 0) for d in dc.DEPT_ORDER
+            ]
         else:
-            w = [None] * len(DEPT_ORDER)
-        rp = rm = [None] * len(DEPT_ORDER)
+            w = [None] * len(dc.DEPT_ORDER)
+        rp = rm = [None] * len(dc.DEPT_ORDER)
         if pd.notna(a.gefs_issue_date):
             rs = rain_long[
                 (rain_long.atcf_id == aid)
@@ -142,8 +143,8 @@ def _storm_file(s, adv, fc, rain_long, wcols, variant, engine):
             if len(rs):
                 g = rs.groupby("dept")
                 pmax, mmax = g["pix_max_mm"].max(), g["mean_mm"].max()
-                rp = [_r(pmax.get(d, np.nan), 0) for d in DEPT_ORDER]
-                rm = [_r(mmax.get(d, np.nan), 0) for d in DEPT_ORDER]
+                rp = [_r(pmax.get(d, np.nan), 0) for d in dc.DEPT_ORDER]
+                rm = [_r(mmax.get(d, np.nan), 0) for d in dc.DEPT_ORDER]
         # observed 64 kt swath accumulated by this issuance
         prior = obsv_buf[obsv_buf.valid_time <= a.issued_time]
         swath = _geom(prior.iloc[-1].geometry) if len(prior) else None
@@ -190,7 +191,7 @@ def write(out_dir, only=None):
     adv = adv.merge(exp_adv, on=["atcf_id", "issued_time"], how="left")
 
     variant = dc.ORANGE_WIND_VARIANT
-    wcols = {d: f"{variant}_dept_{d}_kt" for d in DEPT_ORDER}
+    wcols = {d: f"{variant}_dept_{d}_kt" for d in dc.DEPT_ORDER}
     fc = fcast.set_index(["atcf_id", "issued_time"])
 
     storms = storms.sort_values("first_near")
@@ -201,8 +202,8 @@ def write(out_dir, only=None):
             "rain_mm": dc.ORANGE_RAIN["threshold_mm"],
             "fcast_rain_mm": TRIGGERS["mobilisation"]["rain_mm"],
             "exposure_kt": EXPOSURE_WIND_KT,
-            "n_depts": PROPOSED_N,
-            "depts": DEPT_ORDER,
+            "n_depts": dc.ORANGE_N_DEPTS,
+            "depts": dc.DEPT_ORDER,
             "levels": list(WIND_LEVELS),
         },
         "depts": _depts_geojson(),

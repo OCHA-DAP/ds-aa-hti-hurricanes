@@ -37,6 +37,12 @@ def _fmt(v, decimals=0):
     return s.replace(".", ",")
 
 
+def _dec(v, decimals):
+    if decimals is not None:
+        return decimals
+    return 0 if float(v).is_integer() else 1
+
+
 def grouped_barh(
     categories,
     series,
@@ -50,11 +56,14 @@ def grouped_barh(
     value_w=54,
     width=760,
     x_title="",
+    decimals=0,
 ):
     """Horizontal grouped bar chart.
 
     ``series`` is a list of ``(key, label, [values])``; ``thresholds`` a list
     of ``(value, label, status_key)`` drawn as labelled vertical rules.
+    ``decimals=None`` labels each value with a decimal only where it has
+    one (13,5 h beside 54 h).
     """
     n_series = len(series)
     row_h = n_series * bar_h + (n_series - 1) * gap + group_gap
@@ -149,7 +158,7 @@ def grouped_barh(
                 f'<text x="{plot_x + w + 6:.1f}" y="{y + bar_h - 0.8:.1f}" '
                 f'fill="{MUTED}" font-size="9.8" paint-order="stroke" '
                 f'stroke="{SURFACE}" stroke-width="3" '
-                f'stroke-linejoin="round">{_fmt(v)}{unit}</text>'
+                f'stroke-linejoin="round">{_fmt(v, _dec(v, decimals))}{unit}</text>'
             )
 
     # Axis spine.

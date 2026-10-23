@@ -1,0 +1,10 @@
+atcf_id,name,season,warning_issued_utc,advisory_time_utc,area_fr,source
+AL042005,Dennis,2005,2005-07-06 09:00,2005-07-06 06:00,Péninsule sud-ouest,https://www.nhc.noaa.gov/data/tcr/AL042005_Dennis.pdf
+AL062006,Ernesto,2006,2006-08-27 09:00,2006-08-27 06:00,Frontière dominicaine → pointe sud-ouest,https://www.nhc.noaa.gov/data/tcr/AL062006_Ernesto.pdf
+AL042007,Dean,2007,2007-08-18 03:00,2007-08-18 00:00,Frontière dominicaine → Port-au-Prince,https://www.nhc.noaa.gov/data/tcr/AL042007_Dean.pdf
+AL072008,Gustav,2008,2008-08-25 18:00,2008-08-25 18:00,Frontière dominicaine → Port-au-Prince,https://www.nhc.noaa.gov/data/tcr/AL072008_Gustav.pdf
+AL212010,Tomas,2010,2010-11-04 03:00,2010-11-04 00:00,Toute la côte d’Haïti,https://www.nhc.noaa.gov/data/tcr/AL212010_Tomas.pdf
+AL092012,Isaac,2012,2012-08-23 03:00,2012-08-23 00:00,Toute la côte d’Haïti,https://www.nhc.noaa.gov/data/tcr/AL092012_Isaac.pdf
+AL142016,Matthew,2016,2016-10-01 21:00,2016-10-01 18:00,Frontière sud → Le Môle-Saint-Nicolas,https://www.nhc.noaa.gov/data/tcr/AL142016_Matthew.pdf
+AL112017,Irma,2017,2017-09-06 15:00,2017-09-06 12:00,"Côte nord, Le Môle-Saint-Nicolas → frontière dominicaine",https://www.nhc.noaa.gov/data/tcr/AL112017_Irma.pdf
+AL052021,Elsa,2021,2021-07-02 15:00,2021-07-02 12:00,Frontière dominicaine → Port-au-Prince,https://www.nhc.noaa.gov/data/tcr/AL052021_Elsa.pdf

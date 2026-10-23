@@ -1,22 +1,24 @@
 # Haiti Anticipatory Action: hurricanes
 <!-- markdownlint-disable MD013 -->
-[![Generic badge](https://img.shields.io/badge/STATUS-PENDING_ENDORSEMENT-%23F2645A)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/STATUS-ENDORSED-%231EBFB3)](https://shields.io/)
 
-This repository contains the analysis code and the monitoring pipeline for the Haiti Anticipatory Action framework for hurricanes (2026 revision, pending endorsement). The endorsed 2024 framework document is available online here: [Cadre d'Action Anticipatoire : Pilote en Haïti | Tempêtes/Ouragans](https://www.unocha.org/publications/report/haiti/cadre-daction-anticipatoire-pilote-en-haiti-tempetesouragans).
+This repository contains the analysis code and the monitoring pipeline for the Haiti Anticipatory Action framework for hurricanes (2026 version, endorsed). The 2024 framework document is available online here: [Cadre d'Action Anticipatoire : Pilote en Haïti | Tempêtes/Ouragans](https://www.unocha.org/publications/report/haiti/cadre-daction-anticipatoire-pilote-en-haiti-tempetesouragans).
 
-## Trigger definition (2026 revision)
+**Site:** <https://ocha-dap.github.io/ds-aa-hti-hurricanes/> — the 2026 version, with every analysis behind it, is at <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/>.
+
+## Trigger definition (2026 version)
 
 | Déclencheur | Période de retour | Délai max. des prévisions | Conditions |
 |---|---|---|---|
-| Prévisions : Mobilisation | ≈ 3,0 ans | 120 h | ≥ 68 mm de précipitations prévues (2 jours) OU > 0 personnes prévues d'être exposées aux vents de 64 kt |
-| Prévisions : Action | 3,0 ans | 72 h | ≥ 68 mm de précipitations prévues (2 jours) OU > 0 personnes prévues d'être exposées aux vents de 64 kt OU alerte rouge DGPC confirmée par un Hurricane Warning du NHC* |
-| Observations : Réponse précoce | 3,4 ans | — | ≥ 57 mm de précipitations observées (2 jours) OU > 0 personnes observées d'être exposées aux vents de 64 kt |
+| Prévisions : Mobilisation | ≈ 3,0 ans | 120 h | ≥ 68 mm de précipitations prévues (2 jours) OU > 0 personnes prévues d'être exposées aux vents de 64 nœuds |
+| Prévisions : Action | 2,7 ans | 72 h | ≥ 68 mm de précipitations prévues (2 jours) OU > 0 personnes prévues d'être exposées aux vents de 64 nœuds OU alerte orange DGPC dans au moins 6 départements (sur 10)* OU alerte rouge DGPC confirmée par un Hurricane Warning du NHC* |
+| Observations : Réponse précoce | 3,4 ans | — | ≥ 57 mm de précipitations observées (2 jours) OU > 0 personnes observées d'être exposées aux vents de 64 nœuds |
 
-Période de retour globale : 2,4 ans.
+Période de retour globale : 2,4 ans (13 storms in 10 seasons, 2002–2025).
 
-**Cutoff**: no forecast trigger may fire once the storm is forecast to make landfall or pass closest to Haiti within 48 hours (informational emails are still sent, flagged as past-cutoff).
+**Cutoff**: no forecast trigger may fire once the storm is forecast to make landfall or pass closest to Haiti within 48 hours (informational emails are still sent, flagged as past-cutoff). This includes both DGPC conditions; held to the cutoff, the red + Hurricane Warning condition adds no activation in 2002–2025 (see the [2026 page](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/#rouge)).
 
-*The DGPC red alert condition is not yet implemented in the monitoring system.
+*The two DGPC conditions are not implemented in the monitoring system: there is no feed of DGPC alerts.
 
 Trigger design and calibration live in `exploration/wsp_trigger.py` (marimo app; run with `uv run marimo edit exploration/wsp_trigger.py`).
 
@@ -113,7 +115,7 @@ are documented in `src/dgpc/constants.py` and on the page itself.
 
 ```shell
 uv run python pipelines/run_dgpc_wind.py    # ~10 min, writes to blob
-uv run python pipelines/build_dgpc_page.py  # renders docs/dgpc-alertes.html
+uv run python pipelines/build_dgpc_page.py  # renders docs/2026/premiere-evaluation.html
 ```
 
 The **rainfall** leg runs on Databricks rather than locally, because the
@@ -148,9 +150,16 @@ site, so products share a URL space behind a landing page at `/`
 
 | Path | Product | Built by |
 |---|---|---|
-| `/` | landing page (cards) | hand-edited `docs/index.html` |
-| `/slides.html` | trigger-mechanism deck (French) | hand-edited |
-| `/dgpc-alertes.html` | DGPC alert-level analysis (French) | `pipelines/build_dgpc_page.py` |
+| `/` | landing page (one card per framework version, plus the repo) | hand-edited `docs/index.html` + `docs/assets/` |
+| `/2026/` | the 2026 version on one page: trigger, embedded deck, map replay, threshold choice, DGPC orange and red analyses (French) | `pipelines/build_page_2026.py`; map data in `docs/2026/assets/carte/` from `pipelines/build_dgpc_map.py` (needs the storms DB) |
+| `/2026/slides.html` | trigger-mechanism deck (French); PDF in `docs/2026/assets/` | hand-edited; PDF printed with headless Chrome (`--headless=new --no-pdf-header-footer --print-to-pdf`) from the served page |
+| `/2026/premiere-evaluation.html` | archived first DGPC alert-level assessment (French) | `pipelines/build_dgpc_page.py` |
+
+The September 2026 URLs (`/slides.html`, `/carte-avis.html`,
+`/dgpc-departements.html`, `/dgpc-alertes.html`) are redirect stubs into
+`/2026/`, and `docs/assets/declencheur-aa-haiti-ouragans.pdf` is a copy of the
+2026 deck PDF, so links already shared keep working. The framework document
+links to `/2026/`; a later version gets its own folder and card.
 
 French terminology follows the team's doc-sourced glossary
 ([KB `docs/I18N.md`](https://github.com/OCHA-DAP/ds-knowledge-base/blob/main/docs/I18N.md)).
