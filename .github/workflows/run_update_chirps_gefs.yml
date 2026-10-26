@@ -8,6 +8,12 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    env:
+      # ubuntu-latest moved to Ubuntu 26.04 from 2026-10-19; uv then picks
+      # Python 3.14, where building this package fails (`No module named
+      # 'distutils'`) and every run since 2026-10-20 died at "Install
+      # dependencies". Pin the interpreter the lockfile was built for.
+      UV_PYTHON: "3.11"
     permissions:
       contents: read
       issues: write
