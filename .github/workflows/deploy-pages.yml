@@ -21,8 +21,11 @@ name: Deploy Pages site
 #     script).
 #   - workflow_dispatch: manual redeploy.
 #
-# This repo's Pages used to serve main:/docs directly (legacy build);
-# configure-pages with enablement: true switches it to workflow builds.
+# This repo's Pages used to serve main:/docs directly (legacy build). The
+# site's source must be set to "GitHub Actions" once, by hand
+# (gh api -X PUT repos/OCHA-DAP/ds-aa-hti-hurricanes/pages -f build_type=workflow):
+# configure-pages does not convert an existing legacy site, and while it
+# stays legacy every push to main also redeploys docs/ WITHOUT /suivi/data/.
 
 on:
   schedule:
@@ -70,8 +73,6 @@ jobs:
           test -f site/suivi/data/index.json && test -f site/suivi/data/geo/hti.geojson
           test -f site/suivi/data/fcast_monitoring.csv
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

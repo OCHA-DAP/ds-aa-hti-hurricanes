@@ -6,7 +6,7 @@
   const DATA = 'data/';
   const STAGES = ['mobilisation', 'action'];
   const cache = {};
-  let INDEX, GEO, storm = null, advIdx = 0, map, layers = {};
+  let INDEX, GEO, storm = null, advIdx = 0, map, layers = {}, stormReq = 0, advReq = 0;
 
   // ---------- formatting ----------
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
@@ -87,11 +87,13 @@
     };
     $('stages').innerHTML = ['mobilisation', 'action', 'obsv'].map((k) => {
       const a = act[k];
-      const who = a ? `${esc(stormName(a.monitor_id.split('_')[0].toUpperCase()))}, ${fmtTime(a.issue_time)}` : '';
+      const who = a ? `${esc(stormName(a.atcf_id))}, ${fmtTime(a.issue_time)}` : '';
+      const noSep = a && a.separate_activation === false;
       return `<div class="stage${a ? ' hit' : ''}">
         <div class="nm">${esc(T[k].name_fr)}</div>
-        <div class="st">${a ? '✓ Atteint' : 'Non atteint'}</div>
-        <div class="det">${a ? `Premier déclenchement : ${who}` : esc(desc[k])}</div>
+        <div class="st">${a ? (noSep ? '✓ Conditions remplies' : '✓ Atteint') : 'Non atteint'}</div>
+        <div class="det">${a ? `Premier déclenchement : ${who}` : esc(desc[k])}${noSep
+          ? '. Pas d’activation séparée : l’Action avait déjà été déclenchée pour cette tempête.' : ''}</div>
       </div>`;
     }).join('');
   }
@@ -187,7 +189,8 @@
         g.addTo(layers[k]); bounds.extend(g.getBounds());
       } else if (p.layer === 'obsv_64kt_swath') {
         const g = L.geoJSON(f, { style: STY.swath }).bindTooltip(
-          `Vents ≥ 64 kt observés jusqu’au ${fmtTime(p.swath_valid_time)}<br>${pers(p.pop_exposed_hti)} personnes en Haïti`, { sticky: true });
+          `Vents ≥ 64 kt observés jusqu’au ${fmtTime(p.swath_valid_time)}<br>${pers(p.pop_exposed_hti)} personnes en Haïti`
+          + (p.subtracted_from_forecast === false ? '<br><i>Non retirée des zones prévues : pas d’andain à l’heure exacte de l’avis.</i>' : ''), { sticky: true });
         g.addTo(layers.swath); bounds.extend(g.getBounds());
       }
     });
@@ -382,7 +385,10 @@
   // ---------- explorer ----------
   async function selectStorm(atcf, wantIdx) {
     if (!atcf) return;
-    storm = await getJSON(`storms/${atcf}.json`);
+    const my = ++stormReq;
+    const s = await getJSON(`storms/${atcf}.json`);
+    if (my !== stormReq) return; // a newer storm selection won
+    storm = s;
     const advs = storm.advisories;
     const r = $('adv-range');
     r.max = Math.max(0, advs.length - 1);
@@ -397,14 +403,14 @@
   async function showAdvisory() {
     const advs = storm.advisories;
     if (!advs.length) return;
-    const row = advs[advIdx];
+    const row = advs[advIdx], my = ++advReq;
     $('prev').disabled = advIdx <= 0; $('next').disabled = advIdx >= advs.length - 1;
     $('adv-lab').innerHTML = `${esc(storm.name)} · avis ${advIdx + 1} sur ${advs.length} · ${fmtTime(row.issue_time)}`
       + (row.past_cutoff ? '<span class="badge cut">après l’heure limite</span>' : '<span class="badge ok">avant l’heure limite</span>');
     document.querySelectorAll('#adv-table tbody tr').forEach((tr) => tr.classList.toggle('sel', +tr.dataset.i === advIdx));
     let fc;
     try { fc = await getJSON(row.file); } catch (e) { fc = null; }
-    if (advs[advIdx] !== row) return; // a newer selection won
+    if (my !== advReq) return; // a newer advisory selection won
     const adv = fc ? fc.advisory : null;
     if (!adv) { $('stage-cards').innerHTML = '<p class="muted">Fichier de l’avis indisponible.</p>'; return; }
     drawAdvisoryMap(fc, adv);

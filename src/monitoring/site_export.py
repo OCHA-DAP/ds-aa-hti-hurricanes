@@ -75,8 +75,8 @@ COORD_DECIMALS = 4
 # Recomputed vs recorded: differences under these are rounding noise.
 TOL = {"rain": 0.01, "pop": 0.5}
 
-# Storm considered "active" on the page while its last advisory is this
-# recent relative to the newest advisory in the record.
+# Storm considered "active" on the page while its last advisory is at most
+# this old when the export runs.
 ACTIVE_HRS = 18
 
 
@@ -232,9 +232,26 @@ class SiteStore:
 # --- inputs ---------------------------------------------------------------
 
 
+OBSV_COLS = [
+    "monitor_id",
+    "atcf_id",
+    "name",
+    "issue_time",
+    "min_dist",
+    "obsv_rain",
+    "obsv_exp",
+    "rainfall_relevant",
+    "rain_trigger_obsv",
+    "exp_trigger_obsv",
+    "obsv_trigger",
+]
+
+
 def _load_recorded():
     fc = mu.load_existing_monitoring_points("fcast")
     ob = mu.load_existing_monitoring_points("obsv")
+    if "atcf_id" not in ob:  # no observation parquet yet (new season/setup)
+        ob = pd.DataFrame(columns=OBSV_COLS)
     for df in (fc, ob):
         if "issue_time" in df:
             df["issue_time"] = pd.to_datetime(df["issue_time"])
@@ -444,8 +461,16 @@ def build_advisory(
             "storms DB; publishing the recorded values without geometry."
         )
 
-    # observed swath at issuance (what exp_obsv counts)
+    # observed swath at issuance (what exp_obsv counts). The forecast
+    # buffers only had a swath removed when one existed at exactly the
+    # issue time (fetch_obsv_buffer_at, as in ds-storms-pipeline); flag it.
     sw_time, sw_geom = _fetch_obsv_buffer_latest(atcf_id, issue_time)
+    subtracted = None
+    if res is not None:
+        subtracted = any(
+            det["buffers"][s]["obsv_geometry"] is not None
+            for s in mu.FCAST_STAGES
+        )
     g = _geojson_geom(sw_geom)
     if g is not None:
         features.append(
@@ -455,6 +480,7 @@ def build_advisory(
                 "properties": {
                     "layer": f"obsv_{EXPOSURE_WIND_KT}kt_swath",
                     "swath_valid_time": _iso(sw_time),
+                    "subtracted_from_forecast": subtracted,
                     "wind_kt": EXPOSURE_WIND_KT,
                     "pop_exposed_hti": _num(rec.get("exp_obsv"), 0),
                 },
@@ -493,8 +519,22 @@ def build_advisory(
 
 
 def _activations(fc: pd.DataFrame, ob: pd.DataFrame) -> dict:
-    """First advisory / observation at which each stage fired."""
+    """First advisory / observation at which each stage fired.
+
+    Réponse précoce: the emails send no separate activation for a storm
+    whose Action already fired (src/email/update_emails.py), so a storm
+    without Action is preferred and ``separate_activation`` says which.
+    """
     out = {}
+    action_storms = (
+        set(fc.loc[fc["action_trigger"].fillna(False).astype(bool), "atcf_id"])
+        if "action_trigger" in fc
+        else set()
+    )
+    if "obsv_trigger" in ob and not ob.empty:
+        ob = ob.assign(_sep=~ob["atcf_id"].isin(action_storms)).sort_values(
+            ["_sep", "issue_time"], ascending=[False, True]
+        )
     for stage, df in (
         ("mobilisation", fc),
         ("action", fc),
@@ -502,18 +542,22 @@ def _activations(fc: pd.DataFrame, ob: pd.DataFrame) -> dict:
     ):
         col = f"{stage}_trigger"
         hit = (
-            df[df[col].astype(bool)].sort_values("issue_time")
+            df[df[col].fillna(False).astype(bool)]
             if col in df and not df.empty
             else df.iloc[0:0]
         )
-        out[stage] = (
-            None
-            if hit.empty
-            else {
-                "monitor_id": hit.iloc[0]["monitor_id"],
-                "issue_time": _iso(hit.iloc[0]["issue_time"]),
-            }
-        )
+        if stage != "obsv":
+            hit = hit.sort_values("issue_time")
+        if hit.empty:
+            out[stage] = None
+            continue
+        out[stage] = {
+            "atcf_id": hit.iloc[0]["atcf_id"].upper(),
+            "monitor_id": hit.iloc[0]["monitor_id"],
+            "issue_time": _iso(hit.iloc[0]["issue_time"]),
+        }
+        if stage == "obsv":
+            out[stage]["separate_activation"] = bool(hit.iloc[0]["_sep"])
     return out
 
 
@@ -720,6 +764,8 @@ def export_site(local_dir: str | None = None, full: bool = False):
     # storm files (rewritten each run)
     storms = []
     latest_issue = fc["issue_time"].max()
+    now = pd.Timestamp(generated_at).tz_localize(None)
+    season = int(latest_issue.year)
     for atcf_id in sorted(set(fc["atcf_id"]) | set(ob["atcf_id"])):
         f_s = fc[fc["atcf_id"] == atcf_id]
         o_s = ob[ob["atcf_id"] == atcf_id]
@@ -747,7 +793,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
                 ),
                 "active": bool(
                     last is not None
-                    and latest_issue - last <= pd.Timedelta(hours=ACTIVE_HRS)
+                    and now - last <= pd.Timedelta(hours=ACTIVE_HRS)
                 ),
                 "activations": storm["activations"],
                 "latest": latest_row,
@@ -789,7 +835,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
     index = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
-        "season": int(latest_issue.year),
+        "season": season,
         "monitoring_start": _date(mu.MONITORING_START),
         "triggers": {
             s: {
@@ -813,7 +859,10 @@ def export_site(local_dir: str | None = None, full: bool = False):
             if not ob.empty
             else None,
         },
-        "season_activations": _activations(fc, ob),
+        "season_activations": _activations(
+            fc[fc["issue_time"].dt.year == season],
+            ob[ob["issue_time"].dt.year == season],
+        ),
         "storms": storms,
         "chirps_gefs_latest": {
             "issue_date": _date(last_gefs),
