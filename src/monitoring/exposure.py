@@ -179,11 +179,29 @@ def fcastonly_exposure(
     Returns None when the advisory is not yet in the DB (caller should
     defer); 0.0 when computed and there is no overlap with Haiti.
     """
+    res = fcastonly_buffer(atcf_id, issued_time, lt_cap_hrs, wind_speed_kt)
+    return None if res is None else res["pop_exposed"]
+
+
+def fcastonly_buffer(
+    atcf_id: str,
+    issued_time: pd.Timestamp,
+    lt_cap_hrs: int,
+    wind_speed_kt: int = EXPOSURE_WIND_KT,
+) -> dict | None:
+    """``fcastonly_exposure`` plus the geometries behind the number.
+
+    Returns None when the advisory is not yet in the DB, else a dict:
+    ``geometry`` (the leadtime-capped forecast buffer minus the observed
+    swath, EPSG:4326; None when there is no buffer), ``obsv_geometry``
+    (the swath that was subtracted, or None) and ``pop_exposed``.
+    """
+    out = {"geometry": None, "obsv_geometry": None, "pop_exposed": 0.0}
     gdf = fetch_fcast_track_points(atcf_id, issued_time)
     if gdf.empty:
         if not issuance_in_db(atcf_id, issued_time):
             return None
-        return 0.0
+        return out
 
     gdf = gdf[gdf["leadtime"] <= lt_cap_hrs]
     has_radii = (
@@ -199,7 +217,7 @@ def fcastonly_exposure(
     )
     gdf = gdf[has_radii]
     if gdf.empty:
-        return 0.0
+        return out
 
     for speed in (34, 50, 64):
         gdf = expand_quad_col(gdf, f"quadrant_radius_{speed}")
@@ -210,26 +228,29 @@ def fcastonly_exposure(
         wind_speed_kt, "geometry"
     ]
     if buf_geom is None or buf_geom.is_empty:
-        return 0.0
+        return out
 
     # subtract the cumulative observed swath at this issuance
     _, obsv_geom = storms_db.fetch_obsv_buffer_at(
         atcf_id, issued_time, wind_speed_kt
     )
     if obsv_geom is not None:
+        out["obsv_geometry"] = obsv_geom
         buf_geom = buf_geom.difference(obsv_geom)
         if buf_geom.is_empty:
-            return 0.0
+            return out
+    out["geometry"] = buf_geom
 
     hti_geom = load_hti_adm0().geometry.union_all()
     if not buf_geom.intersects(hti_geom):
-        return 0.0
+        return out
     df = calculate_exposure(
         gpd.GeoDataFrame(geometry=[buf_geom], crs="EPSG:4326"),
         load_pop_hti(),
         mask_geom=hti_geom,
     )
-    return float(df["pop_exposed"].iloc[0])
+    out["pop_exposed"] = float(df["pop_exposed"].iloc[0])
+    return out
 
 
 def obsv_exposure_at(

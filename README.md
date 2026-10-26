@@ -24,7 +24,7 @@ Trigger design and calibration live in `exploration/wsp_trigger.py` (marimo app;
 
 ## Monitoring
 
-One Databricks job (`databricks.yml`, job `HTI Hurricane Monitoring`) runs `pipelines/monitor.py` at 03:50/09:50/15:50/21:50 UTC — after the upstream `ds-storms-pipeline` (every 3 h) has landed each NHC advisory's tracks, wind-exposure and WSP data in the storms DB (dev).
+One Databricks job (`databricks.yml`, job `HTI Hurricane Monitoring`) runs `pipelines/monitor.py` (then `pipelines/export_site_data.py` for the public page) at 03:50/09:50/15:50/21:50 UTC — after the upstream `ds-storms-pipeline` (every 3 h) has landed each NHC advisory's tracks, wind-exposure and WSP data in the storms DB (dev).
 
 Data sources:
 
@@ -36,6 +36,7 @@ The pipeline back-fills: every advisory/IMERG day is checked exactly once (`moni
 
 - `monitoring/hti_fcast_monitoring_v2.parquet` / `monitoring/hti_obsv_monitoring_v2.parquet` — one row per storm × issue time, with per-stage rain/exposure values and trigger booleans. (The v1 files are kept for the historical record.)
 - `email/email_record_v2.csv` — one row per email sent (`info`, `mobilisation`, `action`, `obsv`).
+- `monitoring/site/` — data for the public monitoring page `/suivi/` (task `export_site`, see [Published site](#published-site)).
 
 ### Emails (Listmonk)
 
@@ -69,9 +70,13 @@ uv run python pipelines/send_test_email.py   # Hurricane Melissa (2025) replay t
 ├── .github/workflows/                  # CHIRPS-GEFS refresh + keep-awake
 ├── databricks.yml                      # Databricks Asset Bundle (monitoring job)
 ├── databricks/run_monitor_job.py       # DBX wrapper (secrets, PYTHONPATH)
+├── databricks/run_site_export_job.py  # DBX wrapper for the page-data export
+├── docs/suivi/                         # public monitoring page (static)
 ├── exploration/                        # analysis notebooks + marimo apps
 ├── pipelines/
 │   ├── monitor.py                      # main monitoring entrypoint
+│   ├── export_site_data.py             # data for the monitoring page
+│   ├── sync_site_data.py               # deploy: download + verify that data
 │   ├── send_test_email.py              # Melissa-replay test email
 │   ├── setup_listmonk_lists.py         # provision Listmonk lists
 │   └── update_chirps_gefs.py           # daily CHIRPS-GEFS refresh
@@ -85,7 +90,8 @@ uv run python pipelines/send_test_email.py   # Hurricane Melissa (2025) replay t
 │   │   └── update_emails.py            # decide what's due, dedup, send
 │   ├── monitoring/
 │   │   ├── exposure.py                 # leadtime-capped wind exposure
-│   │   └── monitoring_utils.py         # trigger evaluation per advisory
+│   │   ├── monitoring_utils.py         # trigger evaluation per advisory
+│   │   └── site_export.py              # monitoring page files (blob)
 │   └── utils/
 └── ...
 ```
@@ -143,17 +149,41 @@ uv run python -m src.dgpc.rain_analysis   # aggregation ordering, land masking
 
 ## Published site
 
-GitHub Pages serves `main:/docs` at
-<https://ocha-dap.github.io/ds-aa-hti-hurricanes/>. One repo gets one Pages
+`.github/workflows/deploy-pages.yml` publishes `main:/docs` at
+<https://ocha-dap.github.io/ds-aa-hti-hurricanes/>, plus the monitoring
+page's data under `/suivi/data/` (downloaded from blob, never committed).
+One repo gets one Pages
 site, so products share a URL space behind a landing page at `/`
 ([convention](https://github.com/OCHA-DAP/ds-knowledge-base/blob/main/methods/static-data-apps.md)):
 
 | Path | Product | Built by |
 |---|---|---|
-| `/` | landing page (one card per framework version, plus the repo) | hand-edited `docs/index.html` + `docs/assets/` |
+| `/` | landing page (monitoring, one card per framework version, the repo) | hand-edited `docs/index.html` + `docs/assets/` |
+| `/suivi/` | live monitoring page (French): season status, every NHC advisory on a map with the 64 kt buffers capped at 120 h / 72 h, rain windows, latest CHIRPS-GEFS / IMERG, and public data files | static `docs/suivi/` (HTML/JS/CSS); data from the DBX task `export_site` (`src/monitoring/site_export.py`) → dev blob `ds-aa-hti-hurricanes/monitoring/site/` → `pipelines/sync_site_data.py` in the deploy workflow |
 | `/2026/` | the 2026 version on one page: trigger, embedded deck, map replay, threshold choice, DGPC orange and red analyses (French) | `pipelines/build_page_2026.py`; map data in `docs/2026/assets/carte/` from `pipelines/build_dgpc_map.py` (needs the storms DB) |
 | `/2026/slides.html` | trigger-mechanism deck (French); PDF in `docs/2026/assets/` | hand-edited; PDF printed with headless Chrome (`--headless=new --no-pdf-header-footer --print-to-pdf`) from the served page |
 | `/2026/premiere-evaluation.html` | archived first DGPC alert-level assessment (French) | `pipelines/build_dgpc_page.py` |
+
+### Monitoring page data (`/suivi/data/`)
+
+The DBX job's second task, `export_site`, runs after every monitoring run and
+republishes the run's records with the inputs behind them: one GeoJSON per
+NHC advisory (forecast track, 64 kt buffers capped at 120 h and 72 h with the
+observed swath removed, observed swath, the CHIRPS-GEFS issuance used and each
+stage's rain window), one JSON per storm, the monitoring tables as CSV, the
+rain series and an `index.json`. Trigger values are always the recorded ones;
+geometries are rebuilt with `process_fcast_advisory(detail=True)` and any
+difference from the record is written into the file (`rebuilt.differences`).
+Advisory files are written once; everything else each run; `manifest.json`
+(sha256 per file) is written last and checked by the deploy. The files are
+public and documented on the page itself ("Accéder aux données"), which is
+how partners (e.g. WFP) get the data: plain HTTPS, no account or key.
+
+```shell
+uv run python pipelines/export_site_data.py --local /tmp/site   # dry run to a directory (needs the DB)
+uv run python pipelines/export_site_data.py                     # dev blob, new advisories only
+uv run python pipelines/export_site_data.py --full               # rewrite every advisory file
+```
 
 The September 2026 URLs (`/slides.html`, `/carte-avis.html`,
 `/dgpc-departements.html`, `/dgpc-alertes.html`) are redirect stubs into

@@ -152,3 +152,6 @@ temp/
 
 # marimo session cache
 exploration/__marimo__/
+
+# Pages build output (deploy-pages.yml assembles it; never committed)
+/site/

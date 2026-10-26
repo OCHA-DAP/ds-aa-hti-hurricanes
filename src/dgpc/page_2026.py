@@ -40,9 +40,8 @@ RAIN_OBSV = TRIGGERS["obsv"]["rain_mm"]
 # précoce and the overall figure are recomputed from the replay below and
 # must agree; Mobilisation (120 h cap) is not in the replay, which reads
 # forecast rain at the Action cap, so the document's figure is quoted.
-# (src.constants.TRIGGERS, which the monitoring emails print, still holds
-# the pre-orange Action figure of 3.0; the monitoring has neither DGPC
-# pathway.)
+# (src.constants.TRIGGERS, which the monitoring emails print, holds the
+# same figures; the monitoring has neither DGPC pathway.)
 DOC_RP = {"mobilisation": 3.0, "action": 2.7, "obsv": 3.4}
 
 # The Haiti Hurricane Warnings the first calibration (exploration/

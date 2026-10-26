@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi du déclencheur — ouragans, Haïti</title>
+<meta name="description" content="Suivi en continu du déclencheur 2026 du cadre d’action anticipatoire pour les tempêtes et ouragans en Haïti : avis du NHC, prévisions et observations de pluie, et les données derrière chaque valeur.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="home-link" href="../">← Action anticipatoire · Ouragans · Haïti</a>
+  <div class="kicker">Cadre d’action anticipatoire · Version 2026 · Suivi</div>
+  <h1>Suivi du déclencheur : tempêtes et ouragans en Haïti</h1>
+  <p class="sub">
+    Ce que le système de suivi a calculé pour chaque avis du National
+    Hurricane Center (NHC) et chaque jour de pluie observée, avec les
+    données derrière chaque valeur. La page se met à jour après chaque
+    passage du système : toutes les 6 heures, après chaque avis du NHC, et
+    à l’arrivée de chaque nouvelle prévision (CHIRPS-GEFS) et observation
+    (IMERG) de pluie. Le déclencheur est défini sur la
+    <a href="../2026/#declencheur">page du cadre 2026</a>.
+  </p>
+</header>
+
+<div id="load-error" class="callout" hidden>
+  <h3>Les données de suivi n’ont pas pu être chargées.</h3>
+  <p>Réessayez dans quelques minutes. Les fichiers sont aussi accessibles
+  directement : <a href="data/index.json">data/index.json</a>.</p>
+</div>
+
+<section id="fraicheur" aria-label="Fraîcheur des données">
+  <div class="stats" id="fresh"></div>
+</section>
+
+<h2 id="etat">État des déclencheurs, saison <span id="season">—</span></h2>
+<p>Un déclencheur atteint pour une tempête le reste jusqu’à la fin de
+cette tempête, même si les avis suivants ne remplissent plus les
+conditions.</p>
+<div class="stages" id="stages"></div>
+<p class="small muted" id="dgpc-note">Les deux conditions de l’Action
+fondées sur les alertes de la DGPC (orange dans au moins 6 départements ;
+rouge confirmée par un Hurricane Warning du NHC) ne sont pas suivies ici :
+il n’existe pas de flux des alertes de la DGPC. Voir
+<a href="#methode">Méthode et limites</a>.</p>
+
+<h2 id="tempetes">Tempêtes suivies</h2>
+<p>Toutes les tempêtes de l’Atlantique Nord pour lesquelles le NHC a émis
+des avis depuis le <span id="mon-start">—</span>. Les courriels
+d’information ne partent que pour les tempêtes à moins de
+<span class="info-km">1 000</span> km d’Haïti.</p>
+<div class="ctl">
+  <label><input type="checkbox" id="only-near" checked> <span>Seulement les
+  tempêtes passées à moins de <span class="info-km">1 000</span> km</span></label>
+</div>
+<div class="tablewrap"><table id="storm-table">
+  <thead><tr>
+    <th>Tempête</th><th>Avis</th><th>Premier avis</th><th>Dernier avis</th>
+    <th class="r">Distance min.</th><th>Mobilisation</th><th>Action</th>
+    <th>Réponse précoce</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<h2 id="avis">Avis par avis</h2>
+<p>Choisissez une tempête puis un avis du NHC. La carte montre ce que
+l’avis prévoyait ; les cartes à droite montrent comment chaque condition
+du déclencheur a été évaluée.</p>
+
+<div id="explorer" class="panel">
+  <div class="ctl">
+    <label>Tempête <select id="storm-select"></select></label>
+    <button id="prev" type="button" aria-label="Avis précédent">◀</button>
+    <input id="adv-range" type="range" min="0" max="0" value="0"
+      aria-label="Avis">
+    <button id="next" type="button" aria-label="Avis suivant">▶</button>
+  </div>
+  <div id="adv-lab" class="advlab">—</div>
+  <div class="explorer-grid">
+    <div>
+      <div id="carte" role="img" aria-label="Carte de l’avis sélectionné"></div>
+      <div class="toggles" id="layer-toggles"></div>
+    </div>
+    <div id="stage-cards"></div>
+  </div>
+  <h3>Pluie prévue utilisée pour cet avis</h3>
+  <p class="small muted" id="gefs-cap">—</p>
+  <div class="chart" id="chart-fcast"></div>
+  <div class="tablewrap scroll"><table id="adv-table">
+    <thead><tr>
+      <th>Avis (UTC)</th><th class="r">Passage au plus près</th>
+      <th>Heure limite</th>
+      <th class="r">Pluie ≤ 120 h</th><th class="r">Pers. 64 kt ≤ 120 h</th>
+      <th>Mobilisation</th>
+      <th class="r">Pluie ≤ 72 h</th><th class="r">Pers. 64 kt ≤ 72 h</th>
+      <th>Action</th><th>Données</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+</div>
+
+<h3 id="observe">Pluie et vents observés pour cette tempête</h3>
+<p class="small muted" id="obsv-cap">—</p>
+<div class="chart" id="chart-obsv"></div>
+<div class="tablewrap"><table id="obsv-table">
+  <thead><tr>
+    <th>IMERG jusqu’au</th><th class="r">Pluie 2 jours (max. fenêtre)</th>
+    <th>Pluie utilisable</th><th class="r">Pers. 64 kt observées</th>
+    <th>Réponse précoce</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<h2 id="pluie">Pluie : dernières données</h2>
+<p>Ces séries arrivent même sans tempête. La pluie ne compte pour le
+déclencheur que pendant les jours où une tempête est prévue (ou observée)
+à moins de <span class="rain-km">230</span> km d’Haïti.</p>
+<h3>Dernière prévision CHIRPS-GEFS</h3>
+<p class="small muted" id="gefs-latest-cap">—</p>
+<div class="chart" id="chart-gefs-latest"></div>
+<h3>Pluie observée IMERG, 45 derniers jours</h3>
+<div class="chart" id="chart-imerg-recent"></div>
+
+<h2 id="donnees">Accéder aux données</h2>
+<p>Toutes les données de cette page sont des fichiers statiques publics,
+mis à jour à chaque passage du système. Il n’y a ni compte ni clé : chaque
+fichier a une adresse fixe, qu’un navigateur, <code>curl</code>, Python ou
+R peuvent lire directement.</p>
+<div class="tablewrap"><table class="prose files">
+  <thead><tr><th>Fichier</th><th>Contenu</th></tr></thead>
+  <tbody>
+    <tr><td><a href="data/index.json"><code>data/index.json</code></a></td>
+      <td>Point d’entrée : seuils, fraîcheur de chaque source, liste des
+      tempêtes avec leur dernier avis et leurs déclenchements, dernière
+      prévision CHIRPS-GEFS et 45 derniers jours IMERG.</td></tr>
+    <tr><td><code>data/storms/{ATCF}.json</code></td>
+      <td>Une tempête (ex. <code>AL052026</code>) : chaque avis avec ses
+      valeurs et le chemin de son fichier, la trajectoire et l’andain
+      observés, les jours IMERG et la fenêtre de pluie observée.</td></tr>
+    <tr><td><code>data/advisories/{ATCF}/{AAAA-MM-JJTHHMMZ}.geojson</code></td>
+      <td>Un avis du NHC, en GeoJSON (ouvrable dans QGIS) : points de
+      trajectoire prévus, zones de vents de 64 kt limitées à 120 h et
+      72 h (zone déjà observée retirée), andain observé ; le bloc
+      <code>advisory</code> donne l’heure limite, les fenêtres de pluie,
+      la série CHIRPS-GEFS utilisée et le résultat de chaque condition.</td></tr>
+    <tr><td><a href="data/fcast_monitoring.csv"><code>data/fcast_monitoring.csv</code></a></td>
+      <td>Une ligne par avis : toutes les valeurs prévues et les résultats.</td></tr>
+    <tr><td><a href="data/obsv_monitoring.csv"><code>data/obsv_monitoring.csv</code></a></td>
+      <td>Une ligne par tempête et par jour IMERG : pluie et vents observés.</td></tr>
+    <tr><td><a href="data/rain/chirps_gefs.csv"><code>data/rain/chirps_gefs.csv</code></a>,
+      <a href="data/rain/imerg.csv"><code>data/rain/imerg.csv</code></a></td>
+      <td>Pluie moyenne nationale journalière et cumul sur 2 jours, chaque
+      prévision CHIRPS-GEFS et chaque jour IMERG.</td></tr>
+    <tr><td><a href="data/geo/hti.geojson"><code>data/geo/hti.geojson</code></a></td>
+      <td>Contour d’Haïti et zones de 230 km et 1 000 km.</td></tr>
+    <tr><td><a href="data/manifest.json"><code>data/manifest.json</code></a></td>
+      <td>Empreinte SHA-256 et taille de chaque fichier, et heure de
+      génération.</td></tr>
+  </tbody>
+</table></div>
+<p>Pour obtenir l’avis d’une date et heure précises, lisez
+<code>data/storms/{ATCF}.json</code> : chaque avis y figure avec son
+<code>issue_time</code> et le chemin de son fichier. Par exemple :</p>
+<pre><code id="example-code">—</code></pre>
+<details class="more">
+  <summary>Signification des champs principaux</summary>
+  <div class="tablewrap"><table class="prose">
+    <thead><tr><th>Champ</th><th>Signification</th></tr></thead>
+    <tbody>
+      <tr><td><code>issue_time</code></td><td>Heure d’émission de l’avis du NHC (UTC).</td></tr>
+      <tr><td><code>hours_to_closest_pass</code></td><td>Heures entre l’avis et le passage au plus près d’Haïti prévu par cet avis.</td></tr>
+      <tr><td><code>past_cutoff</code></td><td>Vrai si ce passage est prévu dans moins de 48 h : l’avis ne peut plus déclencher (heure limite).</td></tr>
+      <tr><td><code>rain_window_start</code>, <code>rain_window_end</code></td><td>Jours où la tempête est prévue à moins de 230 km d’Haïti dans la limite de l’étape (120 h ou 72 h), plus le jour suivant. Vide si la tempête n’y est pas prévue.</td></tr>
+      <tr><td><code>rain_eligible</code></td><td>Vrai si une fenêtre existe : la pluie prévue peut alors compter pour le déclencheur. Vide (<code>null</code>) pour les quelques avis dont la fenêtre n’a pas pu être reconstituée.</td></tr>
+      <tr><td><code>rain_120h</code>, <code>rain_72h</code> / <code>rain_2day_max_mm</code></td><td>Maximum, sur la fenêtre, du cumul de pluie moyenne nationale sur 2 jours (CHIRPS-GEFS), en mm. Vide sans fenêtre.</td></tr>
+      <tr><td><code>sum_2day_mm</code></td><td>Cumul sur 2 jours affecté au second jour : pluie du jour J−1 + pluie du jour J.</td></tr>
+      <tr><td><code>in_window_mobilisation</code>, <code>in_window_action</code>, <code>in_window</code></td><td>Vrai si ce jour est dans la fenêtre où la pluie compte.</td></tr>
+      <tr><td><code>exp_fcast_120h</code>, <code>exp_fcast_72h</code></td><td>Personnes en Haïti dans la zone de vents ≥ 64 kt prévue jusqu’à 120 h / 72 h, hors zone déjà observée (WorldPop 2026).</td></tr>
+      <tr><td><code>exp_obsv</code>, <code>obsv_exp</code></td><td>Personnes en Haïti dans l’andain de vents ≥ 64 kt déjà observé.</td></tr>
+      <tr><td><code>exp_total_120h</code>, <code>exp_total_72h</code></td><td>Somme des deux : la condition de vent est remplie si elle dépasse 0.</td></tr>
+      <tr><td><code>rain_trigger_*</code>, <code>exp_trigger_*</code></td><td>Condition de pluie ou de vent remplie, avant l’heure limite.</td></tr>
+      <tr><td><code>mobilisation_trigger</code>, <code>action_trigger</code>, <code>obsv_trigger</code></td><td>Étape déclenchée par cet avis (ou ce jour), heure limite comprise.</td></tr>
+      <tr><td><code>rainfall_relevant</code></td><td>Observations : vrai tant que le jour IMERG est dans la fenêtre où la tempête était à moins de 230 km.</td></tr>
+      <tr><td><code>rebuilt.differences</code></td><td>Les géométries sont recalculées pour la page avec la même fonction que le suivi ; tout écart avec les valeurs enregistrées est listé ici (vide normalement).</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+<h2 id="methode">Méthode et limites</h2>
+<ul>
+  <li><b>Avis du NHC.</b> Chaque avis est évalué une seule fois, après son
+  arrivée dans la base de données des tempêtes (mise à jour par
+  <code>ds-storms-pipeline</code>). Les valeurs publiées sont celles
+  enregistrées par le système de suivi au moment de l’évaluation.</li>
+  <li><b>Vents.</b> Les rayons de vents de 64 kt par quadrant de chaque
+  point prévu sont interpolés toutes les 30 minutes et réunis en une
+  zone. Pour la Mobilisation, seuls les points prévus jusqu’à 120 h
+  comptent ; pour l’Action, jusqu’à 72 h. La zone déjà balayée par les
+  vents observés est retirée de la zone prévue, puis comptée à part ; la
+  condition est remplie dès qu’une personne est exposée (population
+  WorldPop 2026).</li>
+  <li><b>Pluie prévue.</b> Moyenne nationale journalière de la prévision
+  CHIRPS-GEFS la plus récente avant l’avis, cumulée sur 2 jours. Elle ne
+  compte que sur les jours où la tempête est prévue à moins de 230 km
+  d’Haïti (dans la limite de 120 h ou 72 h), plus le jour suivant ; sans
+  tempête dans cette zone, la pluie prévue ne peut pas déclencher.</li>
+  <li><b>Pluie observée.</b> Moyenne nationale journalière IMERG, cumulée
+  sur 2 jours, sur les jours où la tempête a été observée à moins de
+  230 km, plus le jour suivant. Un jour IMERG arrive vers 15 h UTC le
+  lendemain.</li>
+  <li><b>Heure limite.</b> Aucune condition prévue ne peut déclencher si
+  l’avis prévoit le passage au plus près d’Haïti dans moins de 48 h ; les
+  avis après l’heure limite restent affichés.</li>
+  <li><b>Distances.</b> Mesurées depuis le contour d’Haïti, comme dans la
+  calibration du déclencheur.</li>
+  <li><b>Alertes de la DGPC.</b> Les conditions d’Action fondées sur
+  l’alerte orange (au moins 6 départements) et sur l’alerte rouge
+  confirmée par un Hurricane Warning du NHC ne sont pas évaluées ici, faute
+  de flux des alertes de la DGPC.</li>
+  <li><b>Géométries publiées.</b> Simplifiées à environ 100 m pour
+  l’affichage ; les nombres de personnes sont calculés sur les géométries
+  complètes.</li>
+</ul>
+
+<footer>
+  Centre de données humanitaires d’OCHA ·
+  <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">code source</a> ·
+  <a href="../2026/">cadre 2026</a> ·
+  Fonds de carte © Esri — Esri, HERE, Garmin, contributeurs OpenStreetMap
+</footer>
+</div>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

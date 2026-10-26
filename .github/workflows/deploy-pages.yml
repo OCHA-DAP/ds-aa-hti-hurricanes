@@ -1,0 +1,79 @@
+name: Deploy Pages site
+
+# Publishes the whole Pages site: the committed pages under docs/ (landing
+# page, /2026/, redirect stubs) plus the monitoring page's data under
+# /suivi/data/, which never enters git.
+#
+# The data is written by the Databricks job "HTI Hurricane Monitoring"
+# (task export_site, src/monitoring/site_export.py) to dev blob after every
+# monitoring run. GitHub-hosted runners cannot reach the databases, so this
+# workflow only downloads that bundle (pipelines/sync_site_data.py, checked
+# against its sha256 manifest) and deploys. The only secret is the org-level
+# dev blob READ SAS.
+#
+# Triggers:
+#   - schedule: 25 min after each scheduled monitoring run (04:15 / 10:15 /
+#     16:15 / 22:15 UTC, ~10 min long), so the page follows every NHC
+#     advisory, the daily CHIRPS-GEFS forecast (picked up by the 10:15 run)
+#     and each IMERG day (16:15 run). If the monitoring cron moves back to
+#     :50 (see databricks.yml), move this one to :15 of the next hour.
+#   - push to main touching the site's code (docs/**, this file, the sync
+#     script).
+#   - workflow_dispatch: manual redeploy.
+#
+# This repo's Pages used to serve main:/docs directly (legacy build);
+# configure-pages with enablement: true switches it to workflow builds.
+
+on:
+  schedule:
+    - cron: "40 4,10,16,22 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/deploy-pages.yml"
+      - "pipelines/sync_site_data.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --quiet "azure-storage-blob>=12.20"
+      - name: Assemble site (docs/ at /, monitoring data at /suivi/data/)
+        env:
+          DSCI_AZ_BLOB_DEV_SAS: ${{ secrets.DSCI_AZ_BLOB_DEV_SAS }}
+        run: |
+          mkdir -p site
+          rsync -a docs/ site/
+          python pipelines/sync_site_data.py site/suivi/data
+          test -f site/index.html && test -f site/2026/index.html
+          test -f site/suivi/index.html && test -f site/suivi/app.js
+          test -f site/suivi/data/index.json && test -f site/suivi/data/geo/hti.geojson
+          test -f site/suivi/data/fcast_monitoring.csv
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
