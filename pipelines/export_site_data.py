@@ -6,7 +6,7 @@ Usage:
     python pipelines/export_site_data.py --local out  # write to a directory instead
 
 Runs on Databricks after each monitoring run (task ``export_site``); the
-Pages workflow then publishes the files under /suivi/data/.
+Pages workflow then publishes the files under /2026/suivi/data/.
 """
 
 import argparse

@@ -169,7 +169,7 @@ resources:
             - pypi: { package: "azure-storage-blob>=12.20" }
             - pypi: { package: "databricks-sdk" }
 
-        # Data for the public monitoring page (/suivi/ on the Pages site):
+        # Data for the public monitoring page (/2026/suivi/ on the Pages site):
         # republishes the run's records, with the capped wind buffers and
         # rain windows behind them, to dev blob; the Pages workflow
         # (.github/workflows/deploy-pages.yml) picks them up. Runs only if

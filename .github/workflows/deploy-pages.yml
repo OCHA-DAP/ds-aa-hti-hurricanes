@@ -2,7 +2,7 @@ name: Deploy Pages site
 
 # Publishes the whole Pages site: the committed pages under docs/ (landing
 # page, /2026/, redirect stubs) plus the monitoring page's data under
-# /suivi/data/, which never enters git.
+# /2026/suivi/data/, which never enters git.
 #
 # The data is written by the Databricks job "HTI Hurricane Monitoring"
 # (task export_site, src/monitoring/site_export.py) to dev blob after every
@@ -25,7 +25,7 @@ name: Deploy Pages site
 # site's source must be set to "GitHub Actions" once, by hand
 # (gh api -X PUT repos/OCHA-DAP/ds-aa-hti-hurricanes/pages -f build_type=workflow):
 # configure-pages does not convert an existing legacy site, and while it
-# stays legacy every push to main also redeploys docs/ WITHOUT /suivi/data/.
+# stays legacy every push to main also redeploys docs/ WITHOUT /2026/suivi/data/.
 
 on:
   schedule:
@@ -61,17 +61,17 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install --quiet "azure-storage-blob>=12.20"
-      - name: Assemble site (docs/ at /, monitoring data at /suivi/data/)
+      - name: Assemble site (docs/ at /, monitoring data at /2026/suivi/data/)
         env:
           DSCI_AZ_BLOB_DEV_SAS: ${{ secrets.DSCI_AZ_BLOB_DEV_SAS }}
         run: |
           mkdir -p site
           rsync -a docs/ site/
-          python pipelines/sync_site_data.py site/suivi/data
+          python pipelines/sync_site_data.py site/2026/suivi/data
           test -f site/index.html && test -f site/2026/index.html
-          test -f site/suivi/index.html && test -f site/suivi/app.js
-          test -f site/suivi/data/index.json && test -f site/suivi/data/geo/hti.geojson
-          test -f site/suivi/data/fcast_monitoring.csv
+          test -f site/2026/suivi/index.html && test -f site/2026/suivi/app.js
+          test -f site/2026/suivi/data/index.json && test -f site/2026/suivi/data/geo/hti.geojson
+          test -f site/2026/suivi/data/fcast_monitoring.csv
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

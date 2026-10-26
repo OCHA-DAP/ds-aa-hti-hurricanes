@@ -36,7 +36,7 @@ The pipeline back-fills: every advisory/IMERG day is checked exactly once (`moni
 
 - `monitoring/hti_fcast_monitoring_v2.parquet` / `monitoring/hti_obsv_monitoring_v2.parquet` — one row per storm × issue time, with per-stage rain/exposure values and trigger booleans. (The v1 files are kept for the historical record.)
 - `email/email_record_v2.csv` — one row per email sent (`info`, `mobilisation`, `action`, `obsv`).
-- `monitoring/site/` — data for the public monitoring page `/suivi/` (task `export_site`, see [Published site](#published-site)).
+- `monitoring/site/` — data for the public monitoring page `/2026/suivi/` (task `export_site`, see [Published site](#published-site)).
 
 ### Emails (Listmonk)
 
@@ -70,8 +70,8 @@ uv run python pipelines/send_test_email.py   # Hurricane Melissa (2025) replay t
 ├── .github/workflows/                  # CHIRPS-GEFS refresh + keep-awake
 ├── databricks.yml                      # Databricks Asset Bundle (monitoring job)
 ├── databricks/run_monitor_job.py       # DBX wrapper (secrets, PYTHONPATH)
-├── databricks/run_site_export_job.py  # DBX wrapper for the page-data export
-├── docs/suivi/                         # public monitoring page (static)
+├── databricks/run_site_export_job.py   # DBX wrapper for the page-data export
+├── docs/2026/suivi/                    # public monitoring page (static)
 ├── exploration/                        # analysis notebooks + marimo apps
 ├── pipelines/
 │   ├── monitor.py                      # main monitoring entrypoint
@@ -151,7 +151,7 @@ uv run python -m src.dgpc.rain_analysis   # aggregation ordering, land masking
 
 `.github/workflows/deploy-pages.yml` publishes `main:/docs` at
 <https://ocha-dap.github.io/ds-aa-hti-hurricanes/>, plus the monitoring
-page's data under `/suivi/data/` (downloaded from blob, never committed).
+page's data under `/2026/suivi/data/` (downloaded from blob, never committed).
 One repo gets one Pages
 site, so products share a URL space behind a landing page at `/`
 ([convention](https://github.com/OCHA-DAP/ds-knowledge-base/blob/main/methods/static-data-apps.md)):
@@ -159,12 +159,12 @@ site, so products share a URL space behind a landing page at `/`
 | Path | Product | Built by |
 |---|---|---|
 | `/` | landing page (monitoring, one card per framework version, the repo) | hand-edited `docs/index.html` + `docs/assets/` |
-| `/suivi/` | live monitoring page (French): season status, every NHC advisory on a map with the 64 kt buffers capped at 120 h / 72 h, rain windows, latest CHIRPS-GEFS / IMERG, and public data files | static `docs/suivi/` (HTML/JS/CSS); data from the DBX task `export_site` (`src/monitoring/site_export.py`) → dev blob `ds-aa-hti-hurricanes/monitoring/site/` → `pipelines/sync_site_data.py` in the deploy workflow |
+| `/2026/suivi/` | live monitoring page (French): season status, every NHC advisory on a map with the 64 kt buffers capped at 120 h / 72 h, rain windows, latest CHIRPS-GEFS / IMERG, and public data files | static `docs/2026/suivi/` (HTML/JS/CSS); data from the DBX task `export_site` (`src/monitoring/site_export.py`) → dev blob `ds-aa-hti-hurricanes/monitoring/site/` → `pipelines/sync_site_data.py` in the deploy workflow |
 | `/2026/` | the 2026 version on one page: trigger, embedded deck, map replay, threshold choice, DGPC orange and red analyses (French) | `pipelines/build_page_2026.py`; map data in `docs/2026/assets/carte/` from `pipelines/build_dgpc_map.py` (needs the storms DB) |
 | `/2026/slides.html` | trigger-mechanism deck (French); PDF in `docs/2026/assets/` | hand-edited; PDF printed with headless Chrome (`--headless=new --no-pdf-header-footer --print-to-pdf`) from the served page |
 | `/2026/premiere-evaluation.html` | archived first DGPC alert-level assessment (French) | `pipelines/build_dgpc_page.py` |
 
-### Monitoring page data (`/suivi/data/`)
+### Monitoring page data (`/2026/suivi/data/`)
 
 The DBX job's second task, `export_site`, runs after every monitoring run and
 republishes the run's records with the inputs behind them: one GeoJSON per

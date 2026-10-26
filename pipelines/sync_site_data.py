@@ -2,7 +2,7 @@
 
 Used by .github/workflows/deploy-pages.yml to put the files that
 src/monitoring/site_export.py wrote (on Databricks) into the Pages
-artifact under /suivi/data/. Needs only azure-storage-blob and the dev
+artifact under /2026/suivi/data/. Needs only azure-storage-blob and the dev
 blob READ SAS (DSCI_AZ_BLOB_DEV_SAS); it does not import the repo's code.
 
     python pipelines/sync_site_data.py DEST_DIR

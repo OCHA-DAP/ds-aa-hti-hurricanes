@@ -1211,6 +1211,11 @@ analyses qui l’ont fondé.">
     la carte avis par avis et les diapositives. Préparé par le Centre de
     données humanitaires d’OCHA avec la DGPC et les partenaires du cadre.
   </p>
+  <p class="sub">
+    <b>Suivi de la saison en cours :</b> la <a href="suivi/">page de suivi</a>
+    montre l’état des déclencheurs et ce que le système calcule pour chaque
+    avis du NHC, mise à jour après chaque passage.
+  </p>
 </header>
 
 <nav class="toc">

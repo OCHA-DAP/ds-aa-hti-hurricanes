@@ -1,4 +1,4 @@
-"""Data behind the public monitoring page (``/suivi/`` on the Pages site).
+"""Data behind the public monitoring page (``/2026/suivi/`` on the Pages site).
 
 Runs after every monitoring run (task ``export_site`` of the DBX job, see
 databricks.yml). It republishes what the monitoring recorded, together
@@ -268,12 +268,8 @@ def _gefs_series(df_gefs_all: pd.DataFrame, issue_date) -> pd.DataFrame:
 
 
 def _load_imerg() -> pd.DataFrame:
-    im = imerg.load_imerg_from_postgres(recent=True)
-    im = im.sort_values("date").reset_index(drop=True)
-    im["roll2_sum"] = (
-        im["mean"].rolling(window=2, center=True, min_periods=1).sum()
-    )
-    return im
+    # Same 2-day sums as update_obsv_monitoring (calendar days).
+    return imerg.add_roll2_sum(imerg.load_imerg_from_postgres(recent=True))
 
 
 def _fetch_obsv_buffer_latest(atcf_id: str, at_time=None):
