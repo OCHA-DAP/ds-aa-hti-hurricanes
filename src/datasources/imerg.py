@@ -100,6 +100,7 @@ def load_imerg_from_postgres(recent: bool = False):
     SELECT valid_date, mean
     FROM public.imerg
     WHERE pcode = 'HT'
+    ORDER BY valid_date
     """
     df = pd.read_sql(
         query, stratus.get_engine(stage="prod"), parse_dates=["valid_date"]
@@ -107,7 +108,28 @@ def load_imerg_from_postgres(recent: bool = False):
     df = df.rename(columns={"valid_date": "date"})
     if recent:
         df = df[df["date"] >= "2024-06-01"]
-    return df
+    # Callers take 2-day sums with a row-wise rolling window, which is
+    # only right on date-ordered rows; Postgres returns them in no
+    # particular order without the ORDER BY.
+    return df.sort_values("date").reset_index(drop=True)
+
+
+def add_roll2_sum(df: pd.DataFrame) -> pd.DataFrame:
+    """Add ``roll2_sum``: rain(D-1) + rain(D), labelled D, by calendar day.
+
+    A day missing from the table (5 since 1998, e.g. 2026-07-14) counts as
+    no data, so the day after a gap gets its own rain only, not the rain
+    from before the gap as a row-wise window would give.
+    """
+    # One value per day: a duplicated row must not stop the monitoring run.
+    daily = (
+        df.drop_duplicates("date", keep="last")
+        .set_index("date")["mean"]
+        .sort_index()
+        .asfreq("D")
+    )
+    roll2 = daily.rolling(window=2, center=True, min_periods=1).sum()
+    return df.assign(roll2_sum=df["date"].map(roll2).to_numpy())
 
 
 def load_imerg_mean(version: int = 6, recent: bool = False):

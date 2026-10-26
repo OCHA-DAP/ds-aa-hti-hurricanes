@@ -270,9 +270,8 @@ def update_fcast_monitoring(clobber: bool = False):
 def update_obsv_monitoring(clobber: bool = False):
     adm0 = codab.load_codab_from_blob().to_crs(3857)
     logger.info("Loading recent IMERG data for Haiti.")
-    obsv_rain = imerg.load_imerg_from_postgres(recent=True)
-    obsv_rain["roll2_sum"] = (
-        obsv_rain["mean"].rolling(window=2, center=True, min_periods=1).sum()
+    obsv_rain = imerg.add_roll2_sum(
+        imerg.load_imerg_from_postgres(recent=True)
     )
     # IMERG for day D lands ~15:00 UTC on D+1
     obsv_rain["issue_time"] = obsv_rain["date"] + pd.Timedelta(
