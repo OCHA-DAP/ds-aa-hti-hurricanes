@@ -259,8 +259,7 @@ def per_storm(storms, adv, exp_adv, obsv_max, wind_adv, rain_long, monitors):
     a = adv.merge(exp_adv, on=["atcf_id", "issued_time"], how="left").merge(
         wind_adv, on=["atcf_id", "issued_time"], how="left"
     )
-    im = imerg.load_imerg_from_postgres().sort_values("date")
-    im["roll2"] = im["mean"].rolling(2, min_periods=1).sum()
+    im = imerg.add_roll2_sum(imerg.load_imerg_from_postgres())
     has_rain = set(rain_long.atcf_id)
 
     rows = []
@@ -280,7 +279,7 @@ def per_storm(storms, adv, exp_adv, obsv_max, wind_adv, rain_long, monitors):
         if aid in obs_cal.index:
             obsv_rain = float(obs_cal[aid])
         else:
-            obsv_rain = float(obs["roll2"].max()) if len(obs) else np.nan
+            obsv_rain = float(obs["roll2_sum"].max()) if len(obs) else np.nan
         fcast_rain = (
             float(pre["fcast_rain_mm"].max())
             if pre["fcast_rain_mm"].notna().any()
