@@ -121,7 +121,13 @@ def add_roll2_sum(df: pd.DataFrame) -> pd.DataFrame:
     no data, so the day after a gap gets its own rain only, not the rain
     from before the gap as a row-wise window would give.
     """
-    daily = df.set_index("date")["mean"].asfreq("D")
+    # One value per day: a duplicated row must not stop the monitoring run.
+    daily = (
+        df.drop_duplicates("date", keep="last")
+        .set_index("date")["mean"]
+        .sort_index()
+        .asfreq("D")
+    )
     roll2 = daily.rolling(window=2, center=True, min_periods=1).sum()
     return df.assign(roll2_sum=df["date"].map(roll2).to_numpy())
 
