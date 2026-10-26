@@ -82,11 +82,14 @@ EXPOSURE_WIND_KT = 64
 # The observational stage fires on:
 #   observed 2-day rolling rainfall >= rain_mm
 #   OR observed population exposed to >= EXPOSURE_WIND_KT winds > 0
-# The Action stage's third condition (DGPC red alert confirmed by an NHC
-# Hurricane Warning) is not yet implemented in this monitoring system.
+# The Action stage's two DGPC conditions (orange alert in >= 6 of 10
+# departments; red alert confirmed by an NHC Hurricane Warning) are not
+# implemented in this monitoring system: there is no feed of DGPC alerts.
+# rp_years are the endorsed framework document's figures; Action's 2.7
+# includes the orange condition.
 TRIGGERS = {
     "mobilisation": {"rain_mm": 68, "lt_max_hrs": 120, "rp_years": 3.0},
-    "action": {"rain_mm": 68, "lt_max_hrs": 72, "rp_years": 3.0},
+    "action": {"rain_mm": 68, "lt_max_hrs": 72, "rp_years": 2.7},
     "obsv": {"rain_mm": 57, "lt_max_hrs": None, "rp_years": 3.4},
 }
 OVERALL_RP_YEARS = 2.4

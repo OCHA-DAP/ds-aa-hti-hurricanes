@@ -169,6 +169,27 @@ resources:
             - pypi: { package: "azure-storage-blob>=12.20" }
             - pypi: { package: "databricks-sdk" }
 
+        # Data for the public monitoring page (/2026/suivi/ on the Pages site):
+        # republishes the run's records, with the capped wind buffers and
+        # rain windows behind them, to dev blob; the Pages workflow
+        # (.github/workflows/deploy-pages.yml) picks them up. Runs only if
+        # the monitoring succeeded, and a failure here cannot hold up the
+        # emails, which have already gone.
+        - task_key: export_site
+          depends_on:
+            - task_key: run_monitoring
+          job_cluster_key: monitor_cluster
+          spark_python_task:
+            python_file: databricks/run_site_export_job.py
+            source: GIT
+          libraries:
+            - pypi: { package: "ocha-stratus>=0.1.7" }
+            - pypi: { package: "ocha-lens==0.5.1" }
+            - pypi: { package: "exactextract" }
+            - pypi: { package: "geopandas>=1.0" }
+            - pypi: { package: "rioxarray>=0.15" }
+            - pypi: { package: "azure-storage-blob>=12.20" }
+
     # One-off analysis job (no schedule): evaluates the DGPC rainfall
     # criteria against IMERG half-hourly for every storm in the Haiti set.
     #

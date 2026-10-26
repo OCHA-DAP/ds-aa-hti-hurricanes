@@ -26,7 +26,21 @@
   </header>
 
   <main>
-    <p class="label">Versions du cadre</p>
+    <p class="label">Suivi</p>
+    <div class="grid">
+
+      <a class="k" href="2026/suivi/">
+        <h2>Suivi du déclencheur 2026</h2>
+        <p>Ce que le système de suivi calcule pour chaque avis du NHC et chaque jour de pluie
+           observée, mis à jour à chaque passage : état des déclencheurs de la saison, carte
+           avis par avis avec les zones de vents de 64 nœuds limitées à 120 h et 72 h,
+           fenêtres de pluie, et les données téléchargeables derrière chaque valeur.</p>
+        <span class="foot"><em>/2026/suivi/</em></span>
+      </a>
+
+    </div>
+
+    <p class="label label-2">Versions du cadre</p>
     <div class="grid">
 
       <a class="k" href="2026/">
@@ -57,7 +71,8 @@
   <div class="note">
     <p><strong>Ajouter une page ?</strong> Chaque version du cadre a son propre dossier sous
        <code>docs/</code> (la version 2026 est dans <code>docs/2026/</code>) et une carte
-       ci-dessus. GitHub Pages publie <code>docs/</code> depuis la branche <code>main</code>.
+       ci-dessus. Le workflow <code>deploy-pages.yml</code> publie <code>docs/</code> depuis la
+       branche <code>main</code>, avec les données du suivi sous <code>/2026/suivi/data/</code>.
        Voir le
        <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes#published-site">README</a>.</p>
   </div>

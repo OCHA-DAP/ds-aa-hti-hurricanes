@@ -126,11 +126,20 @@ def process_fcast_advisory(
     df_gefs_all: pd.DataFrame,
     adm0_3857: gpd.GeoDataFrame,
     name: str | None = None,
-) -> dict | None:
+    detail: bool = False,
+    gefs_issue_date: pd.Timestamp | None = None,
+) -> dict | tuple[dict, dict] | None:
     """Evaluate one NHC advisory against the forecast trigger stages.
 
     Returns the monitoring row, or None when the advisory should be
     deferred (not yet in the storms DB) or has no forecast points.
+
+    With ``detail=True`` returns ``(row, detail)``: the inputs behind the
+    row (forecast track points, the CHIRPS-GEFS issuance used, each
+    stage's rainfall window and capped wind buffer), which the public
+    monitoring page publishes (src/monitoring/site_export.py).
+    ``gefs_issue_date`` pins the CHIRPS-GEFS issuance (the one recorded
+    in the row) instead of taking the latest before the advisory.
     """
     monitor_id = _create_monitor_id(atcf_id, "fcast", issue_time)
     gdf = exposure.fetch_fcast_track_points(atcf_id, issue_time)
@@ -149,6 +158,8 @@ def process_fcast_advisory(
     gefs_recent_date = df_gefs_all[
         df_gefs_all["issue_time_approx"] < issue_time
     ]["issue_date"].max()
+    if gefs_issue_date is not None:
+        gefs_recent_date = pd.Timestamp(gefs_issue_date)
     gefs_issuetime = df_gefs_all[
         df_gefs_all["issue_date"] == gefs_recent_date
     ].copy()
@@ -160,16 +171,18 @@ def process_fcast_advisory(
 
     # wind exposure (leadtime-capped fcastonly + cumulative obsv)
     exp_by_stage = {}
+    buf_by_stage = {}
     for stage in FCAST_STAGES:
         lt_cap = TRIGGERS[stage]["lt_max_hrs"]
-        exp_fcast = exposure.fcastonly_exposure(atcf_id, issue_time, lt_cap)
-        if exp_fcast is None:
+        buf = exposure.fcastonly_buffer(atcf_id, issue_time, lt_cap)
+        if buf is None:
             logger.info(
                 f"Advisory {monitor_id} not yet in storms DB; "
                 "deferring to next run."
             )
             return None
-        exp_by_stage[stage] = exp_fcast
+        exp_by_stage[stage] = buf["pop_exposed"]
+        buf_by_stage[stage] = buf
     exp_obsv = exposure.obsv_exposure_at(atcf_id, issue_time)
 
     row = {
@@ -178,22 +191,25 @@ def process_fcast_advisory(
         "name": name or storms_db.fetch_storm_name(atcf_id),
         "issue_time": issue_time,
         "time_to_closest": time_to_closest,
+        "gefs_issue_date": gefs_recent_date,
         "closest_s": landfall_row["wind_speed"],
         "past_cutoff": past_cutoff,
         "min_dist": gdf_interp["distance"].min(),
         "exp_obsv": exp_obsv,
     }
+    windows = {}
     for stage in FCAST_STAGES:
         lt_cap = TRIGGERS[stage]["lt_max_hrs"]
         gdf_lt = gdf_dist[gdf_dist["leadtime"] <= pd.Timedelta(hours=lt_cap)]
         if gdf_lt.empty:
             rain = None
+            windows[stage] = None
         else:
-            rain = _rain_in_window(
-                gefs_issuetime,
+            windows[stage] = (
                 gdf_lt["valid_time"].min().date(),
                 (gdf_lt["valid_time"].max() + pd.Timedelta(days=1)).date(),
             )
+            rain = _rain_in_window(gefs_issuetime, *windows[stage])
         exp_total = exp_by_stage[stage] + exp_obsv
         rain_trigger = bool(
             rain is not None and rain >= TRIGGERS[stage]["rain_mm"]
@@ -207,7 +223,16 @@ def process_fcast_advisory(
         row[f"{stage}_trigger"] = (
             rain_trigger or exp_trigger
         ) and not past_cutoff
-    return row
+    if not detail:
+        return row
+    return row, {
+        "track": gdf,
+        "closest_time": landfall_row["valid_time"],
+        "gefs_issue_date": gefs_recent_date,
+        "gefs": gefs_issuetime[["valid_date", "mean", "roll2_sum"]],
+        "windows": windows,
+        "buffers": buf_by_stage,
+    }
 
 
 def load_gefs_with_issue_times() -> pd.DataFrame:
