@@ -100,6 +100,7 @@ def load_imerg_from_postgres(recent: bool = False):
     SELECT valid_date, mean
     FROM public.imerg
     WHERE pcode = 'HT'
+    ORDER BY valid_date
     """
     df = pd.read_sql(
         query, stratus.get_engine(stage="prod"), parse_dates=["valid_date"]
@@ -107,7 +108,10 @@ def load_imerg_from_postgres(recent: bool = False):
     df = df.rename(columns={"valid_date": "date"})
     if recent:
         df = df[df["date"] >= "2024-06-01"]
-    return df
+    # Callers take 2-day sums with a row-wise rolling window, which is
+    # only right on date-ordered rows; Postgres returns them in no
+    # particular order without the ORDER BY.
+    return df.sort_values("date").reset_index(drop=True)
 
 
 def load_imerg_mean(version: int = 6, recent: bool = False):
