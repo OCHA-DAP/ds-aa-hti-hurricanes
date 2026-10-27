@@ -65,7 +65,7 @@ import pandas as pd
 import shapely
 from azure.core.exceptions import ResourceNotFoundError
 from shapely.geometry import mapping
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 
 from src.constants import (
     D_THRESH,
@@ -250,10 +250,14 @@ class SiteStore:
         self.write(path, buf.getvalue(), PARQUET_CT)
 
     def read_geoparquet(self, path: str) -> gpd.GeoDataFrame | None:
-        """A GeoParquet file from the last export, or None."""
-        if path not in self.manifest:
+        """A GeoParquet file an earlier export wrote, or None. Read
+        whether or not that export finished (wrote its manifest), so a
+        failed run does not make the next one redo the work."""
+        try:
+            data = self.read(path)
+        except (ResourceNotFoundError, FileNotFoundError):
             return None
-        return gpd.read_parquet(io.BytesIO(self.read(path)))
+        return gpd.read_parquet(io.BytesIO(data))
 
     def finish(self, generated_at: str):
         """Write the manifest last: a deploy never sees a half-run."""
@@ -831,6 +835,18 @@ def _utc(col: pd.Series) -> pd.Series:
     )
 
 
+def _floats(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    """Columns typed as numbers even while every value is missing, so
+    the Parquet schema does not change with the first value."""
+    return df.assign(
+        **{
+            c: pd.to_numeric(df[c], errors="coerce").astype("float64")
+            for c in cols
+            if c in df
+        }
+    )
+
+
 def _load_evaluated() -> gpd.GeoDataFrame | None:
     """The buffers the monitoring saved when it evaluated each advisory."""
     try:
@@ -884,7 +900,7 @@ def _buffers_table(fc: pd.DataFrame, parts: list) -> gpd.GeoDataFrame:
     gdf = gpd.GeoDataFrame(
         pd.concat(frames, ignore_index=True), geometry="geometry", crs=4326
     )
-    gdf["_rank"] = gdf["source"].map(SOURCE_RANK)
+    gdf["_rank"] = gdf["source"].map(SOURCE_RANK).fillna(-1)
     gdf = (
         gdf.sort_values("_rank", kind="stable")
         .drop_duplicates(["monitor_id", "stage", "layer"], keep="last")
@@ -910,7 +926,7 @@ def _swaths_table(atcf_ids) -> gpd.GeoDataFrame:
     """Every cumulative observed 64 kt swath the storms DB holds for these
     storms, exactly as stored, with the HTI exposure the storms pipeline
     counted inside it (what exp_obsv / obsv_exp report)."""
-    ids = tuple(sorted({a.upper() for a in atcf_ids}))
+    ids = sorted({a.upper() for a in atcf_ids})
     query = text(
         """
         SELECT atcf_id, valid_time, wind_speed_kt, geometry
@@ -918,7 +934,7 @@ def _swaths_table(atcf_ids) -> gpd.GeoDataFrame:
         WHERE atcf_id IN :ids AND wind_speed_kt = :kt
         ORDER BY atcf_id, valid_time
         """
-    )
+    ).bindparams(bindparam("ids", expanding=True))
     with storms_db.get_engine().connect() as conn:
         gdf = gpd.read_postgis(
             query,
@@ -932,13 +948,30 @@ def _swaths_table(atcf_ids) -> gpd.GeoDataFrame:
         [storms_db.fetch_obsv_exposure(a).assign(atcf_id=a) for a in ids]
     )
     exp = exp[exp["wind_speed_kt"] == EXPOSURE_WIND_KT]
-    gdf = gdf.merge(
-        exp[["atcf_id", "valid_time", "pop_exposed"]].rename(
-            columns={"pop_exposed": "pop_exposed_hti"}
-        ),
-        on=["atcf_id", "valid_time"],
-        how="left",
+    # As exposure.obsv_exposure_at reads it: the latest value at or before
+    # the swath's time, 0 when there is none yet.
+    exp = exp[["atcf_id", "valid_time", "pop_exposed"]].rename(
+        columns={"pop_exposed": "pop_exposed_hti"}
     )
+    # same resolution on both sides (an empty frame comes back as [s])
+    exp["valid_time"] = pd.to_datetime(exp["valid_time"]).astype(
+        "datetime64[ns]"
+    )
+    gdf["valid_time"] = pd.to_datetime(gdf["valid_time"]).astype(
+        "datetime64[ns]"
+    )
+    gdf = gpd.GeoDataFrame(
+        pd.merge_asof(
+            gdf.sort_values("valid_time"),
+            exp.sort_values("valid_time"),
+            on="valid_time",
+            by="atcf_id",
+            direction="backward",
+        ),
+        geometry="geometry",
+        crs=gdf.crs,
+    ).sort_values(["atcf_id", "valid_time"])
+    gdf["pop_exposed_hti"] = gdf["pop_exposed_hti"].fillna(0).astype("float64")
     gdf["valid_time"] = _utc(gdf["valid_time"])
     return gdf[
         [
@@ -955,8 +988,8 @@ def _adm0_table() -> gpd.GeoDataFrame:
     adm0 = exposure.load_hti_adm0()
     return gpd.GeoDataFrame(
         {
-            "name": ["Haiti"],
-            "source": [exposure.provenance()["adm0_boundary"]],
+            "iso3": ["HTI"],
+            "source_boundary": [exposure.provenance()["adm0_boundary"]],
         },
         geometry=[adm0.geometry.union_all()],
         crs=adm0.crs,
@@ -1021,8 +1054,10 @@ FIELD_DOCS = {
     "(ocha_lens_version is then the export's). none: no longer "
     "rebuildable (advisories scored before 2026-09-22 whose storms-DB issue "
     "time moved); geometry null.",
-    "pop_exposed_hti": "People in Haiti counted inside this geometry "
-    "(fcastonly rows; swaths: by ds-storms-pipeline).",
+    "pop_exposed_hti": "People in Haiti counted inside this geometry. "
+    "Forecast buffers: fcastonly rows only. Swaths: the ds-storms-pipeline "
+    "value the monitoring reads at that time (latest at or before it; 0 "
+    "before the swath reaches Haiti).",
     "pop_exposed_recorded": "The row's recorded exp_fcast_{lt}h "
     "(fcastonly rows). Equal to pop_exposed_hti when source is evaluated.",
     "ocha_lens_version": "ocha-lens version that built the buffer.",
@@ -1032,6 +1067,7 @@ FIELD_DOCS = {
     "geometry": "EPSG:4326, full precision (GeoParquet WKB).",
     "valid_time": "Time of the observed position the cumulative swath runs "
     "to (UTC).",
+    "iso3": "Country code.",
     "source_boundary": "Boundary source.",
     "issue_date": "CHIRPS-GEFS issue date.",
     "valid_date": "Day the rain value is for.",
@@ -1134,7 +1170,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
     kept = None if full else store.read_geoparquet(BUFFERS_PATH)
     kept_ids = set(kept["monitor_id"]) if kept is not None else set()
     have = set() if full else store.existing("advisories/")
-    n_new, rebuilt_recs = 0, []
+    n_new, rebuilt_recs, n_none = 0, [], 0
     for _, rec in fc.sort_values("issue_time").iterrows():
         mid = rec["monitor_id"]
         path = (
@@ -1151,15 +1187,15 @@ def export_site(local_dir: str | None = None, full: bool = False):
                 path, build_advisory(rec, res, adm0, ev_by_id.get(mid))
             )
             n_new += 1
-        if need_buf:
-            rebuilt_recs += (
-                mu.buffer_records(rec, res[1], "rebuilt")
-                if res is not None
-                else _no_buffer_records(rec)
-            )
+        if need_buf and res is not None:
+            rebuilt_recs += mu.buffer_records(rec, res[1], "rebuilt")
+        elif need_buf:
+            rebuilt_recs += _no_buffer_records(rec)
+            n_none += 1
+    n_rebuilt = len(rebuilt_recs) // (2 * len(mu.BUFFER_LAYERS)) - n_none
     logger.info(
-        f"Advisory files written: {n_new}; buffers rebuilt for "
-        f"{len(rebuilt_recs) // (2 * len(mu.BUFFER_LAYERS))} advisories"
+        f"Advisory files written: {n_new}; buffers rebuilt for {n_rebuilt} "
+        f"advisories, {n_none} no longer rebuildable"
     )
     buffers = _buffers_table(fc, [kept, rebuilt_recs, evaluated])
     store.write_parquet(BUFFERS_PATH, buffers)
@@ -1210,10 +1246,15 @@ def export_site(local_dir: str | None = None, full: bool = False):
     ob_out = ob.copy()
     ob_out["issue_time"] = ob_out["issue_time"].map(_iso)
     store.write_csv("obsv_monitoring.csv", ob_out)
-    fc_pq = fc_tab.assign(issue_time=_utc(fc["issue_time"]).to_numpy())
+    fc_pq = _floats(
+        fc_tab.assign(issue_time=_utc(fc["issue_time"])),
+        ["rain_120h", "rain_72h"],
+    )
     if "gefs_issue_date" in fc_pq:
         fc_pq["gefs_issue_date"] = pd.to_datetime(fc_pq["gefs_issue_date"])
-    ob_pq = ob.assign(issue_time=_utc(ob["issue_time"]))
+    ob_pq = _floats(
+        ob.assign(issue_time=_utc(ob["issue_time"])), ["obsv_rain"]
+    )
     store.write_parquet("fcast_monitoring.parquet", fc_pq)
     store.write_parquet("obsv_monitoring.parquet", ob_pq)
     swaths = _swaths_table(set(fc["atcf_id"]) | set(ob["atcf_id"]))

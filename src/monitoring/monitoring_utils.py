@@ -326,7 +326,7 @@ def update_fcast_monitoring(clobber: bool = False):
 
     names = {}
     dicts = []
-    buffer_recs = []
+    evaluated = []
     for _, iss in df_issuances.iterrows():
         atcf_id = iss["atcf_id"]
         issue_time = iss["issued_time"]  # naive UTC
@@ -346,7 +346,7 @@ def update_fcast_monitoring(clobber: bool = False):
         if res is not None:
             row, det = res
             dicts.append(row)
-            buffer_recs.extend(buffer_records(row, det, "evaluated"))
+            evaluated.append((row, det))
 
     df_new_monitoring = pd.DataFrame(dicts)
 
@@ -374,9 +374,16 @@ def update_fcast_monitoring(clobber: bool = False):
     # The geometries the new rows were computed on, for the public page's
     # data (site_export). This must never stop the run: the emails follow,
     # and the export rebuilds any advisory whose buffers are missing.
-    if buffer_recs:
+    if evaluated:
         try:
-            save_fcast_buffers(buffer_recs, clobber=clobber)
+            save_fcast_buffers(
+                [
+                    r
+                    for row, det in evaluated
+                    for r in buffer_records(row, det, "evaluated")
+                ],
+                clobber=clobber,
+            )
         except Exception:
             logger.exception(
                 "Could not save the forecast wind buffers; the site export "
