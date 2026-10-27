@@ -70,6 +70,7 @@ jobs:
           python pipelines/sync_site_data.py site/2026/suivi/data
           test -f site/index.html && test -f site/2026/index.html
           test -f site/2026/suivi/index.html && test -f site/2026/suivi/app.js
+          test -f site/2026/suivi/en/index.html
           test -f site/2026/suivi/data/index.json && test -f site/2026/suivi/data/geo/hti.geojson
           test -f site/2026/suivi/data/fcast_monitoring.csv
       - uses: actions/configure-pages@v5
