@@ -145,23 +145,49 @@ R peuvent lire directement.</p>
       trajectoire prévus, zones de vents de 64 kt limitées à 120 h et
       72 h (zone déjà observée retirée), andain observé ; le bloc
       <code>advisory</code> donne l’heure limite, les fenêtres de pluie,
-      la série CHIRPS-GEFS utilisée et le résultat de chaque condition.</td></tr>
+      la série CHIRPS-GEFS utilisée et le résultat de chaque condition.
+      Géométries simplifiées pour l’affichage (≈ 100 m) : les géométries
+      exactes sont dans <code>data/buffers/</code>.</td></tr>
+    <tr><td><a href="data/buffers/fcast_64kt.parquet"><code>data/buffers/fcast_64kt.parquet</code></a></td>
+      <td><b>Zones de vents de 64 kt exactes</b> (GeoParquet, EPSG:4326,
+      précision complète), telles que le système les a calculées. Pour
+      chaque avis et chaque étape, trois couches (<code>layer</code>) : la
+      zone prévue limitée à 120 h ou 72 h, l’andain observé qui en est
+      retiré, et la différence, sur laquelle la population exposée
+      (<code>exp_fcast_120h</code>, <code>exp_fcast_72h</code>) est comptée
+      dans la frontière <code>geo/hti_adm0.parquet</code>.</td></tr>
+    <tr><td><a href="data/buffers/obsv_64kt_swaths.parquet"><code>data/buffers/obsv_64kt_swaths.parquet</code></a></td>
+      <td>Chaque andain observé cumulé de 64 kt des tempêtes de la saison,
+      exact, tel que la base de données des tempêtes le contient, avec la
+      population qui y est comptée.</td></tr>
     <tr><td><a href="data/fcast_monitoring.csv"><code>data/fcast_monitoring.csv</code></a></td>
       <td>Une ligne par avis : toutes les valeurs prévues et les résultats.</td></tr>
     <tr><td><a href="data/obsv_monitoring.csv"><code>data/obsv_monitoring.csv</code></a></td>
       <td>Une ligne par tempête et par jour IMERG : pluie et vents observés.</td></tr>
+    <tr><td><a href="data/fcast_monitoring.parquet"><code>data/fcast_monitoring.parquet</code></a>,
+      <a href="data/obsv_monitoring.parquet"><code>data/obsv_monitoring.parquet</code></a></td>
+      <td>Les deux mêmes tableaux en Parquet, avec leurs types (dates en
+      UTC, nombres, booléens), pour les scripts.</td></tr>
     <tr><td><a href="data/rain/chirps_gefs.csv"><code>data/rain/chirps_gefs.csv</code></a>,
       <a href="data/rain/imerg.csv"><code>data/rain/imerg.csv</code></a></td>
       <td>Pluie moyenne nationale journalière et cumul sur 2 jours, chaque
       prévision CHIRPS-GEFS et chaque jour IMERG.</td></tr>
     <tr><td><a href="data/geo/hti.geojson"><code>data/geo/hti.geojson</code></a></td>
-      <td>Contour d’Haïti et zones de 230 km et 1 000 km.</td></tr>
+      <td>Contour d’Haïti et zones de 230 km et 1 000 km (simplifiés).</td></tr>
+    <tr><td><a href="data/geo/hti_adm0.parquet"><code>data/geo/hti_adm0.parquet</code></a></td>
+      <td>La frontière exacte dans laquelle la population exposée est
+      comptée (FieldMaps).</td></tr>
+    <tr><td><a href="data/datapackage.json"><code>data/datapackage.json</code></a></td>
+      <td>Chaque fichier avec la description de chacun de ses champs, sa
+      taille et son empreinte (format Frictionless Data Package, en
+      anglais).</td></tr>
     <tr><td><a href="data/manifest.json"><code>data/manifest.json</code></a></td>
       <td>Empreinte SHA-256 et taille de chaque fichier, et heure de
       génération.</td></tr>
   </tbody>
 </table></div>
-<p>Pour obtenir l’avis d’une date et heure précises, lisez
+<p>Pour toute la saison d’un coup, lisez les fichiers Parquet ; pour
+l’avis d’une date et heure précises, lisez
 <code>data/storms/{ATCF}.json</code> : chaque avis y figure avec son
 <code>issue_time</code> et le chemin de son fichier. Par exemple :</p>
 <pre><code id="example-code">—</code></pre>
@@ -184,7 +210,10 @@ R peuvent lire directement.</p>
       <tr><td><code>rain_trigger_*</code>, <code>exp_trigger_*</code></td><td>Condition de pluie ou de vent remplie, avant l’heure limite.</td></tr>
       <tr><td><code>mobilisation_trigger</code>, <code>action_trigger</code>, <code>obsv_trigger</code></td><td>Étape déclenchée par cet avis (ou ce jour), heure limite comprise.</td></tr>
       <tr><td><code>rainfall_relevant</code></td><td>Observations : vrai tant que le jour IMERG est dans la fenêtre où la tempête était à moins de 230 km.</td></tr>
-      <tr><td><code>rebuilt.differences</code></td><td>Les géométries sont recalculées pour la page avec la même fonction que le suivi ; tout écart avec les valeurs enregistrées est listé ici (vide normalement).</td></tr>
+      <tr><td><code>layer</code></td><td>Zones exactes : <code>fcast_capped</code>, zone de vents ≥ 64 kt des points prévus jusqu’à 120 h ou 72 h ; <code>obsv_swath_subtracted</code>, andain observé à l’heure exacte de l’avis, retiré de cette zone (vide s’il n’existait pas) ; <code>fcastonly</code>, la différence, sur laquelle la population est comptée.</td></tr>
+      <tr><td><code>source</code></td><td><code>evaluated</code> : zone enregistrée par le système au moment où il a évalué l’avis. <code>rebuilt</code> : avis évalué avant que le système n’enregistre ses zones, recalculé une fois avec la même fonction. <code>none</code> : plus reconstituable (avis évalués avant le 22 septembre 2026 dont l’heure a changé dans la base de données) ; pas de géométrie.</td></tr>
+      <tr><td><code>pop_exposed_hti</code>, <code>pop_exposed_recorded</code></td><td>Personnes comptées dans la zone <code>fcastonly</code>, et la valeur enregistrée par le suivi ; identiques quand <code>source</code> vaut <code>evaluated</code>.</td></tr>
+      <tr><td><code>rebuilt.differences</code></td><td>Les trajectoires et fenêtres de pluie sont recalculées pour la page avec la même fonction que le suivi ; tout écart avec les valeurs enregistrées est listé ici (vide normalement). <code>geometry_identical_to_evaluated</code> indique si la zone recalculée est identique, coordonnée par coordonnée, à celle enregistrée.</td></tr>
     </tbody>
   </table></div>
 </details>

@@ -21,15 +21,19 @@ used when calibrating the thresholds. This is a date-window rule, not
 a trigger gate: wind exposure is computed without any distance gate.
 
 Monitoring parquets are v2 (new schema); the v1 files are left intact
-for the historical record and the Dash app.
+for the historical record and the Dash app. Next to the forecast parquet,
+FCAST_BUFFERS_BLOB keeps the wind geometries each forecast row's exposure
+was counted on, at full precision, as evaluated.
 """
 
+import io
 from typing import Literal
 
 import geopandas as gpd
 import pandas as pd
+from azure.core.exceptions import ResourceNotFoundError
 
-from src.constants import D_THRESH, LT_CUTOFF_HRS, TRIGGERS
+from src.constants import D_THRESH, EXPOSURE_WIND_KT, LT_CUTOFF_HRS, TRIGGERS
 from src.datasources import chirps_gefs, codab, imerg, storms_db
 from src.monitoring import exposure
 from src.utils import blob
@@ -42,6 +46,17 @@ FCAST_STAGES = ["mobilisation", "action"]
 # Only monitor advisories from here on; earlier ones belong to the v1
 # system's era and would otherwise be backfilled on the first run.
 MONITORING_START = pd.Timestamp("2026-08-01")
+
+FCAST_BUFFERS_BLOB = (
+    f"{blob.PROJECT_PREFIX}/monitoring/hti_fcast_buffers_v2.parquet"
+)
+# The geometries behind exp_fcast_{lt}h, per stage: layer name -> key of
+# the dict exposure.fcastonly_buffer returns.
+BUFFER_LAYERS = {
+    "fcast_capped": "fcast_geometry",
+    "obsv_swath_subtracted": "obsv_geometry",
+    "fcastonly": "geometry",
+}
 
 
 def _create_monitor_id(
@@ -235,6 +250,63 @@ def process_fcast_advisory(
     }
 
 
+def buffer_records(row: dict, det: dict, source: str) -> list[dict]:
+    """The wind geometries behind one forecast row, at full precision.
+
+    One record per stage and layer: the 64 kt forecast buffer capped at
+    the stage's lead time, the observed swath subtracted from it, and the
+    difference ("fcastonly"), which the row's exp_fcast_{lt}h counts
+    (inside the FieldMaps HTI adm0). A layer with no geometry (no
+    buffer, no swath) is kept with a null geometry. ``source`` is
+    "evaluated" when saved by the monitoring run that wrote the row,
+    "rebuilt" when recomputed later.
+    """
+    prov = exposure.provenance()
+    recs = []
+    for stage in FCAST_STAGES:
+        buf = det["buffers"][stage]
+        for layer, key in BUFFER_LAYERS.items():
+            recs.append(
+                {
+                    "monitor_id": row["monitor_id"],
+                    "atcf_id": row["atcf_id"],
+                    "issue_time": row["issue_time"],
+                    "stage": stage,
+                    "lt_max_hrs": TRIGGERS[stage]["lt_max_hrs"],
+                    "wind_speed_kt": EXPOSURE_WIND_KT,
+                    "layer": layer,
+                    "pop_exposed_hti": (
+                        buf["pop_exposed"] if layer == "fcastonly" else None
+                    ),
+                    "source": source,
+                    **prov,
+                    "geometry": buf[key],
+                }
+            )
+    return recs
+
+
+def load_fcast_buffers() -> gpd.GeoDataFrame:
+    return gpd.read_parquet(
+        io.BytesIO(blob.load_blob_data(FCAST_BUFFERS_BLOB))
+    )
+
+
+def save_fcast_buffers(records: list[dict], clobber: bool = False):
+    """Add buffer records to FCAST_BUFFERS_BLOB; a record replaces any
+    earlier one for the same monitor_id, stage and layer."""
+    gdf = gpd.GeoDataFrame(records, geometry="geometry", crs="EPSG:4326")
+    if not clobber:
+        try:
+            gdf = pd.concat([load_fcast_buffers(), gdf], ignore_index=True)
+        except ResourceNotFoundError:
+            pass
+    gdf = gdf.drop_duplicates(
+        ["monitor_id", "stage", "layer"], keep="last"
+    ).sort_values(["issue_time", "atcf_id", "stage", "layer"])
+    blob.upload_parquet_to_blob(FCAST_BUFFERS_BLOB, gdf, index=False)
+
+
 def load_gefs_with_issue_times() -> pd.DataFrame:
     df_gefs_all = chirps_gefs.load_recent_chirps_gefs_mean_daily()
     df_gefs_all["issue_time_approx"] = df_gefs_all[
@@ -254,6 +326,7 @@ def update_fcast_monitoring(clobber: bool = False):
 
     names = {}
     dicts = []
+    evaluated = []
     for _, iss in df_issuances.iterrows():
         atcf_id = iss["atcf_id"]
         issue_time = iss["issued_time"]  # naive UTC
@@ -262,11 +335,18 @@ def update_fcast_monitoring(clobber: bool = False):
             continue
         if atcf_id not in names:
             names[atcf_id] = storms_db.fetch_storm_name(atcf_id)
-        row = process_fcast_advisory(
-            atcf_id, issue_time, df_gefs_all, adm0, name=names[atcf_id]
+        res = process_fcast_advisory(
+            atcf_id,
+            issue_time,
+            df_gefs_all,
+            adm0,
+            name=names[atcf_id],
+            detail=True,
         )
-        if row is not None:
+        if res is not None:
+            row, det = res
             dicts.append(row)
+            evaluated.append((row, det))
 
     df_new_monitoring = pd.DataFrame(dicts)
 
@@ -290,6 +370,25 @@ def update_fcast_monitoring(clobber: bool = False):
         f"{blob.PROJECT_PREFIX}/monitoring/hti_fcast_monitoring_v2.parquet"
     )
     blob.upload_parquet_to_blob(blob_name, df_monitoring_combined, index=False)
+
+    # The geometries the new rows were computed on, for the public page's
+    # data (site_export). This must never stop the run: the emails follow,
+    # and the export rebuilds any advisory whose buffers are missing.
+    if evaluated:
+        try:
+            save_fcast_buffers(
+                [
+                    r
+                    for row, det in evaluated
+                    for r in buffer_records(row, det, "evaluated")
+                ],
+                clobber=clobber,
+            )
+        except Exception:
+            logger.exception(
+                "Could not save the forecast wind buffers; the site export "
+                "will rebuild them."
+            )
 
 
 def update_obsv_monitoring(clobber: bool = False):
