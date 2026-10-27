@@ -19,6 +19,20 @@ and that anyone can download:
     obsv_monitoring.csv
     rain/chirps_gefs.csv            rain series since MONITORING_START
     rain/imerg.csv
+    fcast_monitoring.parquet        the same tables, typed, for scripts
+    obsv_monitoring.parquet
+    buffers/fcast_64kt.parquet      EXACT wind geometries behind every
+                                    forecast row (GeoParquet, full
+                                    precision): per stage the capped
+                                    forecast buffer, the observed swath
+                                    subtracted and the difference that
+                                    exp_fcast_{lt}h counts
+    buffers/obsv_64kt_swaths.parquet
+                                    every cumulative observed swath of the
+                                    season's storms, as the storms DB holds it
+    geo/hti_adm0.parquet            the boundary exposure is counted inside
+    datapackage.json                every file with its fields (Frictionless
+                                    Data Package)
     manifest.json                   sha256 + size of every file, written last
 
 Files live in dev blob under ``SITE_PREFIX``; the Pages workflow downloads
@@ -26,11 +40,16 @@ them and checks them against the manifest (pipelines/sync_site_data.py).
 Advisory files are written once; everything else is rewritten each run.
 
 Trigger values are always the ones the monitoring RECORDED (the v2
-parquets), never recomputed ones. The geometries and rain windows are
-rebuilt by the function the monitoring itself uses
-(``process_fcast_advisory(detail=True)``, pinned to the recorded
-CHIRPS-GEFS issuance); the rebuilt values are compared with the recorded
-ones and any difference is written into the advisory file.
+parquets), never recomputed ones. The wind geometries are the ones the
+monitoring saved when it evaluated the advisory
+(mu.FCAST_BUFFERS_BLOB, ``source`` "evaluated"). Advisories evaluated
+before it saved them are rebuilt once by the function the monitoring
+itself uses (``process_fcast_advisory(detail=True)``, pinned to the
+recorded CHIRPS-GEFS issuance; ``source`` "rebuilt") and kept, so later
+runs never recompute them. Rain windows and the track shown on the map
+always come from that rebuild; any difference from the recorded values
+is written into the advisory file. The .geojson files are simplified
+for display; the .parquet files are exact.
 """
 
 import hashlib
@@ -44,6 +63,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import shapely
+from azure.core.exceptions import ResourceNotFoundError
 from shapely.geometry import mapping
 from sqlalchemy import text
 
@@ -57,6 +77,7 @@ from src.constants import (
     TRIGGERS,
 )
 from src.datasources import codab, imerg, storms_db
+from src.monitoring import exposure
 from src.monitoring import monitoring_utils as mu
 from src.utils import blob
 from src.utils.logging import get_logger
@@ -66,11 +87,17 @@ logger = get_logger(__name__)
 SITE_PREFIX = f"{blob.PROJECT_PREFIX}/monitoring/site"
 SCHEMA_VERSION = 1
 
-# Display simplification of exported polygons (degrees, ~100 m) and
+# Display simplification of the .geojson polygons (degrees, ~100 m) and
 # coordinate rounding (4 decimals, ~11 m). Exposure values are computed on
-# the full-resolution geometry before this.
+# the full-resolution geometry, which the .parquet files below carry.
 SIMPLIFY_DEG = 0.001
 COORD_DECIMALS = 4
+
+BUFFERS_PATH = "buffers/fcast_64kt.parquet"
+SWATHS_PATH = "buffers/obsv_64kt_swaths.parquet"
+ADM0_PATH = "geo/hti_adm0.parquet"
+PARQUET_CT = "application/vnd.apache.parquet"
+SOURCE_RANK = {"none": 0, "rebuilt": 1, "evaluated": 2}
 
 # Recomputed vs recorded: differences under these are rounding noise.
 TOL = {"rain": 0.01, "pop": 0.5}
@@ -217,6 +244,17 @@ class SiteStore:
         df.to_csv(buf, index=False)
         self.write(path, buf.getvalue().encode("utf-8"), "text/csv")
 
+    def write_parquet(self, path: str, df: pd.DataFrame):
+        buf = io.BytesIO()
+        df.to_parquet(buf, index=False)
+        self.write(path, buf.getvalue(), PARQUET_CT)
+
+    def read_geoparquet(self, path: str) -> gpd.GeoDataFrame | None:
+        """A GeoParquet file from the last export, or None."""
+        if path not in self.manifest:
+            return None
+        return gpd.read_parquet(io.BytesIO(self.read(path)))
+
     def finish(self, generated_at: str):
         """Write the manifest last: a deploy never sees a half-run."""
         self.write_json(
@@ -353,22 +391,56 @@ def _jsonable(x):
     return _num(x) if x is not None else None
 
 
-def build_advisory(
-    rec: pd.Series, df_gefs_all: pd.DataFrame, adm0_3857
-) -> dict:
-    """GeoJSON FeatureCollection for one recorded advisory row."""
-    atcf_id, issue_time = rec["atcf_id"], pd.Timestamp(rec["issue_time"])
+def rebuild_advisory(rec: pd.Series, df_gefs_all: pd.DataFrame, adm0_3857):
+    """process_fcast_advisory(detail=True) for a recorded row, pinned to
+    its recorded CHIRPS-GEFS issuance; None if no longer rebuildable."""
     gefs_date = rec.get("gefs_issue_date")
     gefs_date = None if gefs_date is None or pd.isna(gefs_date) else gefs_date
-    res = mu.process_fcast_advisory(
-        atcf_id,
-        issue_time,
+    return mu.process_fcast_advisory(
+        rec["atcf_id"],
+        pd.Timestamp(rec["issue_time"]),
         df_gefs_all,
         adm0_3857,
         name=rec["name"],
         detail=True,
         gefs_issue_date=gefs_date,
     )
+
+
+def _layer_geom(gdf: gpd.GeoDataFrame | None, stage: str, layer: str):
+    """Geometry of one stage/layer buffer record, or None."""
+    if gdf is None or gdf.empty:
+        return None
+    m = gdf[(gdf["stage"] == stage) & (gdf["layer"] == layer)]
+    if m.empty:
+        return None
+    g = m.geometry.iloc[0]
+    return None if g is None or g.is_empty else g
+
+
+def _same_geom(a, b) -> bool:
+    """Identical geometries, coordinate for coordinate."""
+    a = None if a is None or a.is_empty else a
+    b = None if b is None or b.is_empty else b
+    if a is None or b is None:
+        return a is None and b is None
+    return shapely.to_wkb(a) == shapely.to_wkb(b)
+
+
+def build_advisory(
+    rec: pd.Series,
+    res,
+    adm0_3857,
+    evaluated: gpd.GeoDataFrame | None = None,
+) -> dict:
+    """GeoJSON FeatureCollection for one recorded advisory row.
+
+    ``res`` is ``rebuild_advisory``'s result; ``evaluated`` the buffer
+    records the monitoring saved for this row, if any. The buffers shown
+    are the evaluated ones when they exist, else the rebuilt ones.
+    """
+    atcf_id, issue_time = rec["atcf_id"], pd.Timestamp(rec["issue_time"])
+    has_ev = evaluated is not None and not evaluated.empty
     features = []
     windows = {"mobilisation": None, "action": None}
     gefs_block = None
@@ -407,28 +479,6 @@ def build_advisory(
                     },
                 }
             )
-        # capped forecast buffers (forecast-only: observed swath removed)
-        for stage in mu.FCAST_STAGES:
-            lt = TRIGGERS[stage]["lt_max_hrs"]
-            buf = det["buffers"][stage]
-            g = _geojson_geom(buf["geometry"])
-            if g is None:
-                continue
-            features.append(
-                {
-                    "type": "Feature",
-                    "geometry": g,
-                    "properties": {
-                        "layer": f"fcast_{EXPOSURE_WIND_KT}kt_le{lt}h",
-                        "stage": stage,
-                        "lt_max_hrs": lt,
-                        "wind_kt": EXPOSURE_WIND_KT,
-                        "pop_exposed_hti": _num(
-                            rec.get(f"exp_fcast_{lt}h"), 0
-                        ),
-                    },
-                }
-            )
         # gefs series actually used
         g = det["gefs"]
         gefs_block = {
@@ -451,20 +501,57 @@ def build_advisory(
                 for _, r in g.sort_values("valid_date").iterrows()
             ],
         }
-    else:
+    elif not has_ev:
         logger.warning(
             f"{rec['monitor_id']}: advisory no longer rebuildable from the "
             "storms DB; publishing the recorded values without geometry."
         )
+
+    # capped forecast buffers (forecast-only: observed swath removed), as
+    # evaluated when the monitoring saved them, else as rebuilt
+    identical = {}
+    for stage in mu.FCAST_STAGES:
+        lt = TRIGGERS[stage]["lt_max_hrs"]
+        rebuilt_geom = (
+            res[1]["buffers"][stage]["geometry"] if res is not None else None
+        )
+        geom = rebuilt_geom
+        if has_ev:
+            geom = _layer_geom(evaluated, stage, "fcastonly")
+            if res is not None:
+                identical[stage] = _same_geom(geom, rebuilt_geom)
+        g = _geojson_geom(geom)
+        if g is None:
+            continue
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": g,
+                "properties": {
+                    "layer": f"fcast_{EXPOSURE_WIND_KT}kt_le{lt}h",
+                    "stage": stage,
+                    "lt_max_hrs": lt,
+                    "wind_kt": EXPOSURE_WIND_KT,
+                    "pop_exposed_hti": _num(rec.get(f"exp_fcast_{lt}h"), 0),
+                },
+            }
+        )
+    if identical:
+        rebuilt["geometry_identical_to_evaluated"] = identical
 
     # observed swath at issuance (what exp_obsv counts). The forecast
     # buffers only had a swath removed when one existed at exactly the
     # issue time (fetch_obsv_buffer_at, as in ds-storms-pipeline); flag it.
     sw_time, sw_geom = _fetch_obsv_buffer_latest(atcf_id, issue_time)
     subtracted = None
-    if res is not None:
+    if has_ev:
         subtracted = any(
-            det["buffers"][s]["obsv_geometry"] is not None
+            _layer_geom(evaluated, s, "obsv_swath_subtracted") is not None
+            for s in mu.FCAST_STAGES
+        )
+    elif res is not None:
+        subtracted = any(
+            res[1]["buffers"][s]["obsv_geometry"] is not None
             for s in mu.FCAST_STAGES
         )
     g = _geojson_geom(sw_geom)
@@ -502,6 +589,9 @@ def build_advisory(
             for s in mu.FCAST_STAGES
         },
         "chirps_gefs": gefs_block,
+        "buffers_source": (
+            "evaluated" if has_ev else "rebuilt" if res is not None else None
+        ),
         "rebuilt": rebuilt,
     }
     return {
@@ -731,8 +821,297 @@ def _geo_layers(adm0_3857) -> dict:
 # --- entry point ----------------------------------------------------------
 
 
+# --- exact files (for scripts) ---------------------------------------------
+
+
+def _utc(col: pd.Series) -> pd.Series:
+    t = pd.to_datetime(col)
+    return (
+        t.dt.tz_localize("UTC") if t.dt.tz is None else t.dt.tz_convert("UTC")
+    )
+
+
+def _load_evaluated() -> gpd.GeoDataFrame | None:
+    """The buffers the monitoring saved when it evaluated each advisory."""
+    try:
+        return mu.load_fcast_buffers()
+    except ResourceNotFoundError:
+        return None
+
+
+def _no_buffer_records(rec: pd.Series) -> list[dict]:
+    """Null-geometry records for an advisory evaluated before the
+    monitoring saved its buffers and no longer rebuildable."""
+    keys = ["geometry", "fcast_geometry", "obsv_geometry", "pop_exposed"]
+    det = {"buffers": {s: dict.fromkeys(keys) for s in mu.FCAST_STAGES}}
+    recs = mu.buffer_records(rec, det, "none")
+    for r in recs:
+        r.update(ocha_lens_version=None, pop_raster=None, adm0_boundary=None)
+    return recs
+
+
+BUFFER_COLS = [
+    "monitor_id",
+    "atcf_id",
+    "name",
+    "issue_time",
+    "stage",
+    "lt_max_hrs",
+    "wind_speed_kt",
+    "layer",
+    "source",
+    "pop_exposed_hti",
+    "pop_exposed_recorded",
+    "ocha_lens_version",
+    "pop_raster",
+    "adm0_boundary",
+    "geometry",
+]
+
+
+def _buffers_table(fc: pd.DataFrame, parts: list) -> gpd.GeoDataFrame:
+    """One record per recorded forecast row, stage and layer: the
+    evaluated geometry where saved, else the rebuilt one, else none."""
+    frames = []
+    for p in parts:
+        if p is None or len(p) == 0:
+            continue
+        p = pd.DataFrame(p).drop(
+            columns=["name", "pop_exposed_recorded"], errors="ignore"
+        )
+        p["issue_time"] = _utc(p["issue_time"])
+        frames.append(p)
+    gdf = gpd.GeoDataFrame(
+        pd.concat(frames, ignore_index=True), geometry="geometry", crs=4326
+    )
+    gdf["_rank"] = gdf["source"].map(SOURCE_RANK)
+    gdf = (
+        gdf.sort_values("_rank", kind="stable")
+        .drop_duplicates(["monitor_id", "stage", "layer"], keep="last")
+        .drop(columns="_rank")
+    )
+    rec = fc.drop_duplicates("monitor_id", keep="last").set_index("monitor_id")
+    gdf = gdf[gdf["monitor_id"].isin(rec.index)].copy()
+    gdf["atcf_id"] = gdf["atcf_id"].str.upper()
+    gdf["name"] = gdf["monitor_id"].map(rec["name"])
+    gdf["pop_exposed_recorded"] = [
+        rec.at[m, f"exp_fcast_{lt}h"] if layer == "fcastonly" else np.nan
+        for m, lt, layer in zip(
+            gdf["monitor_id"], gdf["lt_max_hrs"], gdf["layer"]
+        )
+    ]
+    gdf.loc[gdf.geometry.notna() & gdf.geometry.is_empty, "geometry"] = None
+    return gdf[BUFFER_COLS].sort_values(
+        ["issue_time", "atcf_id", "stage", "layer"]
+    )
+
+
+def _swaths_table(atcf_ids) -> gpd.GeoDataFrame:
+    """Every cumulative observed 64 kt swath the storms DB holds for these
+    storms, exactly as stored, with the HTI exposure the storms pipeline
+    counted inside it (what exp_obsv / obsv_exp report)."""
+    ids = tuple(sorted({a.upper() for a in atcf_ids}))
+    query = text(
+        """
+        SELECT atcf_id, valid_time, wind_speed_kt, geometry
+        FROM storms.nhc_tracks_obsv_buffers
+        WHERE atcf_id IN :ids AND wind_speed_kt = :kt
+        ORDER BY atcf_id, valid_time
+        """
+    )
+    with storms_db.get_engine().connect() as conn:
+        gdf = gpd.read_postgis(
+            query,
+            conn,
+            params={"ids": ids, "kt": EXPOSURE_WIND_KT},
+            geom_col="geometry",
+        )
+    if gdf.crs is None:
+        gdf = gdf.set_crs(4326)
+    exp = pd.concat(
+        [storms_db.fetch_obsv_exposure(a).assign(atcf_id=a) for a in ids]
+    )
+    exp = exp[exp["wind_speed_kt"] == EXPOSURE_WIND_KT]
+    gdf = gdf.merge(
+        exp[["atcf_id", "valid_time", "pop_exposed"]].rename(
+            columns={"pop_exposed": "pop_exposed_hti"}
+        ),
+        on=["atcf_id", "valid_time"],
+        how="left",
+    )
+    gdf["valid_time"] = _utc(gdf["valid_time"])
+    return gdf[
+        [
+            "atcf_id",
+            "valid_time",
+            "wind_speed_kt",
+            "pop_exposed_hti",
+            "geometry",
+        ]
+    ]
+
+
+def _adm0_table() -> gpd.GeoDataFrame:
+    adm0 = exposure.load_hti_adm0()
+    return gpd.GeoDataFrame(
+        {
+            "name": ["Haiti"],
+            "source": [exposure.provenance()["adm0_boundary"]],
+        },
+        geometry=[adm0.geometry.union_all()],
+        crs=adm0.crs,
+    )
+
+
+FIELD_DOCS = {
+    "monitor_id": "Id of the evaluation: {atcf_id}_{fcast|obsv}_{time}.",
+    "atcf_id": "NHC storm id (ATCF).",
+    "name": "Storm name.",
+    "issue_time": "Forecast rows: NHC advisory issue time. Observation "
+    "rows: when the IMERG day became available (day + 1, 15:00 UTC). UTC.",
+    "hours_to_closest_pass": "Hours from the advisory to the closest pass "
+    "to Haiti forecast by it.",
+    "gefs_issue_date": "CHIRPS-GEFS issuance used: the latest issued "
+    "(08:50 UTC) before the advisory.",
+    "closest_s": "Forecast wind speed (kt) at the closest pass.",
+    "past_cutoff": "True when the closest pass is forecast under 48 h "
+    "away: the advisory can no longer trigger.",
+    "min_dist": "Minimum distance (km) from the track to Haiti (forecast "
+    "rows: forecast track; observation rows: observed track so far).",
+    "exp_obsv": "People in Haiti inside the observed >= 64 kt swath at the "
+    "advisory, as counted by ds-storms-pipeline (see "
+    "buffers/obsv_64kt_swaths.parquet).",
+    "rain_120h": "Max 2-day national-mean CHIRPS-GEFS rain (mm) over the "
+    "days the track is forecast within 230 km of Haiti within 120 h, plus "
+    "the next day. Empty when it is not forecast there.",
+    "rain_72h": "As rain_120h, within 72 h.",
+    "exp_fcast_120h": "People in Haiti (WorldPop 2026, 1 km) inside the "
+    ">= 64 kt forecast buffer capped at 120 h, observed swath removed: the "
+    "'fcastonly' geometry in buffers/fcast_64kt.parquet, counted inside "
+    "geo/hti_adm0.parquet.",
+    "exp_fcast_72h": "As exp_fcast_120h, capped at 72 h.",
+    "exp_total_120h": "exp_fcast_120h + exp_obsv; the wind condition is "
+    "met when above 0.",
+    "exp_total_72h": "exp_fcast_72h + exp_obsv.",
+    "rain_trigger_mobilisation": "Rain condition met for Mobilisation.",
+    "exp_trigger_mobilisation": "Wind condition met for Mobilisation.",
+    "mobilisation_trigger": "Mobilisation triggered by this advisory "
+    "(cutoff applied).",
+    "rain_trigger_action": "Rain condition met for Action.",
+    "exp_trigger_action": "Wind condition met for Action.",
+    "action_trigger": "Action triggered by this advisory (cutoff applied).",
+    "file": "The advisory's GeoJSON file (geometry simplified for display).",
+    "obsv_rain": "Max 2-day national-mean IMERG rain (mm) over the days the "
+    "observed track was within 230 km of Haiti, plus the next day.",
+    "obsv_exp": "People in Haiti inside the observed >= 64 kt swath so far.",
+    "rainfall_relevant": "True while the IMERG day is within that window.",
+    "rain_trigger_obsv": "Observed rain condition met (Réponse précoce).",
+    "exp_trigger_obsv": "Observed wind condition met.",
+    "obsv_trigger": "Réponse précoce conditions met on this day.",
+    "stage": "mobilisation (forecast capped at 120 h) or action (72 h).",
+    "lt_max_hrs": "Lead-time cap of the stage (hours).",
+    "wind_speed_kt": "Wind threshold of the buffer (kt).",
+    "layer": "fcast_capped: >= 64 kt buffer of the forecast track points up "
+    "to lt_max_hrs (30-min interpolation, quadrant radii; ocha-lens). "
+    "obsv_swath_subtracted: the observed swath at exactly the issue time, "
+    "removed from it (null when none existed). fcastonly: the difference, "
+    "which exp_fcast_{lt}h counts.",
+    "source": "evaluated: saved by the monitoring run that recorded the "
+    "row. rebuilt: recomputed later with the same function "
+    "(ocha_lens_version is then the export's). none: no longer "
+    "rebuildable (advisories scored before 2026-09-22 whose storms-DB issue "
+    "time moved); geometry null.",
+    "pop_exposed_hti": "People in Haiti counted inside this geometry "
+    "(fcastonly rows; swaths: by ds-storms-pipeline).",
+    "pop_exposed_recorded": "The row's recorded exp_fcast_{lt}h "
+    "(fcastonly rows). Equal to pop_exposed_hti when source is evaluated.",
+    "ocha_lens_version": "ocha-lens version that built the buffer.",
+    "pop_raster": "WorldPop raster exposure is counted on.",
+    "adm0_boundary": "Boundary exposure is counted inside "
+    "(geo/hti_adm0.parquet).",
+    "geometry": "EPSG:4326, full precision (GeoParquet WKB).",
+    "valid_time": "Time of the observed position the cumulative swath runs "
+    "to (UTC).",
+    "source_boundary": "Boundary source.",
+    "issue_date": "CHIRPS-GEFS issue date.",
+    "valid_date": "Day the rain value is for.",
+    "date": "IMERG day.",
+    "mean_mm": "National-mean daily rain (mm).",
+    "sum_2day_mm": "Rain of the day before + this day (mm), the 2-day sum "
+    "the triggers use.",
+}
+
+
+def _field_type(dtype) -> str:
+    if pd.api.types.is_bool_dtype(dtype):
+        return "boolean"
+    if pd.api.types.is_integer_dtype(dtype):
+        return "integer"
+    if pd.api.types.is_float_dtype(dtype):
+        return "number"
+    if pd.api.types.is_datetime64_any_dtype(dtype):
+        return "datetime"
+    if str(dtype) == "geometry":
+        return "any"
+    return "string"
+
+
+def _datapackage(store: SiteStore, tables: dict, generated_at: str) -> dict:
+    """Frictionless Data Package: every file, with the fields of each
+    table taken from the frame written."""
+    resources = []
+    for path, meta in sorted(store.manifest.items()):
+        if path in ("datapackage.json", "manifest.json") or path.startswith(
+            ("advisories/", "storms/")
+        ):
+            continue
+        fmt = path.rsplit(".", 1)[-1]
+        r = {
+            "name": path.replace("/", "-").replace("_", "-").lower(),
+            "path": path,
+            "format": fmt,
+            "bytes": meta["bytes"],
+            "hash": f"sha256:{meta['sha256']}",
+        }
+        if path in tables:
+            desc, df = tables[path]
+            r["description"] = desc
+            r["schema"] = {
+                "fields": [
+                    {
+                        "name": c,
+                        "type": _field_type(df[c].dtype),
+                        "description": FIELD_DOCS.get(c, ""),
+                    }
+                    for c in df.columns
+                ]
+            }
+        resources.append(r)
+    return {
+        "name": "hti-hurricanes-monitoring-2026",
+        "title": "Haiti hurricanes anticipatory action: 2026 trigger "
+        "monitoring data",
+        "description": "Everything the 2026 Haiti hurricane trigger "
+        "monitoring recorded, with the exact wind geometries behind each "
+        "exposure value. Per-advisory GeoJSON (advisories/{ATCF}/"
+        "{YYYY-MM-DDTHHMMZ}.geojson, simplified for display) and per-storm "
+        "JSON (storms/{ATCF}.json) are listed in index.json.",
+        "created": generated_at,
+        "homepage": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/",
+        "sources": [
+            {"title": "NHC advisories via ds-storms-pipeline"},
+            {"title": "CHIRPS-GEFS (UCSB Climate Hazards Center)"},
+            {"title": "IMERG (NASA GPM)"},
+            {"title": "WorldPop 2026 constrained 1 km"},
+            {"title": "FieldMaps edge-matched humanitarian boundaries"},
+        ],
+        "resources": resources,
+    }
+
+
 def export_site(local_dir: str | None = None, full: bool = False):
-    """Write the site data. ``full`` rewrites every advisory file."""
+    """Write the site data. ``full`` rewrites every advisory file and
+    rebuilds every geometry the monitoring did not save."""
     generated_at = _iso(datetime.now(timezone.utc))
     store = SiteStore(local_dir)
     adm0 = codab.load_codab_from_blob().to_crs(3857)
@@ -743,19 +1122,47 @@ def export_site(local_dir: str | None = None, full: bool = False):
     df_gefs_all = mu.load_gefs_with_issue_times()
     im = _load_imerg()
 
-    # advisory files (immutable; only the missing ones)
+    # Advisory files (immutable; only the missing ones) and the exact
+    # buffers: as evaluated where the monitoring saved them, else rebuilt
+    # once and kept from the last export.
+    evaluated = _load_evaluated()
+    ev_by_id = (
+        dict(tuple(evaluated.groupby("monitor_id")))
+        if evaluated is not None
+        else {}
+    )
+    kept = None if full else store.read_geoparquet(BUFFERS_PATH)
+    kept_ids = set(kept["monitor_id"]) if kept is not None else set()
     have = set() if full else store.existing("advisories/")
-    n_new = 0
+    n_new, rebuilt_recs = 0, []
     for _, rec in fc.sort_values("issue_time").iterrows():
+        mid = rec["monitor_id"]
         path = (
             f"advisories/{rec['atcf_id'].upper()}/"
             f"{stamp(rec['issue_time'])}.geojson"
         )
-        if path in have and path in store.manifest:
+        need_file = not (path in have and path in store.manifest)
+        need_buf = mid not in ev_by_id and mid not in kept_ids
+        if not (need_file or need_buf):
             continue
-        store.write_json(path, build_advisory(rec, df_gefs_all, adm0))
-        n_new += 1
-    logger.info(f"Advisory files written: {n_new}")
+        res = rebuild_advisory(rec, df_gefs_all, adm0)
+        if need_file:
+            store.write_json(
+                path, build_advisory(rec, res, adm0, ev_by_id.get(mid))
+            )
+            n_new += 1
+        if need_buf:
+            rebuilt_recs += (
+                mu.buffer_records(rec, res[1], "rebuilt")
+                if res is not None
+                else _no_buffer_records(rec)
+            )
+    logger.info(
+        f"Advisory files written: {n_new}; buffers rebuilt for "
+        f"{len(rebuilt_recs) // (2 * len(mu.BUFFER_LAYERS))} advisories"
+    )
+    buffers = _buffers_table(fc, [kept, rebuilt_recs, evaluated])
+    store.write_parquet(BUFFERS_PATH, buffers)
 
     # storm files (rewritten each run)
     storms = []
@@ -797,11 +1204,22 @@ def export_site(local_dir: str | None = None, full: bool = False):
         )
     storms.sort(key=lambda s: s["last_issue_time"] or "", reverse=True)
 
-    # tables and rain series
-    store.write_csv("fcast_monitoring.csv", _fcast_table(fc))
+    # tables and rain series (CSV, and Parquet with types for scripts)
+    fc_tab = _fcast_table(fc)
+    store.write_csv("fcast_monitoring.csv", fc_tab)
     ob_out = ob.copy()
     ob_out["issue_time"] = ob_out["issue_time"].map(_iso)
     store.write_csv("obsv_monitoring.csv", ob_out)
+    fc_pq = fc_tab.assign(issue_time=_utc(fc["issue_time"]).to_numpy())
+    if "gefs_issue_date" in fc_pq:
+        fc_pq["gefs_issue_date"] = pd.to_datetime(fc_pq["gefs_issue_date"])
+    ob_pq = ob.assign(issue_time=_utc(ob["issue_time"]))
+    store.write_parquet("fcast_monitoring.parquet", fc_pq)
+    store.write_parquet("obsv_monitoring.parquet", ob_pq)
+    swaths = _swaths_table(set(fc["atcf_id"]) | set(ob["atcf_id"]))
+    store.write_parquet(SWATHS_PATH, swaths)
+    adm0_exact = _adm0_table()
+    store.write_parquet(ADM0_PATH, adm0_exact)
 
     start = mu.MONITORING_START - pd.Timedelta(days=7)
     g_all = df_gefs_all[df_gefs_all["issue_date"] >= start]
@@ -882,14 +1300,61 @@ def export_site(local_dir: str | None = None, full: bool = False):
         "files": {
             "fcast_monitoring": "fcast_monitoring.csv",
             "obsv_monitoring": "obsv_monitoring.csv",
+            "fcast_monitoring_parquet": "fcast_monitoring.parquet",
+            "obsv_monitoring_parquet": "obsv_monitoring.parquet",
+            "fcast_buffers_exact": BUFFERS_PATH,
+            "obsv_swaths_exact": SWATHS_PATH,
+            "adm0_exact": ADM0_PATH,
             "chirps_gefs": "rain/chirps_gefs.csv",
             "imerg": "rain/imerg.csv",
             "geo": "geo/hti.geojson",
+            "datapackage": "datapackage.json",
             "manifest": "manifest.json",
         },
     }
     store.write_json("geo/hti.geojson", _geo_layers(adm0))
     store.write_json("index.json", index)
+    tables = {
+        "fcast_monitoring.parquet": (
+            "One row per NHC advisory: every forecast value and result, "
+            "as recorded.",
+            fc_pq,
+        ),
+        "fcast_monitoring.csv": ("Same as fcast_monitoring.parquet.", fc_tab),
+        "obsv_monitoring.parquet": (
+            "One row per storm and IMERG day: observed rain and wind, as "
+            "recorded.",
+            ob_pq,
+        ),
+        "obsv_monitoring.csv": ("Same as obsv_monitoring.parquet.", ob_out),
+        BUFFERS_PATH: (
+            "EXACT wind geometries behind each forecast row's "
+            "exp_fcast_{lt}h (GeoParquet, EPSG:4326, full precision): one "
+            "record per advisory, stage and layer.",
+            buffers,
+        ),
+        SWATHS_PATH: (
+            "Every cumulative observed >= 64 kt swath of the season's "
+            "storms, exactly as the storms DB holds it.",
+            swaths,
+        ),
+        ADM0_PATH: (
+            "The boundary exposure is counted inside (exact).",
+            adm0_exact,
+        ),
+        "rain/chirps_gefs.csv": (
+            "Every CHIRPS-GEFS issuance since monitoring start: "
+            "national-mean daily rain and 2-day sum.",
+            gefs_tab,
+        ),
+        "rain/imerg.csv": (
+            "IMERG national-mean daily rain and 2-day sum.",
+            im_tab,
+        ),
+    }
+    store.write_json(
+        "datapackage.json", _datapackage(store, tables, generated_at)
+    )
     store.finish(generated_at)
     logger.info(
         f"Site data exported ({len(store.manifest)} files, "

@@ -18,6 +18,7 @@ Faithfulness notes (deliberate, to match the storms.* tables):
 """
 
 from functools import lru_cache
+from importlib.metadata import version
 
 import geopandas as gpd
 import ocha_stratus as stratus
@@ -34,6 +35,16 @@ logger = get_logger(__name__)
 
 _POP_BLOB = "worldpop/pop_count/global_pop_2026_CN_1km_R2025A_UA_v1.tif"
 _ADM0_BLOB = "fieldmaps/edge-matched/humanitarian/intl/adm0/HTI.parquet"
+
+
+def provenance() -> dict:
+    """What a buffer/exposure value depends on besides the storms DB,
+    recorded next to the published geometries."""
+    return {
+        "ocha_lens_version": version("ocha-lens"),
+        "pop_raster": _POP_BLOB.rsplit("/", 1)[-1],
+        "adm0_boundary": "FieldMaps edge-matched humanitarian adm0 HTI",
+    }
 
 
 @lru_cache(maxsize=1)
@@ -193,10 +204,17 @@ def fcastonly_buffer(
 
     Returns None when the advisory is not yet in the DB, else a dict:
     ``geometry`` (the leadtime-capped forecast buffer minus the observed
-    swath, EPSG:4326; None when there is no buffer), ``obsv_geometry``
-    (the swath that was subtracted, or None) and ``pop_exposed``.
+    swath, EPSG:4326; None when there is no buffer), ``fcast_geometry``
+    (the capped buffer before the subtraction, or None),
+    ``obsv_geometry`` (the swath that was subtracted, or None) and
+    ``pop_exposed``.
     """
-    out = {"geometry": None, "obsv_geometry": None, "pop_exposed": 0.0}
+    out = {
+        "geometry": None,
+        "fcast_geometry": None,
+        "obsv_geometry": None,
+        "pop_exposed": 0.0,
+    }
     gdf = fetch_fcast_track_points(atcf_id, issued_time)
     if gdf.empty:
         if not issuance_in_db(atcf_id, issued_time):
@@ -229,6 +247,7 @@ def fcastonly_buffer(
     ]
     if buf_geom is None or buf_geom.is_empty:
         return out
+    out["fcast_geometry"] = buf_geom
 
     # subtract the cumulative observed swath at this issuance
     _, obsv_geom = storms_db.fetch_obsv_buffer_at(

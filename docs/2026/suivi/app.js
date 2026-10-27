@@ -468,7 +468,15 @@
     const s = nearStorms()[0] || INDEX.storms[0];
     const id = s ? s.atcf_id : 'AL052026';
     $('example-code').textContent =
-`# Tous les avis d’une tempête, puis celui émis à une heure donnée
+`# Toute la saison : valeurs enregistrées et zones de vents exactes
+import io, requests, pandas as pd, geopandas as gpd
+base = "${base}"
+rows = pd.read_parquet(base + "fcast_monitoring.parquet")
+get = lambda f: io.BytesIO(requests.get(base + f).content)
+zones = gpd.read_parquet(get("buffers/fcast_64kt.parquet"))
+action = zones[(zones.stage == "action") & (zones.layer == "fcastonly")]
+
+# Tous les avis d’une tempête, puis celui émis à une heure donnée
 curl -s ${base}storms/${id}.json | jq '.advisories[] | {issue_time, file}'
 
 import requests
