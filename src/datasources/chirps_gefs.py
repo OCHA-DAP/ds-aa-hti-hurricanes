@@ -1,9 +1,11 @@
 import datetime
 import sys
 import tempfile
+import time
 from io import BytesIO
 
 import pandas as pd
+import rasterio
 import rioxarray as rxr
 import xarray as xr
 from azure.core.exceptions import ResourceNotFoundError
@@ -30,52 +32,98 @@ CHIRPS3_GEFS_URL = (
 )
 CHIRPS3_START = pd.Timestamp("2026-07-01")
 CHIRPS_GEFS_BLOB_DIR = "raw/chirps/gefs/hti"
+N_LEADTIMES = 16
+# From this issue date on, an issuance is stored only once all
+# N_LEADTIMES files are in, and the download keeps retrying the missing
+# ones: a run cut short (e.g. by the CHC server refusing requests) must
+# not leave a partial issuance that the monitoring then reads as the
+# latest forecast. Earlier partial issuances are left as they are.
+COMPLETE_ONLY_FROM = CHIRPS3_START
+# In the first days of January the download also looks at the end of
+# the previous year, so a late or partial December issuance is retried.
+RECHECK_DAYS = 7
+# Since late October 2026 data.chc.ucsb.edu refuses (HTTP 403) every
+# request from an address after a short burst (first seen 2026-10-26:
+# refused after 2 files). On each open GDAL by default lists the
+# directory (403 on this server) and probes for 9 sidecar files (404s),
+# so 10 of its 13 requests per file fail; turn both off so a download
+# is only the 3 requests for the file itself.
+CHC_GDAL_ENV = {
+    "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+    "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
+}
+CHC_PAUSE_S = 1.0
+
+
+def _issue_date(blob_name: str) -> pd.Timestamp:
+    return pd.Timestamp(blob_name.split("issued-")[1].split("_valid-")[0])
 
 
 def download_recent_chirps_gefs():
     adm0 = codab.load_codab_from_blob(admin_level=0)
     total_bounds = adm0.total_bounds
 
-    current_year = datetime.date.today().year
+    today = pd.Timestamp(datetime.date.today())
+    start_year = (today - pd.Timedelta(days=RECHECK_DAYS)).year
+    # CHC publishes issuance D before the 08:50 UTC run on day D, so
+    # there is nothing to fetch after today.
     issue_date_range = pd.date_range(
-        start=f"{current_year}-01-01",
-        end=datetime.date.today() + pd.DateOffset(days=1),
-        freq="D",
+        start=f"{start_year}-01-01", end=today, freq="D"
     )
 
-    existing_files = blob.list_container_blobs(
-        name_starts_with=f"{blob.PROJECT_PREFIX}/"
-        f"{CHIRPS_GEFS_BLOB_DIR}/"
-        f"chirps-gefs-hti_issued-{current_year}"
-    )
-
-    existing_issue_dates = [
-        pd.Timestamp(f.split("issued-")[1].split("_valid-")[0])
-        for f in existing_files
+    existing_files = [
+        f
+        for year in range(start_year, today.year + 1)
+        for f in blob.list_container_blobs(
+            name_starts_with=f"{blob.PROJECT_PREFIX}/"
+            f"{CHIRPS_GEFS_BLOB_DIR}/"
+            f"chirps-gefs-hti_issued-{year}"
+        )
     ]
+
+    n_files = pd.Series(
+        [_issue_date(f) for f in existing_files], dtype="datetime64[ns]"
+    ).value_counts()
     logger.info(
-        f"Found {len(existing_issue_dates)} existing files for {current_year}"
+        f"Found {len(existing_files)} existing files since {start_year}"
     )
+    # Newest first: if the run is cut short, the issuance the monitoring
+    # reads is the one most likely to be complete.
     download_dates = [
-        d for d in issue_date_range if d not in existing_issue_dates
+        d
+        for d in issue_date_range[::-1]
+        if n_files.get(d, 0) == 0
+        or (d >= COMPLETE_ONLY_FROM and n_files.get(d, 0) < N_LEADTIMES)
     ]
     logger.info(
-        f"Downloading {len(download_dates)} new issue dates for {current_year}: {[str(x.date()) for x in download_dates]}"  # noqa: E501
+        f"Downloading {len(download_dates)} issue dates: {[str(x.date()) for x in download_dates]}"  # noqa: E501
     )
 
     for issue_date in tqdm(
         download_dates,
         disable=not sys.stdout.isatty(),
     ):
-        for leadtime in range(16):
+        misses = 0
+        for leadtime in range(N_LEADTIMES):
             valid_date = issue_date + pd.Timedelta(days=leadtime)
-            download_chirps_gefs(
+            status = download_chirps_gefs(
                 issue_date,
                 valid_date,
                 total_bounds,
                 existing_files,
                 clobber=False,
             )
+            if status == "refused":
+                # More requests would only prolong the refusal.
+                logger.error("CHC is refusing requests; download stopped.")
+                return
+            misses = misses + 1 if status == "missing" else 0
+            if status == "failed" or misses == 2 or (misses and leadtime == 0):
+                # Issuance not up yet (first file missing), not all up
+                # (two in a row missing), or something broke: leave it to
+                # the next run. A single missing file is skipped, so the
+                # rest of the issuance still comes in.
+                break
 
 
 def download_all_chirps_gefs():
@@ -92,7 +140,7 @@ def download_all_chirps_gefs():
         name_starts_with=CHIRPS_GEFS_BLOB_DIR
     )
     for issue_date in tqdm(issue_date_range):
-        for leadtime in range(16):
+        for leadtime in range(N_LEADTIMES):
             valid_date = issue_date + pd.Timedelta(days=leadtime)
             download_chirps_gefs(
                 issue_date,
@@ -110,8 +158,12 @@ def download_chirps_gefs(
     existing_files,
     clobber: bool = False,
     verbose: bool = False,
-):
-    """Download CHIRPS GEFS data for a specific issue and valid date."""
+) -> str:
+    """Download CHIRPS GEFS data for a specific issue and valid date.
+
+    Returns "ok" (also when the file was already there), "missing" (HTTP
+    404), "refused" (HTTP 403) or "failed" (anything else).
+    """
     url_template = (
         CHIRPS3_GEFS_URL if issue_date >= CHIRPS3_START else CHIRPS_GEFS_URL
     )
@@ -136,9 +188,10 @@ def download_chirps_gefs(
                 f"File for issue date {issue_date} "
                 f"and valid date {valid_date} already exists"
             )
-        return
+        return "ok"
+    status = "ok"
     try:
-        with rxr.open_rasterio(url) as da:
+        with rasterio.Env(**CHC_GDAL_ENV), rxr.open_rasterio(url) as da:
             da_aoi = da.rio.clip_box(*total_bounds)
             with tempfile.NamedTemporaryFile(
                 delete=False, suffix=".tif"
@@ -152,7 +205,14 @@ def download_chirps_gefs(
             f"Failed to download or process CHIRPS GEFS data for "
             f"{issue_date.date()} valid {valid_date.date()}: {e}"
         )
-    return
+        if "HTTP response code: 404" in str(e):
+            status = "missing"
+        elif "HTTP response code: 403" in str(e):
+            status = "refused"
+        else:
+            status = "failed"
+    time.sleep(CHC_PAUSE_S)
+    return status
 
 
 def load_chirps_gefs_raster(
@@ -185,7 +245,7 @@ def process_chirps_gefs(verbose: bool = False):
     dfs = []
     for issue_date in tqdm(issue_date_range):
         das_i = []
-        for leadtime in range(16):
+        for leadtime in range(N_LEADTIMES):
             valid_date = issue_date + pd.Timedelta(days=leadtime)
             try:
                 da_in = load_chirps_gefs_raster(issue_date, valid_date)
@@ -233,6 +293,18 @@ def process_recent_chirps_gefs(verbose: bool = False):
         end=datetime.date.today() + pd.DateOffset(days=1),
         freq="D",
     )
+    # A partial issuance from COMPLETE_ONLY_FROM on (stored before this
+    # rule) is dropped and processed again, now that more files may be in.
+    n_rows = existing_df.groupby("issue_date")["valid_date"].nunique()
+    partial = n_rows[
+        (n_rows.index >= COMPLETE_ONLY_FROM) & (n_rows < N_LEADTIMES)
+    ].index
+    if len(partial):
+        logger.info(
+            "Reprocessing partial issuances: "
+            f"{[str(pd.Timestamp(x).date()) for x in partial]}"
+        )
+        existing_df = existing_df[~existing_df["issue_date"].isin(partial)]
     unprocessed_issue_date_range = [
         d
         for d in issue_date_range
@@ -252,7 +324,7 @@ def process_recent_chirps_gefs(verbose: bool = False):
                 print(f"Skipping {issue_date}, already processed")
             continue
         das_i = []
-        for leadtime in range(16):
+        for leadtime in range(N_LEADTIMES):
             valid_date = issue_date + pd.Timedelta(days=leadtime)
             try:
                 da_in = load_chirps_gefs_raster(issue_date, valid_date)
@@ -262,7 +334,17 @@ def process_recent_chirps_gefs(verbose: bool = False):
                 if verbose:
                     print(f"{e} for {issue_date} {valid_date}")
 
-        if das_i:
+        if (
+            das_i
+            and issue_date >= COMPLETE_ONLY_FROM
+            and len(das_i) < N_LEADTIMES
+        ):
+            logger.warning(
+                f"Only {len(das_i)} of {N_LEADTIMES} files for "
+                f"issue_date {issue_date.date()}; not processed until "
+                "complete."
+            )
+        elif das_i:
             logger.info(
                 f"Processing {len(das_i)} files for issue_date {issue_date}"
             )
