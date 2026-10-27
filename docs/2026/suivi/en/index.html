@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trigger monitoring — hurricanes, Haiti</title>
+<meta name="description" content="Continuous monitoring of the 2026 trigger of the anticipatory action framework for storms and hurricanes in Haiti: NHC advisories, forecast and observed rainfall, and the data behind every value.">
+<link rel="alternate" hreflang="fr" href="../">
+<link rel="alternate" hreflang="en" href="./">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body data-data="../data/">
+<div class="wrap">
+
+<header>
+  <div class="topnav">
+    <a class="home-link" href="../../../">← Anticipatory action · Hurricanes · Haiti</a>
+    <a class="lang-link" href="../" hreflang="fr" lang="fr">Français</a>
+  </div>
+  <div class="kicker">Anticipatory action framework · 2026 version · Monitoring</div>
+  <h1>Trigger monitoring: storms and hurricanes in Haiti</h1>
+  <p class="sub">
+    What the monitoring system computed for each National Hurricane Center
+    (NHC) advisory and each day of observed rainfall, with the data behind
+    every value. The page updates after each run of the system: every
+    6 hours, after each NHC advisory, and when each new rainfall forecast
+    (CHIRPS-GEFS) and observation (IMERG) arrives. The trigger is defined
+    on the <a href="../../#declencheur" hreflang="fr">2026 framework page</a>
+    (in French).
+  </p>
+</header>
+
+<div id="load-error" class="callout" hidden>
+  <h3>The monitoring data could not be loaded.</h3>
+  <p>Try again in a few minutes. The files can also be read directly:
+  <a href="../data/index.json">data/index.json</a>.</p>
+</div>
+
+<section id="freshness" aria-label="Data freshness">
+  <div class="stats" id="fresh"></div>
+</section>
+
+<h2 id="status">Trigger status, <span id="season">—</span> season</h2>
+<p>Once a trigger is reached for a storm, it stays reached until the end
+of that storm, even if later advisories no longer meet the conditions.
+The framework, written in French, names the three stages Mobilisation,
+Action and <i lang="fr">Réponse précoce</i>; this page calls the last
+one Early response.</p>
+<div class="stages" id="stages"></div>
+<p class="small muted" id="dgpc-note">The two Action conditions based on
+DGPC alerts (orange in at least 6 departments; red confirmed by an NHC
+Hurricane Warning) are not monitored here: there is no feed of DGPC
+alerts. See <a href="#method">Method and limitations</a>.</p>
+
+<h2 id="storms">Monitored storms</h2>
+<p>Every North Atlantic storm the NHC has issued advisories for since
+<span id="mon-start">—</span>. Information emails only go out for storms
+within <span class="info-km">1,000</span> km of Haiti.</p>
+<div class="ctl">
+  <label><input type="checkbox" id="only-near" checked> <span>Only storms
+  that came within <span class="info-km">1,000</span> km</span></label>
+</div>
+<div class="tablewrap"><table id="storm-table">
+  <thead><tr>
+    <th>Storm</th><th>Advisories</th><th>First advisory</th><th>Last advisory</th>
+    <th class="r">Min. distance</th><th>Mobilisation</th><th>Action</th>
+    <th>Early response</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<h2 id="avis">Advisory by advisory</h2>
+<p>Pick a storm, then an NHC advisory. The map shows what the advisory
+forecast; the cards on the right show how each trigger condition was
+evaluated.</p>
+
+<div id="explorer" class="panel">
+  <div class="ctl">
+    <label>Storm <select id="storm-select"></select></label>
+    <button id="prev" type="button" aria-label="Previous advisory">◀</button>
+    <input id="adv-range" type="range" min="0" max="0" value="0"
+      aria-label="Advisory">
+    <button id="next" type="button" aria-label="Next advisory">▶</button>
+  </div>
+  <div id="adv-lab" class="advlab">—</div>
+  <div class="explorer-grid">
+    <div>
+      <div id="carte" role="img" aria-label="Map of the selected advisory"></div>
+      <div class="toggles" id="layer-toggles"></div>
+    </div>
+    <div id="stage-cards"></div>
+  </div>
+  <h3>Forecast rainfall used for this advisory</h3>
+  <p class="small muted" id="gefs-cap">—</p>
+  <div class="chart" id="chart-fcast"></div>
+  <div class="tablewrap scroll"><table id="adv-table">
+    <thead><tr>
+      <th>Advisory (UTC)</th><th class="r">Closest pass</th>
+      <th>Cutoff</th>
+      <th class="r">Rain ≤ 120 h</th><th class="r">People 64 kt ≤ 120 h</th>
+      <th>Mobilisation</th>
+      <th class="r">Rain ≤ 72 h</th><th class="r">People 64 kt ≤ 72 h</th>
+      <th>Action</th><th>Data</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+</div>
+
+<h3 id="observed">Observed rainfall and winds for this storm</h3>
+<p class="small muted" id="obsv-cap">—</p>
+<div class="chart" id="chart-obsv"></div>
+<div class="tablewrap"><table id="obsv-table">
+  <thead><tr>
+    <th>IMERG through</th><th class="r">2-day rain (window max.)</th>
+    <th>Rain counts</th><th class="r">People 64 kt observed</th>
+    <th>Early response</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<h2 id="rainfall">Rainfall: latest data</h2>
+<p>These series arrive even when there is no storm. Rainfall only counts
+for the trigger on the days a storm is forecast (or observed) within
+<span class="rain-km">230</span> km of Haiti.</p>
+<h3>Latest CHIRPS-GEFS forecast</h3>
+<p class="small muted" id="gefs-latest-cap">—</p>
+<div class="chart" id="chart-gefs-latest"></div>
+<h3>IMERG observed rainfall, last 45 days</h3>
+<div class="chart" id="chart-imerg-recent"></div>
+
+<h2 id="data">Getting the data</h2>
+<p>All the data on this page are public static files, updated at every
+run of the system. There is no account and no key: each file has a fixed
+address that a browser, <code>curl</code>, Python or R can read
+directly. Paths below are relative to
+<code>https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/</code>.</p>
+<div class="tablewrap"><table class="prose files">
+  <thead><tr><th>File</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td><a href="../data/index.json"><code>data/index.json</code></a></td>
+      <td>Entry point: thresholds, freshness of each source, list of storms
+      with their latest advisory and triggers, latest CHIRPS-GEFS forecast
+      and the last 45 days of IMERG.</td></tr>
+    <tr><td><code>data/storms/{ATCF}.json</code></td>
+      <td>One storm (e.g. <code>AL052026</code>): each advisory with its
+      values and the path of its file, the observed track and swath, the
+      IMERG days and the observed rainfall window.</td></tr>
+    <tr><td><code>data/advisories/{ATCF}/{YYYY-MM-DDTHHMMZ}.geojson</code></td>
+      <td>One NHC advisory, as GeoJSON (opens in QGIS): forecast track
+      points, 64 kt wind zones capped at 120 h and 72 h (already observed
+      area removed), observed swath; the <code>advisory</code> block gives
+      the cutoff, the rainfall windows, the CHIRPS-GEFS series used and
+      the result of each condition. Geometries are simplified for display
+      (≈ 100 m): the exact geometries are in <code>data/buffers/</code>.</td></tr>
+    <tr><td><a href="../data/buffers/fcast_64kt.parquet"><code>data/buffers/fcast_64kt.parquet</code></a></td>
+      <td><b>Exact 64 kt wind zones</b> (GeoParquet, EPSG:4326, full
+      precision), as the system computed them. For each advisory and each
+      stage, three layers (<code>layer</code>): the forecast zone capped at
+      120 h or 72 h, the observed swath removed from it, and the
+      difference, in which the exposed population
+      (<code>exp_fcast_120h</code>, <code>exp_fcast_72h</code>) is counted
+      within the boundary <code>geo/hti_adm0.parquet</code>.</td></tr>
+    <tr><td><a href="../data/buffers/obsv_64kt_swaths.parquet"><code>data/buffers/obsv_64kt_swaths.parquet</code></a></td>
+      <td>Every cumulative observed 64 kt swath of the season’s storms,
+      exact, as the storms database holds it, with the population counted
+      in it.</td></tr>
+    <tr><td><a href="../data/fcast_monitoring.csv"><code>data/fcast_monitoring.csv</code></a></td>
+      <td>One row per advisory: every forecast value and result.</td></tr>
+    <tr><td><a href="../data/obsv_monitoring.csv"><code>data/obsv_monitoring.csv</code></a></td>
+      <td>One row per storm and IMERG day: observed rainfall and winds.</td></tr>
+    <tr><td><a href="../data/fcast_monitoring.parquet"><code>data/fcast_monitoring.parquet</code></a>,
+      <a href="../data/obsv_monitoring.parquet"><code>data/obsv_monitoring.parquet</code></a></td>
+      <td>The same two tables in Parquet, typed (UTC dates, numbers,
+      booleans), for scripts.</td></tr>
+    <tr><td><a href="../data/rain/chirps_gefs.csv"><code>data/rain/chirps_gefs.csv</code></a>,
+      <a href="../data/rain/imerg.csv"><code>data/rain/imerg.csv</code></a></td>
+      <td>Daily national mean rainfall and 2-day total, for every
+      CHIRPS-GEFS forecast and every IMERG day.</td></tr>
+    <tr><td><a href="../data/geo/hti.geojson"><code>data/geo/hti.geojson</code></a></td>
+      <td>Outline of Haiti and the 230 km and 1,000 km zones
+      (simplified).</td></tr>
+    <tr><td><a href="../data/geo/hti_adm0.parquet"><code>data/geo/hti_adm0.parquet</code></a></td>
+      <td>The exact boundary within which exposed population is counted
+      (FieldMaps).</td></tr>
+    <tr><td><a href="../data/datapackage.json"><code>data/datapackage.json</code></a></td>
+      <td>Every file with a description of each of its fields, its size
+      and its checksum (Frictionless Data Package format).</td></tr>
+    <tr><td><a href="../data/manifest.json"><code>data/manifest.json</code></a></td>
+      <td>SHA-256 checksum and size of every file, and generation
+      time.</td></tr>
+  </tbody>
+</table></div>
+<p>For the whole season at once, read the Parquet files; for the
+advisory issued at a specific date and time, read
+<code>data/storms/{ATCF}.json</code>: each advisory is listed there with
+its <code>issue_time</code> and the path of its file. For example:</p>
+<pre><code id="example-code">—</code></pre>
+<details class="more">
+  <summary>What the main fields mean</summary>
+  <div class="tablewrap"><table class="prose">
+    <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>issue_time</code></td><td>Issue time of the NHC advisory (UTC).</td></tr>
+      <tr><td><code>hours_to_closest_pass</code></td><td>Hours between the advisory and the closest pass to Haiti that this advisory forecasts.</td></tr>
+      <tr><td><code>past_cutoff</code></td><td>True if that pass is forecast less than 48 h away: the advisory can no longer trigger (cutoff).</td></tr>
+      <tr><td><code>rain_window_start</code>, <code>rain_window_end</code></td><td>Days the storm is forecast within 230 km of Haiti within the stage’s limit (120 h or 72 h), plus the following day. Empty if the storm is not forecast there.</td></tr>
+      <tr><td><code>rain_eligible</code></td><td>True if a window exists: forecast rainfall can then count for the trigger. Empty (<code>null</code>) for the few advisories whose window could not be rebuilt.</td></tr>
+      <tr><td><code>rain_120h</code>, <code>rain_72h</code> / <code>rain_2day_max_mm</code></td><td>Highest 2-day total of national mean rainfall (CHIRPS-GEFS) over the window, in mm. Empty without a window.</td></tr>
+      <tr><td><code>sum_2day_mm</code></td><td>2-day total assigned to the second day: rainfall on day D−1 + rainfall on day D.</td></tr>
+      <tr><td><code>in_window_mobilisation</code>, <code>in_window_action</code>, <code>in_window</code></td><td>True if that day is in the window where rainfall counts.</td></tr>
+      <tr><td><code>exp_fcast_120h</code>, <code>exp_fcast_72h</code></td><td>People in Haiti inside the forecast ≥ 64 kt wind zone up to 120 h / 72 h, excluding the area already observed (WorldPop 2026).</td></tr>
+      <tr><td><code>exp_obsv</code>, <code>obsv_exp</code></td><td>People in Haiti inside the ≥ 64 kt wind swath already observed.</td></tr>
+      <tr><td><code>exp_total_120h</code>, <code>exp_total_72h</code></td><td>Sum of the two: the wind condition is met if it is above 0.</td></tr>
+      <tr><td><code>rain_trigger_*</code>, <code>exp_trigger_*</code></td><td>Rainfall or wind condition met, before the cutoff.</td></tr>
+      <tr><td><code>mobilisation_trigger</code>, <code>action_trigger</code>, <code>obsv_trigger</code></td><td>Stage triggered by this advisory (or this day), cutoff included. <code>obsv</code> is Early response.</td></tr>
+      <tr><td><code>rainfall_relevant</code></td><td>Observations: true while the IMERG day is in the window when the storm was within 230 km.</td></tr>
+      <tr><td><code>layer</code></td><td>Exact zones: <code>fcast_capped</code>, the ≥ 64 kt wind zone of the forecast points up to 120 h or 72 h; <code>obsv_swath_subtracted</code>, the observed swath at the exact advisory time, removed from that zone (empty if there was none); <code>fcastonly</code>, the difference, in which population is counted.</td></tr>
+      <tr><td><code>source</code></td><td><code>evaluated</code>: zone saved by the system when it evaluated the advisory. <code>rebuilt</code>: advisory evaluated before the system saved its zones, recomputed once with the same function. <code>none</code>: can no longer be rebuilt (advisories evaluated before 22 September 2026 whose time changed in the database); no geometry.</td></tr>
+      <tr><td><code>pop_exposed_hti</code>, <code>pop_exposed_recorded</code></td><td>People counted in the <code>fcastonly</code> zone, and the value recorded by the monitoring; identical when <code>source</code> is <code>evaluated</code>.</td></tr>
+      <tr><td><code>rebuilt.differences</code></td><td>Tracks and rainfall windows are recomputed for the page with the same function as the monitoring; any difference from the recorded values is listed here (normally empty). <code>geometry_identical_to_evaluated</code> says whether the recomputed zone is identical, coordinate for coordinate, to the saved one.</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+<h2 id="method">Method and limitations</h2>
+<ul>
+  <li><b>NHC advisories.</b> Each advisory is evaluated once, after it
+  reaches the storms database (updated by
+  <code>ds-storms-pipeline</code>). The published values are those the
+  monitoring system recorded at evaluation time.</li>
+  <li><b>Winds.</b> The 64 kt wind radii per quadrant of each forecast
+  point are interpolated every 30 minutes and merged into one zone. For
+  Mobilisation, only points forecast up to 120 h count; for Action, up to
+  72 h. The area already swept by observed winds is removed from the
+  forecast zone (when the observed swath exists at the exact advisory
+  time) and counted separately; the condition is met as soon as one
+  person is exposed (WorldPop 2026 population).</li>
+  <li><b>Early response.</b> If Action has already been triggered for a
+  storm, Early response for the same storm does not lead to a separate
+  activation; the page then shows “conditions met”.</li>
+  <li><b>Forecast rainfall.</b> Daily national mean of the latest
+  CHIRPS-GEFS forecast before the advisory, summed over 2 days. It only
+  counts on the days the storm is forecast within 230 km of Haiti (within
+  the 120 h or 72 h limit), plus the following day; with no storm in that
+  zone, forecast rainfall cannot trigger.</li>
+  <li><b>Observed rainfall.</b> Daily national mean from IMERG, summed
+  over 2 days, on the days the storm was observed within 230 km, plus the
+  following day. Each IMERG day arrives around 15:00 UTC the next
+  day.</li>
+  <li><b>Cutoff.</b> No forecast condition can trigger if the advisory
+  forecasts the closest pass to Haiti less than 48 h away; advisories
+  after the cutoff are still shown.</li>
+  <li><b>Distances.</b> Measured from the outline of Haiti, as in the
+  trigger calibration.</li>
+  <li><b>DGPC alerts.</b> The Action conditions based on the orange alert
+  (at least 6 departments) and on the red alert confirmed by an NHC
+  Hurricane Warning are not evaluated here, as there is no feed of DGPC
+  alerts.</li>
+  <li><b>Published geometries.</b> Simplified to about 100 m for display;
+  people counts are computed on the full geometries.</li>
+</ul>
+
+<footer>
+  OCHA Centre for Humanitarian Data ·
+  <a href="https://github.com/OCHA-DAP/ds-aa-hti-hurricanes">source code</a> ·
+  <a href="../../" hreflang="fr">2026 framework (in French)</a> ·
+  Basemap © Esri — Esri, HERE, Garmin, OpenStreetMap contributors
+</footer>
+</div>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="../app.js"></script>
+</body>
+</html>
