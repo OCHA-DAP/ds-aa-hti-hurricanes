@@ -109,6 +109,8 @@
       legFar: (km) => `À plus de ${km} km`,
       tipDist: (n, km) => `${n} : ${km} km`,
       dayAfter: (km) => `Aucune tempête à moins de ${km} km ce jour-là, mais encore dans la fenêtre (elle inclut le jour suivant)`,
+      dayBetween: (km) => `Aucune tempête à moins de ${km} km ce jour-là, mais encore dans la fenêtre (du premier au dernier jour à moins de ${km} km)`,
+      noDistDays: 'Pas de distance de tempête sur ces jours.',
       noActive: 'Aucune tempête active : la pluie prévue ne peut pas déclencher en ce moment.',
       noObsStorm: 'Aucune tempête observée sur ces jours.',
       distNA: 'Distance de la tempête non disponible.',
@@ -218,6 +220,8 @@
       legFar: (km) => `More than ${km} km away`,
       tipDist: (n, km) => `${n}: ${km} km`,
       dayAfter: (km) => `No storm within ${km} km this day, but still in the window (it includes the day after)`,
+      dayBetween: (km) => `No storm within ${km} km this day, but still in the window (first to last day within ${km} km)`,
+      noDistDays: 'No storm distance over these days.',
       noActive: 'No active storm: forecast rainfall cannot trigger now.',
       noObsStorm: 'No storm observed over these days.',
       distNA: 'Storm distance not available.',
@@ -564,7 +568,7 @@
     s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#c3ccce" stroke-width="1"/>`;
     // distance panel: 0 to 1 000 km, farther storms in a band on top
     const byDay = days.map(() => []);
-    let anyFar = false, drawnAny = false;
+    let anyFar = false, anyNear = false;
     if (storms) {
       const dt = m.t + ih + DG;
       const yk = (km) => (km > KM ? dt + STRIP / 2 : dt + STRIP + (1 - km / KM) * (DH - STRIP));
@@ -592,6 +596,7 @@
         if (line) s += `<path d="${line}" fill="none" stroke="${DIST}" stroke-width="2" stroke-linejoin="round"/>`;
         sp.forEach((p) => {
           if (p.km > KM) { anyFar = true; s += `<circle cx="${xC(p.i)}" cy="${yk(p.km)}" r="3" fill="${FAR}"/>`; return; }
+          anyNear = true;
           const near = p.km < LIM; // filled where rainfall counts
           s += `<circle cx="${xC(p.i)}" cy="${yk(p.km)}" r="4" fill="${near ? DIST : '#fff'}" stroke="${near ? '#fff' : DIST}" stroke-width="2"/>`;
         });
@@ -601,7 +606,6 @@
           s += `<text x="${lx}" y="${yk(close.km) - 9}" font-size="11" font-weight="700" fill="#1e2a2b" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(st.name)}</text>`;
         }
       });
-      drawnAny = drawn > 0;
       if (!drawn) {
         s += `<text x="${m.l + iw / 2}" y="${dt + STRIP + (DH - STRIP) / 2 + 4}" font-size="12" fill="#5e6a6b" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(opt.noStorms || STR.distNA)}</text>`;
       }
@@ -625,10 +629,10 @@
       `<span><span class="sw" style="background:var(--rain-day);border-color:var(--rain-day)"></span>${STR.legDay}</span>`,
       `<span><span class="sw line" style="border-color:#1862d8"></span>${STR.leg2}</span>`,
       `<span><span class="sw line" style="border-color:#1e2a2b"></span>${STR.legThr}</span>`,
-    ].concat(opt.windows ? [`<span><span class="sw dot" style="background:#d03b3b;border-color:#d03b3b"></span>${STR.legOver}</span>`] : [])
+    ].concat((opt.windows || []).some((w) => w.start) ? [`<span><span class="sw dot" style="background:#d03b3b;border-color:#d03b3b"></span>${STR.legOver}</span>`] : [])
       .concat((opt.windows || []).filter((w) => w.start && !seen.has(w.label) && seen.add(w.label)).map((w) =>
       `<span><span class="sw" style="background:${w.fill};border-color:${w.fill}"></span>${esc(w.label)}</span>`))
-      .concat(storms && drawnAny ? [
+      .concat(anyNear ? [
         `<span><span class="sw line" style="border-color:${DIST}"></span>${STR.legDist}</span>`,
         `<span><span class="sw dot" style="background:${DIST};border-color:${DIST}"></span>${STR.legNear(num(LIM))}</span>`,
       ] : [])
@@ -642,7 +646,8 @@
         showTip(`<b>${esc(fmtDay(d.date))}</b><br>${STR.tipDay}${mm(d.mean_mm)}<br>${STR.tip2}<b>${mm(d.sum_2day_mm)}</b>`
           + near.map((p) => `<br>${STR.tipDist(esc(p.name), num(p.km))}`).join('')
           + (opt.windows ? `<br>${inW.length ? `${STR.countsFor}${esc(inW.join(', '))}` : STR.outside}` : '')
-          + (storms && inW.length && !near.some((p) => p.km < LIM) ? `<br>${STR.dayAfter(num(LIM))}` : ''), ev);
+          + (storms && inW.length && !near.some((p) => p.km < LIM)
+            ? `<br>${(opt.windows || []).some((w) => w.end === d.date) ? STR.dayAfter(num(LIM)) : STR.dayBetween(num(LIM))}` : ''), ev);
       });
       r.addEventListener('mouseleave', hideTip);
     });
@@ -762,7 +767,7 @@
       threshold: INDEX.triggers.action.rain_mm, aria: STR.ariaGefs,
       windows: fs && fs.flatMap((f) => fcastWindows(f.stages, f.name)),
       storms: fs && fs.map((f) => ({ name: f.name, dist: f.dist_days })),
-      noStorms: STR.noActive,
+      noStorms: fs && fs.length ? STR.noDistDays : STR.noActive,
     });
     rainChart($('chart-imerg-recent'), INDEX.imerg_recent, {
       threshold: INDEX.triggers.obsv.rain_mm, aria: STR.ariaImerg,

@@ -227,9 +227,10 @@ du déclencheur a été évaluée.</p>
 <h2 id="pluie">Pluie : dernières données</h2>
 <p>Ces séries arrivent même sans tempête. La pluie ne compte pour le
 déclencheur que pendant les jours où une tempête est prévue (ou observée)
-à moins de <span class="rain-km">230</span> km d’Haïti, et le jour suivant :
-les jours ombrés. Sous chaque graphique, la distance de chaque tempête à
-Haïti, au plus proche du jour, montre quels sont ces jours.</p>
+à moins de <span class="rain-km">230</span> km d’Haïti : du premier au
+dernier de ces jours, plus le jour suivant (les jours ombrés). Sous chaque
+graphique, la distance de chaque tempête à Haïti, au plus proche du jour,
+montre quels sont ces jours.</p>
 <h3>Dernière prévision CHIRPS-GEFS</h3>
 <p class="small muted" id="gefs-latest-cap">—</p>
 <div class="chart" id="chart-gefs-latest"></div>
@@ -347,7 +348,7 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)</code></pre>
       <tr><td><code>layer</code></td><td>Zones exactes : <code>fcast_capped</code>, zone de vents ≥ 64 kt des points prévus jusqu’à 120 h ou 72 h ; <code>obsv_swath_subtracted</code>, andain observé à l’heure exacte de l’avis, retiré de cette zone (vide s’il n’existait pas) ; <code>fcastonly</code>, la différence, sur laquelle la population est comptée.</td></tr>
       <tr><td><code>source</code></td><td><code>evaluated</code> : zone enregistrée par le système au moment où il a évalué l’avis. <code>rebuilt</code> : avis évalué avant que le système n’enregistre ses zones, recalculé une fois avec la même fonction. <code>none</code> : plus reconstituable (avis évalués avant le 22 septembre 2026 dont l’heure a changé dans la base de données) ; pas de géométrie.</td></tr>
       <tr><td><code>pop_exposed_hti</code>, <code>pop_exposed_recorded</code></td><td>Personnes comptées dans la zone <code>fcastonly</code>, et la valeur enregistrée par le suivi ; identiques quand <code>source</code> vaut <code>evaluated</code>.</td></tr>
-      <tr><td><code>dist_days</code></td><td>Distance la plus proche de la tempête à Haïti (km) pour chaque jour UTC, à partir de la même trajectoire au pas de 30 minutes que le déclencheur : dans chaque fichier d’avis (trajectoire prévue jusqu’à 120 h ; les fichiers plus anciens peuvent ne pas l’avoir), dans <code>storms/{ATCF}.json</code> sous <code>obsv</code> (trajectoire observée), et dans <code>index.json</code> sous <code>chirps_gefs_latest.storms</code> (dernier avis de chaque tempête active, avec ses fenêtres de pluie) et <code>imerg_recent_storms</code>. Un jour à moins de 230 km est dans la fenêtre de pluie, de même que le jour suivant.</td></tr>
+      <tr><td><code>dist_days</code></td><td>Distance la plus proche de la tempête à Haïti (km) pour chaque jour UTC, à partir de la même trajectoire au pas de 30 minutes que le déclencheur : dans chaque fichier d’avis (trajectoire prévue jusqu’à 120 h ; les fichiers plus anciens peuvent ne pas l’avoir), dans <code>storms/{ATCF}.json</code> sous <code>obsv</code> (trajectoire observée), et dans <code>index.json</code> sous <code>chirps_gefs_latest.storms</code> (dernier avis de chaque tempête active, avec ses fenêtres de pluie) et <code>imerg_recent_storms</code>. Une fenêtre de pluie va du premier au dernier jour à moins de 230 km, plus le jour suivant.</td></tr>
       <tr><td><code>rebuilt.differences</code></td><td>Les trajectoires et fenêtres de pluie sont recalculées pour la page avec la même fonction que le suivi ; tout écart avec les valeurs enregistrées est listé ici (vide normalement). <code>geometry_identical_to_evaluated</code> indique si la zone recalculée est identique, coordonnée par coordonnée, à celle enregistrée.</td></tr>
     </tbody>
   </table></div>

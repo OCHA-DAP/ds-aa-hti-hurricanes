@@ -1368,8 +1368,12 @@ def export_site(local_dir: str | None = None, full: bool = False):
     im_lo = _date(im_recent["date"].min())
     im_storms = []
     for st in storm_files.values():
-        days = [d for d in st["obsv"]["dist_days"] if d["date"] >= im_lo]
-        if im_lo and days:
+        days = (
+            [d for d in st["obsv"]["dist_days"] if d["date"] >= im_lo]
+            if im_lo
+            else []
+        )
+        if days:
             im_storms.append(
                 {
                     "atcf_id": st["atcf_id"],
