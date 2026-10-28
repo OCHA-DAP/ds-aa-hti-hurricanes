@@ -17,6 +17,9 @@
   const stageName = (k) => (LANG === 'en' ? STAGE_EN[k] : INDEX.triggers[k].name_fr);
   const STR = {
     fr: {
+      loadErr: (href) => `<h3>Les données de suivi n’ont pas pu être chargées.</h3>
+        <p>Réessayez dans quelques minutes. Les fichiers sont aussi accessibles
+        directement : <a href="${href}">data/index.json</a>.</p>`,
       ago0: 'il y a moins d’une heure',
       agoH: (h) => `il y a ${h} h`,
       agoD: (d) => `il y a ${d} jours`,
@@ -112,6 +115,9 @@
       exZones: '# les zones de vents',
     },
     en: {
+      loadErr: (href) => `<h3>The monitoring data could not be loaded.</h3>
+        <p>Try again in a few minutes. The files can also be read directly:
+        <a href="${href}">data/index.json</a>.</p>`,
       ago0: 'less than an hour ago',
       agoH: (h) => `${h} h ago`,
       agoD: (d) => `${d} days ago`,
@@ -685,11 +691,16 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)`;
   }
 
   // ---------- boot ----------
+  // The status written at deploy (#summary, hidden by style.css when
+  // JavaScript runs) is the only one left if the page cannot draw its own.
+  const showSummary = () => { if ($('summary')) $('summary').classList.add('show'); };
   async function boot() {
     try {
       [INDEX, GEO] = await Promise.all([getJSON('index.json'), getJSON('geo/hti.geojson')]);
     } catch (e) {
-      $('load-error').hidden = false; console.error(e); return;
+      $('load-error').innerHTML = STR.loadErr(DATA + 'index.json');
+      $('load-error').hidden = false;
+      showSummary(); console.error(e); return;
     }
     $('mon-start').textContent = fmtDate(INDEX.monitoring_start);
     document.querySelectorAll('.info-km').forEach((e) => { e.textContent = num(INDEX.info_distance_km); });
@@ -708,5 +719,5 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)`;
       rt = setTimeout(() => { renderLatestRain(); if (storm) { renderObsv(); showAdvisory(); } }, 200);
     });
   }
-  boot();
+  boot().catch((e) => { showSummary(); console.error(e); });
 })();

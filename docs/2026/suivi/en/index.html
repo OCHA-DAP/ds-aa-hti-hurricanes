@@ -10,6 +10,104 @@
 <link rel="alternate" hreflang="x-default" href="https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="../style.css">
+<link rel="alternate" type="application/json" href="../data/index.json" title="Current monitoring state (JSON)">
+<link rel="describedby" type="application/json" href="../data/datapackage.json" title="Tables and their fields (Data Package)">
+<link rel="alternate" type="text/markdown" href="../llms.txt" title="Guide for scripts and AI assistants">
+<script>document.documentElement.classList.add('js');</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "Dataset",
+ "@id": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/#dataset",
+ "name": "Haiti hurricanes anticipatory action: 2026 trigger monitoring data",
+ "description": "Everything the 2026 trigger monitoring of the anticipatory action framework for storms and hurricanes in Haiti recorded: each NHC advisory and how each trigger condition was evaluated, forecast (CHIRPS-GEFS) and observed (IMERG) national mean rainfall, people in Haiti exposed to 64 kt winds (WorldPop 2026), and the exact wind geometries behind each exposure value. Public static files, refreshed after each run of the monitoring system. For information only: official notices of activation are sent by email from the OCHA Centre for Humanitarian Data, as set out in the framework's monitoring and activation protocol.",
+ "url": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/",
+ "creator": {
+  "@type": "Organization",
+  "name": "OCHA Centre for Humanitarian Data",
+  "url": "https://centre.humdata.org/"
+ },
+ "isAccessibleForFree": true,
+ "temporalCoverage": "2026-08-01/..",
+ "spatialCoverage": {
+  "@type": "Place",
+  "name": "Haiti"
+ },
+ "keywords": [
+  "anticipatory action",
+  "hurricanes",
+  "tropical cyclones",
+  "Haiti",
+  "trigger monitoring",
+  "NHC",
+  "CHIRPS-GEFS",
+  "IMERG",
+  "WorldPop"
+ ],
+ "distribution": [
+  {
+   "@type": "DataDownload",
+   "name": "Current state: thresholds, storms, triggers",
+   "encodingFormat": "application/json",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "Data package: the tables and their fields",
+   "encodingFormat": "application/json",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "One row per NHC advisory",
+   "encodingFormat": "text/csv",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.csv"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "One row per storm and IMERG day",
+   "encodingFormat": "text/csv",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.csv"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "One row per NHC advisory (typed)",
+   "encodingFormat": "application/vnd.apache.parquet",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.parquet"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "One row per storm and IMERG day (typed)",
+   "encodingFormat": "application/vnd.apache.parquet",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.parquet"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "Exact 64 kt forecast wind zones (GeoParquet)",
+   "encodingFormat": "application/vnd.apache.parquet",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/buffers/fcast_64kt.parquet"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "Exact observed 64 kt wind swaths (GeoParquet)",
+   "encodingFormat": "application/vnd.apache.parquet",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/buffers/obsv_64kt_swaths.parquet"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "CHIRPS-GEFS national mean rainfall forecasts",
+   "encodingFormat": "text/csv",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/rain/chirps_gefs.csv"
+  },
+  {
+   "@type": "DataDownload",
+   "name": "IMERG national mean observed rainfall",
+   "encodingFormat": "text/csv",
+   "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/rain/imerg.csv"
+  }
+ ]
+}
+</script>
 </head>
 <body data-data="../data/">
 <div class="wrap">
@@ -32,17 +130,23 @@
   </p>
 </header>
 
-<div id="load-error" class="callout" hidden>
-  <h3>The monitoring data could not be loaded.</h3>
-  <p>Try again in a few minutes. The files can also be read directly:
-  <a href="../data/index.json">data/index.json</a>.</p>
-</div>
+<p class="notice"><b>This page and its data are for information only.</b>
+Official notices of activation are sent by email from the OCHA Centre for
+Humanitarian Data, as set out in the framework’s monitoring and activation
+protocol.</p>
+
+<div id="load-error" class="callout" hidden></div>
+
+<!-- Filled at deploy from data/index.json by pipelines/render_site_static.py,
+     for readers that do not run JavaScript (style.css hides it when they do). -->
+<!-- status:start -->
+<!-- status:end -->
 
 <section id="freshness" aria-label="Data freshness">
   <div class="stats" id="fresh"></div>
 </section>
 
-<h2 id="status">Trigger status, <span id="season">—</span> season</h2>
+<h2 id="status">Trigger status, <span id="season">2026</span> season</h2>
 <p>Once a trigger is reached for a storm, it stays reached until the end
 of that storm, even if later advisories no longer meet the conditions.
 The framework, written in French, names the three stages Mobilisation,
@@ -56,7 +160,7 @@ alerts. See <a href="#method">Method and limitations</a>.</p>
 
 <h2 id="storms">Monitored storms</h2>
 <p>Every North Atlantic storm the NHC has issued advisories for since
-<span id="mon-start">—</span>. Information emails only go out for storms
+<span id="mon-start">1 Aug 2026</span>. Information emails only go out for storms
 within <span class="info-km">1,000</span> km of Haiti.</p>
 <div class="ctl">
   <label><input type="checkbox" id="only-near" checked> <span>Only storms
@@ -136,6 +240,10 @@ run of the system. There is no account and no key: each file has a fixed
 address that a browser, <code>curl</code>, Python or R can read
 directly. Paths below are relative to
 <code>https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/</code>.</p>
+<p>For scripts and AI assistants,
+<a href="../llms.txt"><code>llms.txt</code></a> describes these files on
+one plain-text page, with the current status and the most common ways to
+misread them.</p>
 <div class="tablewrap"><table class="prose files">
   <thead><tr><th>File</th><th>Contents</th></tr></thead>
   <tbody>
@@ -196,7 +304,25 @@ directly. Paths below are relative to
 advisory issued at a specific date and time, read
 <code>data/storms/{ATCF}.json</code>: each advisory is listed there with
 its <code>issue_time</code> and the path of its file. For example:</p>
-<pre><code id="example-code">—</code></pre>
+<pre><code id="example-code"># Whole season: recorded values and exact wind zones
+import io, requests, pandas as pd, geopandas as gpd
+base = "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/"
+rows = pd.read_parquet(base + "fcast_monitoring.parquet")
+get = lambda f: io.BytesIO(requests.get(base + f).content)
+zones = gpd.read_parquet(get("buffers/fcast_64kt.parquet"))
+action = zones[(zones.stage == "action") &amp; (zones.layer == "fcastonly")]
+
+# Every advisory of one storm, then the one issued at a given time
+curl -s https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/storms/AL042026.json | jq '.advisories[] | {issue_time, file}'
+
+import requests
+base = "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/"
+storm = requests.get(base + "storms/AL042026.json").json()
+adv = next(a for a in storm["advisories"] if a["issue_time"] == "2026-08-28T15:00:00Z")
+fc = requests.get(base + adv["file"]).json()      # GeoJSON
+print(fc["advisory"]["stages"]["action"])         # rainfall, winds, result
+import geopandas as gpd                           # the wind zones
+gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)</code></pre>
 <details class="more">
   <summary>What the main fields mean</summary>
   <div class="tablewrap"><table class="prose">
@@ -272,6 +398,6 @@ its <code>issue_time</code> and the path of its file. For example:</p>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="../app.js"></script>
+<script src="../app.js" onerror="document.documentElement.classList.remove('js')"></script>
 </body>
 </html>
