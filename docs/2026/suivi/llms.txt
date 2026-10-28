@@ -2,9 +2,13 @@
 
 > Public record of the 2026 trigger monitoring for the anticipatory action framework for storms and hurricanes in Haiti (OCHA Centre for Humanitarian Data). It covers every NHC advisory evaluated and how each trigger condition came out, forecast (CHIRPS-GEFS) and observed (IMERG) national mean rainfall, people in Haiti exposed to 64 kt winds, and the exact wind geometries behind each exposure value. All files are static: no account, no key, any origin can fetch them. They are refreshed after each run of the monitoring system, about every 6 hours.
 
+**For information only.** This page and its data are informational. Official notices of activation are sent by email from the OCHA Centre for Humanitarian Data, as set out in the framework's monitoring and activation protocol. Nothing here is itself an activation notice: a stage shown as reached means the monitoring computed that its conditions were met.
+
 The web page (<https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/>, English at <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/en/>) draws everything with JavaScript from the files below. To answer questions, read the files rather than the page. All paths below are relative to <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/>.
 
 ## Current status
+
+For information only; official notices of activation are sent by email from the OCHA Centre for Humanitarian Data.
 
 <!-- status:start -->
 <!-- status:end -->
@@ -34,7 +38,7 @@ The live thresholds are in `data/index.json` under `triggers`. The full framewor
 
 ## Files
 
-- [data/index.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json): entry point. Thresholds, freshness of each source, every storm with its activations and latest advisory, the latest CHIRPS-GEFS forecast and the last 45 days of IMERG.
+- [data/index.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json): entry point. Thresholds, the information-only `notice`, freshness of each source, every storm with its activations and latest advisory, the latest CHIRPS-GEFS forecast and the last 45 days of IMERG.
 - [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): Frictionless Data Package for the tables, wind zones, rainfall series, boundaries and `index.json`: each field described, each file's size and sha256. The per-storm JSON and per-advisory GeoJSON are not in it.
 - [data/fcast_monitoring.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.csv): one row per NHC advisory, with every forecast value and result. Also as [.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.parquet).
 - [data/obsv_monitoring.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.csv): one row per storm and IMERG day, with observed rainfall, winds and the Early response result. Also as [.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.parquet).

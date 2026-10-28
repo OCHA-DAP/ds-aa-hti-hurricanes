@@ -2,9 +2,13 @@
 
 > Site of the anticipatory action framework for storms and hurricanes in Haiti, prepared with the DGPC (Haitian civil protection) and the framework partners. It has the trigger definition of each framework version (in French) and the live monitoring of the 2026 trigger (French and English), with all its data as public static files.
 
+**For information only.** The monitoring page and its data are informational. Official notices of activation are sent by email from the OCHA Centre for Humanitarian Data, as set out in the framework's monitoring and activation protocol.
+
 For trigger status and data, use the monitoring guide: <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/llms.txt>. It lists every file, says which file answers which question, and lists the easy ways to misread the data.
 
 ## Current status of the 2026 trigger
+
+For information only; official notices of activation are sent by email from the OCHA Centre for Humanitarian Data.
 
 <!-- status:start -->
 <!-- status:end -->

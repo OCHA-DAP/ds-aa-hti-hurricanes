@@ -44,6 +44,10 @@ margin:1.5rem 0;max-width:48em}
 .callout h3{margin-top:0;color:var(--amber-ink);font-size:1rem}
 .callout p:last-child{margin-bottom:0}
 
+.notice{max-width:48em;margin:0 0 1.5rem;padding:.8rem 1.1rem;
+background:var(--card);border:1px solid var(--line);
+border-left:4px solid var(--blue);border-radius:8px}
+
 /* Status written at deploy for readers without JavaScript; with it, the
    stage cards show the same (shown again if the data fails to load). */
 .summary{max-width:48em;margin:0 0 1.5rem}

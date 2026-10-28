@@ -106,6 +106,14 @@ TOL = {"rain": 0.01, "pop": 0.5}
 # this old when the export runs.
 ACTIVE_HRS = 18
 
+# Shown on the page and in llms.txt too: the framework's monitoring and
+# activation protocol makes the Centre's activation email the notice.
+NOTICE = (
+    "For information only. Official notices of activation are sent by "
+    "email from the OCHA Centre for Humanitarian Data, as set out in the "
+    "framework's monitoring and activation protocol."
+)
+
 
 # --- serialisation helpers ------------------------------------------------
 
@@ -1131,7 +1139,7 @@ def _datapackage(store: SiteStore, tables: dict, generated_at: str) -> dict:
         "monitoring recorded, with the exact wind geometries behind each "
         "exposure value. Per-advisory GeoJSON (advisories/{ATCF}/"
         "{YYYY-MM-DDTHHMMZ}.geojson, simplified for display) and per-storm "
-        "JSON (storms/{ATCF}.json) are listed in index.json.",
+        "JSON (storms/{ATCF}.json) are listed in index.json. " + NOTICE,
         "created": generated_at,
         "homepage": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/",
         "sources": [
@@ -1290,6 +1298,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
     index = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
+        "notice": NOTICE,
         "season": season,
         "monitoring_start": _date(mu.MONITORING_START),
         "triggers": {
