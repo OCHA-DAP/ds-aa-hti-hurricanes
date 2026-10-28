@@ -25,21 +25,21 @@ The live thresholds are in `data/index.json` under `triggers`. The full framewor
 
 ## Which file answers which question
 
-- Has any stage been reached this season, and by which storm? `data/index.json`: `season_activations` gives the first hit per stage (`null` = not reached); `storms[].activations` gives it per storm.
+- Has any stage been reached this season, and by which storm? `data/index.json`: `season_activations` gives, per stage, the first advisory that triggered it (`null` = not reached). For `obsv`, it is the first *separate* Early response activation if there is one, otherwise the first time its conditions were met, so it is not always the earliest. `storms[].activations` gives each storm's first hit per stage.
 - What is happening now? `data/index.json`: `sources` (freshness of each input), `storms[]` with `active` and `latest` (the latest advisory's values).
 - What did one advisory say? Read `data/storms/{ATCF}.json`. Find the advisory by `issue_time` in `advisories[]`, then read its `file`, a GeoJSON whose `advisory` block holds each stage's rainfall window, values and result.
 - Every value for the whole season? `data/fcast_monitoring.csv` has one row per NHC advisory; `data/obsv_monitoring.csv` has one row per storm and IMERG day. Parquet versions have proper types.
 - The exact wind zones behind the exposure numbers? `data/buffers/fcast_64kt.parquet` and `data/buffers/obsv_64kt_swaths.parquet` (GeoParquet).
-- What does a column mean? `data/datapackage.json` describes every field of every file.
+- What does a column mean? `data/datapackage.json` describes every field of the tables, wind zones, rainfall series, boundaries and `index.json`. The per-storm JSON and per-advisory GeoJSON are described in this guide and in the field table on the page.
 
 ## Files
 
 - [data/index.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json): entry point. Thresholds, freshness of each source, every storm with its activations and latest advisory, the latest CHIRPS-GEFS forecast and the last 45 days of IMERG.
-- [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): Frictionless Data Package. Every file with each field described, its size and its sha256.
+- [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): Frictionless Data Package for the tables, wind zones, rainfall series, boundaries and `index.json`: each field described, each file's size and sha256. The per-storm JSON and per-advisory GeoJSON are not in it.
 - [data/fcast_monitoring.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.csv): one row per NHC advisory, with every forecast value and result. Also as [.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.parquet).
 - [data/obsv_monitoring.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.csv): one row per storm and IMERG day, with observed rainfall, winds and the Early response result. Also as [.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.parquet).
 - `data/storms/{ATCF}.json`, for example [data/storms/AL042026.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/storms/AL042026.json): one storm. Each advisory with its values and file path, the observed track and swath, the IMERG days and the observed rainfall window.
-- `data/advisories/{ATCF}/{YYYY-MM-DDTHHMMZ}.geojson`: one NHC advisory. It holds the forecast track points, the 64 kt wind zones capped at 120 h and 72 h and the observed swath, plus an `advisory` block with the cutoff, the rainfall windows, the CHIRPS-GEFS series used and the result of each condition.
+- `data/advisories/{ATCF}/{YYYY-MM-DDTHHMMZ}.geojson`: one NHC advisory. It holds the forecast track points; the 64 kt wind zones capped at 120 h and 72 h and the observed swath, when there are any; and an `advisory` block with the cutoff, the rainfall windows, the CHIRPS-GEFS series used and the result of each condition.
 - [data/buffers/fcast_64kt.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/buffers/fcast_64kt.parquet): the exact forecast 64 kt wind zones (GeoParquet, EPSG:4326, full precision), one record per advisory, stage and layer.
 - [data/buffers/obsv_64kt_swaths.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/buffers/obsv_64kt_swaths.parquet): every cumulative observed 64 kt swath of the season's storms, exact, with the population counted in it.
 - [data/rain/chirps_gefs.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/rain/chirps_gefs.csv) and [data/rain/imerg.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/rain/imerg.csv): daily national mean rainfall and the 2-day total, for every CHIRPS-GEFS forecast and every IMERG day.
@@ -54,11 +54,11 @@ The live thresholds are in `data/index.json` under `triggers`. The full framewor
 - **Empty rainfall is not zero rainfall.** `rain_120h` / `rain_72h` are empty when the storm is not forecast within 230 km of Haiti in that window. Forecast rainfall then cannot trigger. Use `rain_2day_max_mm` and `rain_eligible` in the advisory GeoJSON in the same way.
 - **The wind condition is "more than 0 people".** `exp_total_*` = `exp_fcast_*` (forecast zone, minus the area already observed) + `exp_obsv` (already observed swath). The condition is met if it is above 0.
 - **Conditions vs triggers.** `rain_trigger_*` and `exp_trigger_*` are the individual conditions, without the cutoff. `mobilisation_trigger` / `action_trigger` = (rainfall OR wind condition) AND NOT `past_cutoff`. A row can have `exp_trigger_action` true and `action_trigger` false.
-- **The Early response time is a data time.** `season_activations.obsv.issue_time` is when the decisive IMERG day became available.
+- **The Early response time is a data time.** Its `issue_time` (in `season_activations.obsv` and `storms[].activations.obsv`) is when the IMERG day that met the conditions became available, not when it rained.
 - **Wind-zone layers.** In `buffers/fcast_64kt.parquet`, population is counted only in `layer == "fcastonly"`: the forecast zone (`fcast_capped`) minus the observed swath at that moment (`obsv_swath_subtracted`).
 - **Wind-zone sources.** `source` is `evaluated` (saved when the advisory was evaluated), `rebuilt` (recomputed later with the same function) or `none` (no longer rebuildable; the geometry is null). `pop_exposed_hti` is counted in the published geometry; `pop_exposed_recorded` is what the monitoring recorded. They are equal when `source` is `evaluated`.
 - **GeoJSON geometries are simplified** (about 100 m) for display. Use `data/buffers/` to recount population.
-- **Distances** are measured from the outline of Haiti, in km.
+- **Distances** are measured from the outline of Haiti, in km, as in the trigger calibration.
 - **Population** is WorldPop 2026 (constrained, 1 km), counted within the FieldMaps boundary of Haiti.
 - **Not monitored**: the two DGPC-alert conditions of Action (see above).
 

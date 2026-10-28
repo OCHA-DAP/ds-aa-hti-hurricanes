@@ -13,7 +13,7 @@ For trigger status and data, use the monitoring guide: <https://ocha-dap.github.
 
 - [Monitoring data guide](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/llms.txt): files, fields, examples and pitfalls, in English.
 - [data/index.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json): current state, with thresholds, freshness, storms and activations.
-- [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): every published file, with each field described.
+- [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): the tables, wind zones, rainfall series and boundaries, with each field described.
 - [Monitoring page, English](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/en/) and [French](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/). They are interactive (JavaScript) and drawn from the files above.
 
 ## Framework

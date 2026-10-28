@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="style.css">
 <link rel="alternate" type="application/json" href="data/index.json" title="État actuel du suivi (JSON)">
-<link rel="describedby" type="application/json" href="data/datapackage.json" title="Description de chaque fichier et champ (Data Package)">
+<link rel="describedby" type="application/json" href="data/datapackage.json" title="Tableaux et leurs champs (Data Package)">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="Guide pour les scripts et les assistants IA (en anglais)">
 <script>document.documentElement.classList.add('js');</script>
 <script type="application/ld+json">
@@ -53,7 +53,7 @@
   },
   {
    "@type": "DataDownload",
-   "name": "Data package: every file and field",
+   "name": "Data package: the tables and their fields",
    "encodingFormat": "application/json",
    "contentUrl": "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json"
   },
@@ -396,6 +396,6 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)</code></pre>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js"></script>
+<script src="app.js" onerror="document.documentElement.classList.remove('js')"></script>
 </body>
 </html>

@@ -74,10 +74,12 @@ TEXT = {
         "sep": "; ",
         "active": "Active storms",
         "none": "none.",
-        "adv": lambda n, a, t, km, mob, act: f"{n} ({a}): latest advisory "
-        f"{t}, closest approach to Haiti in it {km} km; Mobilisation "
-        f"triggered by it: {mob}; Action: {act}",
-        "yes": "yes",
+        "short": {"obsv": "Early response"},
+        "adv": lambda n, a, t, km, r: f"{n} ({a}): latest advisory {t}, "
+        f"closest approach to Haiti in it {km} km, reached for this storm: "
+        f"{r}",
+        "yes_at": lambda t: f"yes (first triggered {t})",
+        "met_at": lambda t: f"conditions met {t}, no separate activation",
         "no": "no",
         "latest": "Latest data",
         "sources": lambda adv, gefs, imerg: f"NHC advisory {adv}; "
@@ -86,7 +88,7 @@ TEXT = {
         "links": lambda p: f'Machine-readable: <a href="{p}data/index.json">'
         f"data/index.json</a> (current state) · "
         f'<a href="{p}data/datapackage.json">data/datapackage.json</a> '
-        f"(every file and field) · "
+        f"(the tables and their fields) · "
         f'<a href="{p}llms.txt">llms.txt</a> (guide for scripts and AI '
         f"assistants).",
     },
@@ -117,10 +119,13 @@ TEXT = {
         "sep": " ; ",
         "active": "Tempêtes actives",
         "none": "aucune.",
-        "adv": lambda n, a, t, km, mob, act: f"{n} ({a}) : dernier avis "
-        f"le {t}, passage le plus proche d’Haïti dans cet avis {km} km ; "
-        f"Mobilisation déclenchée par cet avis : {mob} ; Action : {act}",
-        "yes": "oui",
+        "short": {},
+        "adv": lambda n, a, t, km, r: f"{n} ({a}) : dernier avis le {t}, "
+        f"passage le plus proche d’Haïti dans cet avis {km} km, atteint pour "
+        f"cette tempête : {r}",
+        "yes_at": lambda t: f"oui (premier déclenchement le {t})",
+        "met_at": lambda t: f"conditions remplies le {t}, sans activation "
+        "séparée",
         "no": "non",
         "latest": "Dernières données",
         "sources": lambda adv, gefs, imerg: f"avis du NHC du {adv} ; "
@@ -129,7 +134,7 @@ TEXT = {
         "links": lambda p: f'Lisible par machine : <a href="{p}data/index.json">'
         f"data/index.json</a> (état actuel) · "
         f'<a href="{p}data/datapackage.json">data/datapackage.json</a> '
-        f"(chaque fichier et champ) · "
+        f"(les tableaux et leurs champs) · "
         f'<a href="{p}llms.txt">llms.txt</a> (guide pour les scripts et '
         f"les assistants IA, en anglais).",
     },
@@ -186,14 +191,29 @@ def status(idx: dict, lang: str) -> tuple[str, list[tuple]]:
         ]
         items.append((name, desc, head + t["sep"].join(hits) + "."))
 
+    def reached(s: dict) -> str:
+        # Stages reached for the storm, not the latest advisory's own
+        # result: that one is false past the cutoff even once reached.
+        out = []
+        for k in STAGES:
+            a = s["activations"].get(k)
+            if not a:
+                state = t["no"]
+            elif a.get("separate_activation") is False:
+                state = t["met_at"](fmt_time(a["issue_time"], lang))
+            else:
+                state = t["yes_at"](fmt_time(a["issue_time"], lang))
+            name = t["short"].get(k) or t["stage"].get(k)
+            out.append(f"{name or trig[k]['name_fr']} {state}")
+        return ", ".join(out)
+
     active = [
         t["adv"](
             s["name"],
             s["atcf_id"],
             fmt_time(s["latest"]["issue_time"], lang),
             fmt_km(s["latest"].get("min_dist_km"), lang),
-            t["yes" if s["latest"].get("mobilisation_trigger") else "no"],
-            t["yes" if s["latest"].get("action_trigger") else "no"],
+            reached(s),
         )
         for s in idx["storms"]
         if s.get("active") and s.get("latest")
@@ -208,8 +228,8 @@ def status(idx: dict, lang: str) -> tuple[str, list[tuple]]:
 
     src = idx["sources"]
     last = src.get("last_advisory_issue_time")
-    by = next((s for s in idx["storms"] if s["last_issue_time"] == last), None)
-    adv = fmt_time(last, lang) + (f" ({by['name']})" if by else "")
+    by = [s["name"] for s in idx["storms"] if s["last_issue_time"] == last]
+    adv = fmt_time(last, lang) + (f" ({', '.join(by)})" if by else "")
     items.append(
         (
             t["latest"],
@@ -256,10 +276,12 @@ def as_markdown(idx: dict, lang: str, base: str) -> str:
 
 def main(site: str) -> int:
     root = Path(site)
-    idx = json.loads((root / "2026/suivi/data/index.json").read_text())
+    idx = json.loads(
+        (root / "2026/suivi/data/index.json").read_text(encoding="utf-8")
+    )
     for rel, (fmt, lang, prefix) in TARGETS.items():
         path = root / rel
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         body = (as_html if fmt == "html" else as_markdown)(idx, lang, prefix)
         new, n = MARKERS.subn(
             lambda m: m.group(1) + body + m.group(2), text, count=1
@@ -267,7 +289,7 @@ def main(site: str) -> int:
         if n != 1:
             print(f"{rel}: status markers not found", file=sys.stderr)
             return 1
-        path.write_text(new)
+        path.write_text(new, encoding="utf-8")
         print(f"Status written to {rel}")
     return 0
 

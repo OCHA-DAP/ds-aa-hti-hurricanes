@@ -691,15 +691,16 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)`;
   }
 
   // ---------- boot ----------
+  // The status written at deploy (#summary, hidden by style.css when
+  // JavaScript runs) is the only one left if the page cannot draw its own.
+  const showSummary = () => { if ($('summary')) $('summary').classList.add('show'); };
   async function boot() {
     try {
       [INDEX, GEO] = await Promise.all([getJSON('index.json'), getJSON('geo/hti.geojson')]);
     } catch (e) {
       $('load-error').innerHTML = STR.loadErr(DATA + 'index.json');
       $('load-error').hidden = false;
-      // The status written at deploy (#summary) is then the only one left.
-      if ($('summary')) $('summary').classList.add('show');
-      console.error(e); return;
+      showSummary(); console.error(e); return;
     }
     $('mon-start').textContent = fmtDate(INDEX.monitoring_start);
     document.querySelectorAll('.info-km').forEach((e) => { e.textContent = num(INDEX.info_distance_km); });
@@ -718,5 +719,5 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)`;
       rt = setTimeout(() => { renderLatestRain(); if (storm) { renderObsv(); showAdvisory(); } }, 200);
     });
   }
-  boot();
+  boot().catch((e) => { showSummary(); console.error(e); });
 })();
