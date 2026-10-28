@@ -103,6 +103,17 @@
       ariaObsv: 'Pluie observée IMERG pendant la tempête',
       noImerg: 'Pas de jours IMERG pour cette tempête.',
       obsvWin: 'Fenêtre de la pluie observée',
+      distTitle: 'Distance à Haïti (point le plus proche du jour), km',
+      legDist: 'Distance de la tempête à Haïti',
+      legNear: (km) => `À moins de ${km} km : la pluie compte`,
+      legFar: (km) => `À plus de ${km} km`,
+      tipDist: (n, km) => `${n} : ${km} km`,
+      dayAfter: (km) => `Aucune tempête à moins de ${km} km ce jour-là, mais encore dans la fenêtre (elle inclut le jour suivant)`,
+      noActive: 'Aucune tempête active : la pluie prévue ne peut pas déclencher en ce moment.',
+      noObsStorm: 'Aucune tempête observée sur ces jours.',
+      distNA: 'Distance de la tempête non disponible.',
+      distOld: ' Distance de la tempête non disponible pour cet avis.',
+      latestAdv: (list) => ` Fenêtres et distances : dernier avis du NHC de chaque tempête active (${list}).`,
       noObsvRows: 'Aucun jour observé enregistré.',
       yes: 'oui',
       no: 'non',
@@ -201,6 +212,17 @@
       ariaObsv: 'IMERG observed rainfall during the storm',
       noImerg: 'No IMERG days for this storm.',
       obsvWin: 'Observed rainfall window',
+      distTitle: 'Distance to Haiti (closest point of the day), km',
+      legDist: 'Storm distance to Haiti',
+      legNear: (km) => `Within ${km} km: rainfall counts`,
+      legFar: (km) => `More than ${km} km away`,
+      tipDist: (n, km) => `${n}: ${km} km`,
+      dayAfter: (km) => `No storm within ${km} km this day, but still in the window (it includes the day after)`,
+      noActive: 'No active storm: forecast rainfall cannot trigger now.',
+      noObsStorm: 'No storm observed over these days.',
+      distNA: 'Storm distance not available.',
+      distOld: ' Storm distance not available for this advisory.',
+      latestAdv: (list) => ` Windows and distances: latest NHC advisory of each active storm (${list}).`,
       noObsvRows: 'No observed days recorded.',
       yes: 'yes',
       no: 'no',
@@ -484,13 +506,20 @@
   const hideTip = () => { tip.hidden = true; };
 
   // days: [{date, mean_mm, sum_2day_mm, ...}]; windows: [{key, start, end, fill, label}]
+  // storms: [{name, dist: [{date, km}]}] adds a panel under the bars with
+  // each storm's closest distance to Haiti that day (undefined: no panel,
+  // as with files exported before it); noStorms: its text when empty.
+  const DIST = '#7a3e9d', FAR = '#9aa5a8';
   function rainChart(el, days, opt) {
     if (!days || !days.length) {
       el.innerHTML = `<div class="empty">${esc(opt.empty || STR.noData)}</div>`; return;
     }
-    const W = Math.max(320, el.clientWidth - 8), H = 230;
+    const storms = opt.storms, KM = INDEX.info_distance_km, LIM = INDEX.rain_distance_km;
+    const DG = 32, DH = 124, STRIP = 16; // gap, distance panel, its "> 1 000 km" band
+    const W = Math.max(320, el.clientWidth - 8), H = 230 + (storms ? DG + DH : 0);
     const m = { l: 42, r: 14, t: 16, b: 38 };
-    const iw = W - m.l - m.r, ih = H - m.t - m.b, n = days.length, bw = iw / n;
+    const iw = W - m.l - m.r, ih = 230 - m.t - m.b, n = days.length, bw = iw / n;
+    const bh = ih + (storms ? DG + DH : 0); // window bands and hover span both panels
     const vmax = Math.max(opt.threshold * 1.15, ...days.map((d) => Math.max(d.mean_mm || 0, d.sum_2day_mm || 0)) ) * 1.08;
     const y = (v) => m.t + ih - (v / vmax) * ih;
     const xC = (i) => m.l + bw * (i + 0.5);
@@ -501,7 +530,7 @@
       const i0 = days.findIndex((d) => d.date >= w.start);
       let i1 = -1; days.forEach((d, i) => { if (d.date <= w.end) i1 = i; });
       if (i0 < 0 || i1 < i0) return;
-      s += `<rect x="${m.l + bw * i0}" y="${m.t}" width="${bw * (i1 - i0 + 1)}" height="${ih}" fill="${w.fill}"/>`;
+      s += `<rect x="${m.l + bw * i0}" y="${m.t}" width="${bw * (i1 - i0 + 1)}" height="${bh}" fill="${w.fill}"/>`;
     });
     // grid
     for (let v = 0; v <= vmax; v += step) {
@@ -532,6 +561,52 @@
       const over = inWin && d.sum_2day_mm >= opt.threshold;
       s += `<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="4" fill="${over ? '#d03b3b' : '#1862d8'}" stroke="#fff" stroke-width="2"/>`;
     });
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#c3ccce" stroke-width="1"/>`;
+    // distance panel: 0 to 1 000 km, farther storms in a band on top
+    const byDay = days.map(() => []);
+    let anyFar = false, drawnAny = false;
+    if (storms) {
+      const dt = m.t + ih + DG;
+      const yk = (km) => (km > KM ? dt + STRIP / 2 : dt + STRIP + (1 - km / KM) * (DH - STRIP));
+      const at = new Map(days.map((d, i) => [d.date, i]));
+      s += `<rect x="${m.l}" y="${dt}" width="${iw}" height="${STRIP}" fill="#f4f7f9"/>`
+        + `<text x="${m.l}" y="${dt - 8}" font-size="11" font-weight="700" fill="#5e6a6b">${esc(STR.distTitle)}</text>`
+        + `<text x="${m.l - 6}" y="${dt + STRIP / 2 + 4}" font-size="11" fill="#5e6a6b" text-anchor="end">&gt;${num(KM)}</text>`;
+      [0, KM / 2, KM].forEach((v) => {
+        s += `<line x1="${m.l}" x2="${W - m.r}" y1="${yk(v)}" y2="${yk(v)}" stroke="#e7edf0" stroke-width="1"/>`
+          + (v < KM ? `<text x="${m.l - 6}" y="${yk(v) + 4}" font-size="11" fill="#5e6a6b" text-anchor="end">${num(v)}</text>` : '');
+      });
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${yk(LIM)}" y2="${yk(LIM)}" stroke="#1e2a2b" stroke-width="1.5"/>`
+        + `<text x="${W - m.r}" y="${yk(LIM) - 5}" font-size="11.5" font-weight="700" fill="#1e2a2b" text-anchor="end">${num(LIM)} km</text>`;
+      let drawn = 0;
+      storms.forEach((st) => {
+        const sp = (st.dist || []).filter((d) => d.km != null && at.has(d.date)).map((d) => ({ i: at.get(d.date), km: d.km }));
+        sp.forEach((p) => { byDay[p.i].push({ name: st.name, km: p.km }); });
+        drawn += sp.length;
+        let line = '';
+        sp.forEach((p, k) => {
+          if (p.km > KM) return;
+          const prev = sp[k - 1];
+          line += `${prev && prev.i === p.i - 1 && prev.km <= KM ? 'L' : 'M'}${xC(p.i)},${yk(p.km)} `;
+        });
+        if (line) s += `<path d="${line}" fill="none" stroke="${DIST}" stroke-width="2" stroke-linejoin="round"/>`;
+        sp.forEach((p) => {
+          if (p.km > KM) { anyFar = true; s += `<circle cx="${xC(p.i)}" cy="${yk(p.km)}" r="3" fill="${FAR}"/>`; return; }
+          const near = p.km < LIM; // filled where rainfall counts
+          s += `<circle cx="${xC(p.i)}" cy="${yk(p.km)}" r="4" fill="${near ? DIST : '#fff'}" stroke="${near ? '#fff' : DIST}" stroke-width="2"/>`;
+        });
+        const close = sp.filter((p) => p.km <= KM).sort((a, b) => a.km - b.km)[0];
+        if (close) {
+          const lx = Math.min(Math.max(xC(close.i), m.l + 30), W - m.r - 30);
+          s += `<text x="${lx}" y="${yk(close.km) - 9}" font-size="11" font-weight="700" fill="#1e2a2b" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(st.name)}</text>`;
+        }
+      });
+      drawnAny = drawn > 0;
+      if (!drawn) {
+        s += `<text x="${m.l + iw / 2}" y="${dt + STRIP + (DH - STRIP) / 2 + 4}" font-size="12" fill="#5e6a6b" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(opt.noStorms || STR.distNA)}</text>`;
+      }
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${yk(0)}" y2="${yk(0)}" stroke="#c3ccce" stroke-width="1"/>`;
+    }
     // x labels
     const every = Math.ceil(n / Math.max(4, Math.floor(iw / 52)));
     days.forEach((d, i) => {
@@ -540,26 +615,34 @@
       const lab = dd.toLocaleDateString(LOC, { timeZone: 'UTC', day: 'numeric', month: 'short' });
       s += `<text x="${xC(i)}" y="${H - m.b + 16}" font-size="11" fill="#5e6a6b" text-anchor="middle">${esc(lab)}</text>`;
     });
-    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#c3ccce" stroke-width="1"/>`;
     // hover columns
     days.forEach((d, i) => {
-      s += `<rect class="hov" data-i="${i}" x="${m.l + bw * i}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent"/>`;
+      s += `<rect class="hov" data-i="${i}" x="${m.l + bw * i}" y="${m.t}" width="${bw}" height="${bh}" fill="transparent"/>`;
     });
     s += '</svg>';
+    const seen = new Set();
     const leg = [
       `<span><span class="sw" style="background:var(--rain-day);border-color:var(--rain-day)"></span>${STR.legDay}</span>`,
       `<span><span class="sw line" style="border-color:#1862d8"></span>${STR.leg2}</span>`,
       `<span><span class="sw line" style="border-color:#1e2a2b"></span>${STR.legThr}</span>`,
     ].concat(opt.windows ? [`<span><span class="sw dot" style="background:#d03b3b;border-color:#d03b3b"></span>${STR.legOver}</span>`] : [])
-      .concat((opt.windows || []).filter((w) => w.start).map((w) =>
-      `<span><span class="sw" style="background:${w.fill};border-color:${w.fill}"></span>${esc(w.label)}</span>`));
+      .concat((opt.windows || []).filter((w) => w.start && !seen.has(w.label) && seen.add(w.label)).map((w) =>
+      `<span><span class="sw" style="background:${w.fill};border-color:${w.fill}"></span>${esc(w.label)}</span>`))
+      .concat(storms && drawnAny ? [
+        `<span><span class="sw line" style="border-color:${DIST}"></span>${STR.legDist}</span>`,
+        `<span><span class="sw dot" style="background:${DIST};border-color:${DIST}"></span>${STR.legNear(num(LIM))}</span>`,
+      ] : [])
+      .concat(anyFar ? [`<span><span class="sw dot" style="background:${FAR};border-color:${FAR}"></span>${STR.legFar(num(KM))}</span>`] : []);
     el.innerHTML = s + `<div class="legend">${leg.join('')}</div>`;
     el.querySelectorAll('rect.hov').forEach((r) => {
       r.addEventListener('mousemove', (ev) => {
-        const d = days[+r.dataset.i];
+        const i = +r.dataset.i, d = days[i];
         const inW = (opt.windows || []).filter((w) => w.start && d.date >= w.start && d.date <= w.end).map((w) => w.short);
+        const near = byDay[i].slice().sort((a, b) => a.km - b.km);
         showTip(`<b>${esc(fmtDay(d.date))}</b><br>${STR.tipDay}${mm(d.mean_mm)}<br>${STR.tip2}<b>${mm(d.sum_2day_mm)}</b>`
-          + (opt.windows ? `<br>${inW.length ? `${STR.countsFor}${esc(inW.join(', '))}` : STR.outside}` : ''), ev);
+          + near.map((p) => `<br>${STR.tipDist(esc(p.name), num(p.km))}`).join('')
+          + (opt.windows ? `<br>${inW.length ? `${STR.countsFor}${esc(inW.join(', '))}` : STR.outside}` : '')
+          + (storms && inW.length && !near.some((p) => p.km < LIM) ? `<br>${STR.dayAfter(num(LIM))}` : ''), ev);
       });
       r.addEventListener('mouseleave', hideTip);
     });
@@ -571,17 +654,27 @@
       $('gefs-cap').textContent = STR.gefsNA;
       rainChart($('chart-fcast'), null, { threshold: 68, empty: STR.noSeries }); return;
     }
-    $('gefs-cap').textContent = STR.gefsCap(fmtDate(g.issue_date));
-    const st = adv.stages;
+    // dist_days: advisory files written before the distance panel lack it
+    $('gefs-cap').textContent = STR.gefsCap(fmtDate(g.issue_date)) + (adv.dist_days ? '' : STR.distOld);
     rainChart($('chart-fcast'), g.days, {
-      threshold: st.action.rain_threshold_mm,
+      threshold: adv.stages.action.rain_threshold_mm,
       aria: STR.ariaFcast,
-      windows: [
-        { start: st.mobilisation.rain_window_start, end: st.mobilisation.rain_window_end, fill: 'var(--win120)', label: STR.win120, short: stageName('mobilisation') },
-        { start: st.action.rain_window_start, end: st.action.rain_window_end, fill: 'var(--win72)', label: STR.win72, short: stageName('action') },
-      ],
+      windows: fcastWindows(adv.stages),
+      storms: adv.dist_days && [{ name: adv.name, dist: adv.dist_days }],
     });
   }
+
+  // Rainfall windows as chart bands; `who` names the storm when several can show.
+  const fcastWindows = (st, who) => ['mobilisation', 'action'].map((k) => ({
+    start: st[k].rain_window_start, end: st[k].rain_window_end,
+    fill: k === 'action' ? 'var(--win72)' : 'var(--win120)',
+    label: k === 'action' ? STR.win72 : STR.win120,
+    short: stageName(k) + (who ? ` (${who})` : ''),
+  }));
+  const obsvWindow = (o, who) => ({
+    start: o.rain_window_start, end: o.rain_window_end, fill: 'var(--win72)',
+    label: STR.obsvWin, short: stageName('obsv') + (who ? ` (${who})` : ''),
+  });
 
   // ---------- explorer ----------
   async function selectStorm(atcf, wantIdx) {
@@ -644,7 +737,8 @@
     rainChart($('chart-obsv'), o.imerg_days, {
       threshold: o.rain_threshold_mm, aria: STR.ariaObsv,
       empty: STR.noImerg,
-      windows: [{ start: o.rain_window_start, end: o.rain_window_end, fill: 'var(--win72)', label: STR.obsvWin, short: stageName('obsv') }],
+      windows: [obsvWindow(o)],
+      storms: o.dist_days && [{ name: storm.name, dist: o.dist_days }],
     });
     const tb = document.querySelector('#obsv-table tbody');
     if (!o.rows.length) { tb.innerHTML = `<tr><td colspan="5" class="na">${STR.noObsvRows}</td></tr>`; return; }
@@ -659,9 +753,23 @@
 
   function renderLatestRain() {
     const g = INDEX.chirps_gefs_latest;
-    $('gefs-latest-cap').textContent = STR.latestCap(fmtDate(g.issue_date), INDEX.triggers.action.rain_mm, INDEX.rain_distance_km);
-    rainChart($('chart-gefs-latest'), g.days, { threshold: INDEX.triggers.action.rain_mm, aria: STR.ariaGefs });
-    rainChart($('chart-imerg-recent'), INDEX.imerg_recent, { threshold: INDEX.triggers.obsv.rain_mm, aria: STR.ariaImerg });
+    // g.storms / imerg_recent_storms: absent from an index.json exported
+    // before the distance panel; the charts are then drawn without it.
+    const fs = g.storms, os = INDEX.imerg_recent_storms;
+    $('gefs-latest-cap').textContent = STR.latestCap(fmtDate(g.issue_date), INDEX.triggers.action.rain_mm, INDEX.rain_distance_km)
+      + (fs && fs.length ? STR.latestAdv(fs.map((f) => `${f.name}, ${fmtTime(f.issue_time)}${f.past_cutoff ? `, ${STR.afterCut}` : ''}`).join(LANG === 'fr' ? ' ; ' : '; ')) : '');
+    rainChart($('chart-gefs-latest'), g.days, {
+      threshold: INDEX.triggers.action.rain_mm, aria: STR.ariaGefs,
+      windows: fs && fs.flatMap((f) => fcastWindows(f.stages, f.name)),
+      storms: fs && fs.map((f) => ({ name: f.name, dist: f.dist_days })),
+      noStorms: STR.noActive,
+    });
+    rainChart($('chart-imerg-recent'), INDEX.imerg_recent, {
+      threshold: INDEX.triggers.obsv.rain_mm, aria: STR.ariaImerg,
+      windows: os && os.map((o) => obsvWindow(o, o.name)),
+      storms: os && os.map((o) => ({ name: o.name, dist: o.dist_days })),
+      noStorms: STR.noObsStorm,
+    });
   }
 
   function renderExample() {

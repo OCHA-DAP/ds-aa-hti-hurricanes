@@ -34,6 +34,7 @@ The live thresholds are in `data/index.json` under `triggers`. The full framewor
 - What did one advisory say? Read `data/storms/{ATCF}.json`. Find the advisory by `issue_time` in `advisories[]`, then read its `file`, a GeoJSON whose `advisory` block holds each stage's rainfall window, values and result.
 - Every value for the whole season? `data/fcast_monitoring.csv` has one row per NHC advisory; `data/obsv_monitoring.csv` has one row per storm and IMERG day. Parquet versions have proper types.
 - The exact wind zones behind the exposure numbers? `data/buffers/fcast_64kt.parquet` and `data/buffers/obsv_64kt_swaths.parquet` (GeoParquet).
+- On which days could rainfall count, and how close was each storm? `dist_days` lists a storm's closest distance to Haiti (km) per UTC day, from the same 30-minute track as the trigger. It is in `data/index.json` under `chirps_gefs_latest.storms` (latest advisory of each active storm, with its rainfall windows) and `imerg_recent_storms` (storms observed over the last 45 IMERG days, with their observed windows), in `data/storms/{ATCF}.json` under `obsv`, and in advisory files (older advisory files may not have it).
 - What does a column mean? `data/datapackage.json` describes every field of the tables, wind zones, rainfall series, boundaries and `index.json`. The per-storm JSON and per-advisory GeoJSON are described in this guide and in the field table on the page.
 
 ## Files
@@ -63,6 +64,7 @@ The live thresholds are in `data/index.json` under `triggers`. The full framewor
 - **Wind-zone sources.** `source` is `evaluated` (saved when the advisory was evaluated), `rebuilt` (recomputed later with the same function) or `none` (no longer rebuildable; the geometry is null). `pop_exposed_hti` is counted in the published geometry; `pop_exposed_recorded` is what the monitoring recorded. They are equal when `source` is `evaluated`.
 - **GeoJSON geometries are simplified** (about 100 m) for display. Use `data/buffers/` to recount population.
 - **Distances** are measured from the outline of Haiti, in km, as in the trigger calibration.
+- **The window includes the day after.** A rainfall window runs from the first to the last day a storm is under 230 km, plus one day; `dist_days` can show more than 230 km on that last window day.
 - **Population** is WorldPop 2026 (constrained, 1 km), counted within the FieldMaps boundary of Haiti.
 - **Not monitored**: the two DGPC-alert conditions of Action (see above).
 
