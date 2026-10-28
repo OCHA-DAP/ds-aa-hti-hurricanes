@@ -1,0 +1,94 @@
+# Haiti hurricanes anticipatory action: 2026 trigger monitoring
+
+> Public record of the 2026 trigger monitoring for the anticipatory action framework for storms and hurricanes in Haiti (OCHA Centre for Humanitarian Data). It covers every NHC advisory evaluated and how each trigger condition came out, forecast (CHIRPS-GEFS) and observed (IMERG) national mean rainfall, people in Haiti exposed to 64 kt winds, and the exact wind geometries behind each exposure value. All files are static: no account, no key, any origin can fetch them. They are refreshed after each run of the monitoring system, about every 6 hours.
+
+The web page (<https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/>, English at <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/en/>) draws everything with JavaScript from the files below. To answer questions, read the files rather than the page. All paths below are relative to <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/>.
+
+## Current status
+
+<!-- status:start -->
+<!-- status:end -->
+
+## The trigger, in short
+
+The 2026 framework has three stages. The data uses the keys `mobilisation`, `action` and `obsv`. `obsv` is the framework's *Réponse précoce*, called Early response on the English page.
+
+- **Mobilisation**: at least 68 mm of forecast rainfall over 2 days, OR more than 0 people in Haiti exposed to forecast winds of 64 kt or more. Only forecasts up to 120 h count.
+- **Action**: the same conditions, with forecasts up to 72 h only. The framework also lets two DGPC (Haitian civil protection) alert conditions trigger Action. **These are not monitored here**: there is no feed of DGPC alerts, so Action could be reached in reality without appearing in this data.
+- **Early response** (`obsv`): at least 57 mm of observed rainfall over 2 days, OR more than 0 people exposed to observed winds of 64 kt or more.
+- Rainfall is the daily national mean for Haiti, summed over 2 days. It only counts on days when the storm is forecast (or observed) within 230 km of Haiti, plus the following day.
+- **Cutoff**: a forecast stage cannot trigger once the advisory forecasts the closest pass to Haiti less than 48 h away.
+- Once a stage is reached for a storm, it stays reached until that storm ends.
+- If Action has already been triggered for a storm, Early response for the same storm is not a separate activation (`separate_activation: false`).
+
+The live thresholds are in `data/index.json` under `triggers`. The full framework definition is on <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/>, in French.
+
+## Which file answers which question
+
+- Has any stage been reached this season, and by which storm? `data/index.json`: `season_activations` gives the first hit per stage (`null` = not reached); `storms[].activations` gives it per storm.
+- What is happening now? `data/index.json`: `sources` (freshness of each input), `storms[]` with `active` and `latest` (the latest advisory's values).
+- What did one advisory say? Read `data/storms/{ATCF}.json`. Find the advisory by `issue_time` in `advisories[]`, then read its `file`, a GeoJSON whose `advisory` block holds each stage's rainfall window, values and result.
+- Every value for the whole season? `data/fcast_monitoring.csv` has one row per NHC advisory; `data/obsv_monitoring.csv` has one row per storm and IMERG day. Parquet versions have proper types.
+- The exact wind zones behind the exposure numbers? `data/buffers/fcast_64kt.parquet` and `data/buffers/obsv_64kt_swaths.parquet` (GeoParquet).
+- What does a column mean? `data/datapackage.json` describes every field of every file.
+
+## Files
+
+- [data/index.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json): entry point. Thresholds, freshness of each source, every storm with its activations and latest advisory, the latest CHIRPS-GEFS forecast and the last 45 days of IMERG.
+- [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): Frictionless Data Package. Every file with each field described, its size and its sha256.
+- [data/fcast_monitoring.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.csv): one row per NHC advisory, with every forecast value and result. Also as [.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/fcast_monitoring.parquet).
+- [data/obsv_monitoring.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.csv): one row per storm and IMERG day, with observed rainfall, winds and the Early response result. Also as [.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/obsv_monitoring.parquet).
+- `data/storms/{ATCF}.json`, for example [data/storms/AL042026.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/storms/AL042026.json): one storm. Each advisory with its values and file path, the observed track and swath, the IMERG days and the observed rainfall window.
+- `data/advisories/{ATCF}/{YYYY-MM-DDTHHMMZ}.geojson`: one NHC advisory. It holds the forecast track points, the 64 kt wind zones capped at 120 h and 72 h and the observed swath, plus an `advisory` block with the cutoff, the rainfall windows, the CHIRPS-GEFS series used and the result of each condition.
+- [data/buffers/fcast_64kt.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/buffers/fcast_64kt.parquet): the exact forecast 64 kt wind zones (GeoParquet, EPSG:4326, full precision), one record per advisory, stage and layer.
+- [data/buffers/obsv_64kt_swaths.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/buffers/obsv_64kt_swaths.parquet): every cumulative observed 64 kt swath of the season's storms, exact, with the population counted in it.
+- [data/rain/chirps_gefs.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/rain/chirps_gefs.csv) and [data/rain/imerg.csv](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/rain/imerg.csv): daily national mean rainfall and the 2-day total, for every CHIRPS-GEFS forecast and every IMERG day.
+- [data/geo/hti_adm0.parquet](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/geo/hti_adm0.parquet): the exact boundary within which exposed population is counted (FieldMaps). [data/geo/hti.geojson](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/geo/hti.geojson) is a simplified outline with the 230 km and 1,000 km zones.
+- [data/manifest.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/manifest.json): sha256 and size of every file, and when they were generated.
+
+## Easy ways to misread the data
+
+- **Times are UTC.** `generated_at` in `data/index.json` says when the data was produced.
+- **`issue_time` means two things.** Forecast rows: the NHC advisory issue time. Observation rows (`obsv_monitoring`, the `obsv` stage): when that IMERG day became available, about 15:00 UTC the next day, not when it rained.
+- **Storm id case.** `atcf_id` is lower case in the CSV/Parquet tables (`al042026`) and upper case in the JSON files and file paths (`AL042026`).
+- **Empty rainfall is not zero rainfall.** `rain_120h` / `rain_72h` are empty when the storm is not forecast within 230 km of Haiti in that window. Forecast rainfall then cannot trigger. Use `rain_2day_max_mm` and `rain_eligible` in the advisory GeoJSON in the same way.
+- **The wind condition is "more than 0 people".** `exp_total_*` = `exp_fcast_*` (forecast zone, minus the area already observed) + `exp_obsv` (already observed swath). The condition is met if it is above 0.
+- **Conditions vs triggers.** `rain_trigger_*` and `exp_trigger_*` are the individual conditions, without the cutoff. `mobilisation_trigger` / `action_trigger` = (rainfall OR wind condition) AND NOT `past_cutoff`. A row can have `exp_trigger_action` true and `action_trigger` false.
+- **The Early response time is a data time.** `season_activations.obsv.issue_time` is when the decisive IMERG day became available.
+- **Wind-zone layers.** In `buffers/fcast_64kt.parquet`, population is counted only in `layer == "fcastonly"`: the forecast zone (`fcast_capped`) minus the observed swath at that moment (`obsv_swath_subtracted`).
+- **Wind-zone sources.** `source` is `evaluated` (saved when the advisory was evaluated), `rebuilt` (recomputed later with the same function) or `none` (no longer rebuildable; the geometry is null). `pop_exposed_hti` is counted in the published geometry; `pop_exposed_recorded` is what the monitoring recorded. They are equal when `source` is `evaluated`.
+- **GeoJSON geometries are simplified** (about 100 m) for display. Use `data/buffers/` to recount population.
+- **Distances** are measured from the outline of Haiti, in km.
+- **Population** is WorldPop 2026 (constrained, 1 km), counted within the FieldMaps boundary of Haiti.
+- **Not monitored**: the two DGPC-alert conditions of Action (see above).
+
+## Example (Python)
+
+```python
+import io, requests, pandas as pd, geopandas as gpd
+
+base = "https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/"
+
+# Current state
+idx = requests.get(base + "index.json").json()
+print(idx["season_activations"])      # None per stage = not reached
+print([(s["name"], s["active"], s["min_dist_km"]) for s in idx["storms"]])
+
+# Every advisory of the season, and the exact Action wind zones
+rows = pd.read_parquet(base + "fcast_monitoring.parquet")
+get = lambda f: io.BytesIO(requests.get(base + f).content)
+zones = gpd.read_parquet(get("buffers/fcast_64kt.parquet"))
+action = zones[(zones.stage == "action") & (zones.layer == "fcastonly")]
+
+# One advisory
+storm = requests.get(base + "storms/AL042026.json").json()
+adv = storm["advisories"][-1]
+fc = requests.get(base + adv["file"]).json()
+print(fc["advisory"]["stages"]["action"])
+```
+
+## Optional
+
+- [2026 framework page](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/) (in French): the trigger definition and the historical analysis behind it.
+- [Source code](https://github.com/OCHA-DAP/ds-aa-hti-hurricanes): the monitoring system and the scripts that build these files.
+- [Site overview](https://ocha-dap.github.io/ds-aa-hti-hurricanes/llms.txt)

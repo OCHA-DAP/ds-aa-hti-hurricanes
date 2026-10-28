@@ -44,6 +44,14 @@ margin:1.5rem 0;max-width:48em}
 .callout h3{margin-top:0;color:var(--amber-ink);font-size:1rem}
 .callout p:last-child{margin-bottom:0}
 
+/* Status written at deploy for readers without JavaScript; with it, the
+   stage cards show the same (shown again if the data fails to load). */
+.summary{max-width:48em;margin:0 0 1.5rem}
+.summary ul{padding-left:1.2rem}
+.summary li{margin:.3rem 0}
+.js .summary{display:none}
+.js .summary.show{display:block}
+
 .stats{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));
 margin:.4rem 0 1rem}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;

@@ -77,6 +77,7 @@ uv run python pipelines/send_test_email.py   # Hurricane Melissa (2025) replay t
 │   ├── monitor.py                      # main monitoring entrypoint
 │   ├── export_site_data.py             # data for the monitoring page
 │   ├── sync_site_data.py               # deploy: download + verify that data
+│   ├── render_site_static.py           # deploy: status as text (no-JS, llms.txt)
 │   ├── send_test_email.py              # Melissa-replay test email
 │   ├── setup_listmonk_lists.py         # provision Listmonk lists
 │   └── update_chirps_gefs.py           # daily CHIRPS-GEFS refresh
@@ -159,7 +160,8 @@ site, so products share a URL space behind a landing page at `/`
 | Path | Product | Built by |
 |---|---|---|
 | `/` | landing page (monitoring, one card per framework version, the repo) | hand-edited `docs/index.html` + `docs/assets/` |
-| `/2026/suivi/` | live monitoring page (French): season status, every NHC advisory on a map with the 64 kt buffers capped at 120 h / 72 h, rain windows, latest CHIRPS-GEFS / IMERG, and public data files | static `docs/2026/suivi/` (HTML/JS/CSS); data from the DBX task `export_site` (`src/monitoring/site_export.py`) → dev blob `ds-aa-hti-hurricanes/monitoring/site/` → `pipelines/sync_site_data.py` in the deploy workflow |
+| `/2026/suivi/` | live monitoring page (French; English at `/2026/suivi/en/`): season status, every NHC advisory on a map with the 64 kt buffers capped at 120 h / 72 h, rain windows, latest CHIRPS-GEFS / IMERG, and public data files | static `docs/2026/suivi/` (HTML/JS/CSS); data from the DBX task `export_site` (`src/monitoring/site_export.py`) → dev blob `ds-aa-hti-hurricanes/monitoring/site/` → `pipelines/sync_site_data.py` in the deploy workflow, then `pipelines/render_site_static.py` writes the current status as plain text into both pages (hidden when JavaScript runs) |
+| `/llms.txt`, `/2026/suivi/llms.txt` | guides for scripts and AI assistants: the site, then every monitoring file, which one answers which question, and the easy misreadings; both carry the current status | hand-edited `docs/llms.txt`, `docs/2026/suivi/llms.txt`; status block filled by `pipelines/render_site_static.py` at deploy |
 | `/2026/` | the 2026 version on one page: trigger, embedded deck, map replay, threshold choice, DGPC orange and red analyses (French) | `pipelines/build_page_2026.py`; map data in `docs/2026/assets/carte/` from `pipelines/build_dgpc_map.py` (needs the storms DB) |
 | `/2026/slides.html` | trigger-mechanism deck (French); PDF in `docs/2026/assets/` | hand-edited; PDF printed with headless Chrome (`--headless=new --no-pdf-header-footer --print-to-pdf`) from the served page |
 | `/2026/premiere-evaluation.html` | archived first DGPC alert-level assessment (French) | `pipelines/build_dgpc_page.py` |

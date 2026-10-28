@@ -1,0 +1,25 @@
+# Haiti hurricanes anticipatory action (OCHA Centre for Humanitarian Data)
+
+> Site of the anticipatory action framework for storms and hurricanes in Haiti, prepared with the DGPC (Haitian civil protection) and the framework partners. It has the trigger definition of each framework version (in French) and the live monitoring of the 2026 trigger (French and English), with all its data as public static files.
+
+For trigger status and data, use the monitoring guide: <https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/llms.txt>. It lists every file, says which file answers which question, and lists the easy ways to misread the data.
+
+## Current status of the 2026 trigger
+
+<!-- status:start -->
+<!-- status:end -->
+
+## Monitoring (2026)
+
+- [Monitoring data guide](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/llms.txt): files, fields, examples and pitfalls, in English.
+- [data/index.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/index.json): current state, with thresholds, freshness, storms and activations.
+- [data/datapackage.json](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/data/datapackage.json): every published file, with each field described.
+- [Monitoring page, English](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/en/) and [French](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/suivi/). They are interactive (JavaScript) and drawn from the files above.
+
+## Framework
+
+- [2026 framework](https://ocha-dap.github.io/ds-aa-hti-hurricanes/2026/) (in French): the endorsed trigger mechanism (Mobilisation, Action, Réponse précoce) and the analyses behind it.
+
+## Optional
+
+- [Source code](https://github.com/OCHA-DAP/ds-aa-hti-hurricanes): the monitoring system, the analyses and the scripts that build this site.
