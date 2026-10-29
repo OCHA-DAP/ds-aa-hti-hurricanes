@@ -227,7 +227,9 @@ evaluated.</p>
 <h2 id="rainfall">Rainfall: latest data</h2>
 <p>These series arrive even when there is no storm. Rainfall only counts
 for the trigger on the days a storm is forecast (or observed) within
-<span class="rain-km">230</span> km of Haiti.</p>
+<span class="rain-km">230</span> km of Haiti: from the first to the last such
+day, plus the day after (the shaded days). Under each chart, each storm’s
+closest distance to Haiti that day shows which days those are.</p>
 <h3>Latest CHIRPS-GEFS forecast</h3>
 <p class="small muted" id="gefs-latest-cap">—</p>
 <div class="chart" id="chart-gefs-latest"></div>
@@ -345,6 +347,7 @@ gdf = gpd.GeoDataFrame.from_features(fc["features"], crs=4326)</code></pre>
       <tr><td><code>layer</code></td><td>Exact zones: <code>fcast_capped</code>, the ≥ 64 kt wind zone of the forecast points up to 120 h or 72 h; <code>obsv_swath_subtracted</code>, the observed swath at the exact advisory time, removed from that zone (empty if there was none); <code>fcastonly</code>, the difference, in which population is counted.</td></tr>
       <tr><td><code>source</code></td><td><code>evaluated</code>: zone saved by the system when it evaluated the advisory. <code>rebuilt</code>: advisory evaluated before the system saved its zones, recomputed once with the same function. <code>none</code>: can no longer be rebuilt (advisories evaluated before 22 September 2026 whose time changed in the database); no geometry.</td></tr>
       <tr><td><code>pop_exposed_hti</code>, <code>pop_exposed_recorded</code></td><td>People counted in the <code>fcastonly</code> zone, and the value recorded by the monitoring; identical when <code>source</code> is <code>evaluated</code>.</td></tr>
+      <tr><td><code>dist_days</code></td><td>The storm’s closest distance to Haiti (km) on each UTC day, from the same 30-minute track as the trigger: in each advisory file (forecast track up to 120 h; older files may not have it), in <code>storms/{ATCF}.json</code> under <code>obsv</code> (observed track), and in <code>index.json</code> under <code>chirps_gefs_latest.storms</code> (latest advisory of each active storm, with its rainfall windows) and <code>imerg_recent_storms</code>. A rainfall window runs from the first to the last day closer than 230 km, plus the day after.</td></tr>
       <tr><td><code>rebuilt.differences</code></td><td>Tracks and rainfall windows are recomputed for the page with the same function as the monitoring; any difference from the recorded values is listed here (normally empty). <code>geometry_identical_to_evaluated</code> says whether the recomputed zone is identical, coordinate for coordinate, to the saved one.</td></tr>
     </tbody>
   </table></div>

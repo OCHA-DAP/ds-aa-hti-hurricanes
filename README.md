@@ -173,7 +173,10 @@ republishes the run's records with the inputs behind them: one GeoJSON per
 NHC advisory (forecast track, 64 kt buffers capped at 120 h and 72 h with the
 observed swath removed, observed swath, the CHIRPS-GEFS issuance used and each
 stage's rain window), one JSON per storm, the monitoring tables as CSV, the
-rain series and an `index.json`. Trigger values are always the recorded ones;
+rain series and an `index.json`. Storm and advisory files, and `index.json` for the
+latest-rainfall charts, carry each storm's closest distance to Haiti per UTC day
+(`dist_days`, from the same 30-min track as the rainfall windows), drawn under
+every rainfall chart. Trigger values are always the recorded ones;
 geometries are rebuilt with `process_fcast_advisory(detail=True)` and any
 difference from the record is written into the file (`rebuilt.differences`).
 Advisory files are written once; everything else each run; `manifest.json`

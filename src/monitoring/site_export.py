@@ -158,6 +158,29 @@ def _hours(td) -> float | None:
     return round(pd.Timedelta(td).total_seconds() / 3600, 2)
 
 
+# Longest forecast lead time any stage counts (Mobilisation's 120 h).
+LT_MAX_HRS = max(TRIGGERS[s]["lt_max_hrs"] for s in mu.FCAST_STAGES)
+
+
+def _dist_days(gi: pd.DataFrame) -> list[dict]:
+    """Closest distance to Haiti (km) per UTC day of a 30-min track from
+    ``mu._interp_track``: the distances the rainfall windows are built
+    from (a day is in a window when its closest point is under D_THRESH,
+    and so is the day after the last such day)."""
+    if gi.empty:
+        return []
+    by_day = gi.groupby(gi["valid_time"].dt.normalize())["distance"].min()
+    return [{"date": _date(d), "km": _num(km, 1)} for d, km in by_day.items()]
+
+
+def _fcast_dist_days(track: gpd.GeoDataFrame, issue_time, adm0_3857):
+    """``_dist_days`` of a forecast track, up to LT_MAX_HRS lead time (as
+    process_fcast_advisory interpolates it)."""
+    gi = mu._interp_track(track, "valid_time", adm0_3857)
+    lt = gi["valid_time"] - pd.Timestamp(issue_time)
+    return _dist_days(gi[lt <= pd.Timedelta(hours=LT_MAX_HRS)])
+
+
 def stamp(issue_time) -> str:
     """File-name-safe advisory stamp, e.g. 2026-10-22T0900Z."""
     return pd.Timestamp(issue_time).strftime("%Y-%m-%dT%H%MZ")
@@ -458,9 +481,11 @@ def build_advisory(
     gefs_block = None
     rebuilt = {"available": False, "differences": {}}
     closest_time = None
+    dist_days = []
     if res is not None:
         row, det = res
         windows = det["windows"]
+        dist_days = _fcast_dist_days(det["track"], issue_time, adm0_3857)
         closest_time = det["closest_time"]
         rebuilt = {"available": True, "differences": _compare(rec, row)}
         if rebuilt["differences"]:
@@ -594,6 +619,7 @@ def build_advisory(
         "cutoff_hrs": LT_CUTOFF_HRS,
         "past_cutoff": _bool(rec.get("past_cutoff")),
         "min_dist_km": _num(rec.get("min_dist"), 1),
+        "dist_days": dist_days,
         "closest_wind_kt": _num(rec.get("closest_s")),
         "exp_obsv": _num(rec.get("exp_obsv"), 0),
         "stages": {
@@ -694,7 +720,7 @@ def build_storm(
 
     # observed track and its 230 km rainfall window (as update_obsv_monitoring)
     trk = storms_db.fetch_obsv_track(atcf_id)
-    track_feats, window = [], None
+    track_feats, window, dist_days = [], None, []
     if not trk.empty:
         t3857 = trk.to_crs(3857)
         trk["dist_km"] = (
@@ -713,6 +739,7 @@ def build_storm(
                 }
             )
         gi = mu._interp_track(trk, "valid_time", adm0_3857)
+        dist_days = _dist_days(gi)
         near = gi[gi["distance"] < D_THRESH]
         if not near.empty:
             window = (
@@ -766,6 +793,7 @@ def build_storm(
             "rain_threshold_mm": TRIGGERS["obsv"]["rain_mm"],
             "rain_window_start": _date(window[0]) if window else None,
             "rain_window_end": _date(window[1]) if window else None,
+            "dist_days": dist_days,
             "rows": obsv_rows,
             "imerg_days": days,
         },
@@ -776,6 +804,42 @@ def build_storm(
             "geometry": _geojson_geom(sw_geom),
         },
     }
+
+
+def latest_forecast(store: SiteStore, f_s: pd.DataFrame, adm0_3857):
+    """An active storm's latest forecast, for the latest-rainfall chart:
+    the newest advisory with forecast track points (an advisory without
+    any falls back to the one before), its daily distance to Haiti and
+    each stage's rainfall window as its advisory file records them."""
+    for _, rec in f_s.sort_values("issue_time", ascending=False).iterrows():
+        issue_time = pd.Timestamp(rec["issue_time"])
+        track = exposure.fetch_fcast_track_points(rec["atcf_id"], issue_time)
+        if track.empty:
+            continue
+        path = (
+            f"advisories/{rec['atcf_id'].upper()}/{stamp(issue_time)}.geojson"
+        )
+        try:
+            stages = json.loads(store.read(path))["advisory"]["stages"]
+        except Exception:  # noqa: BLE001 - windows then unknown, not wrong
+            logger.warning(f"{path}: cannot read its rainfall windows")
+            stages = {}
+        return {
+            "atcf_id": rec["atcf_id"].upper(),
+            "name": rec["name"],
+            "issue_time": _iso(issue_time),
+            "file": path,
+            "past_cutoff": _bool(rec.get("past_cutoff")),
+            "stages": {
+                s: {
+                    k: stages.get(s, {}).get(k)
+                    for k in ("rain_window_start", "rain_window_end")
+                }
+                for s in mu.FCAST_STAGES
+            },
+            "dist_days": _fcast_dist_days(track, issue_time, adm0_3857),
+        }
+    return None
 
 
 # --- tables ---------------------------------------------------------------
@@ -1209,7 +1273,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
     store.write_parquet(BUFFERS_PATH, buffers)
 
     # storm files (rewritten each run)
-    storms = []
+    storms, storm_files, fcast_active = [], {}, []
     latest_issue = fc["issue_time"].max()
     now = pd.Timestamp(generated_at).tz_localize(None)
     season = int(latest_issue.year)
@@ -1218,7 +1282,15 @@ def export_site(local_dir: str | None = None, full: bool = False):
         o_s = ob[ob["atcf_id"] == atcf_id]
         storm = build_storm(atcf_id, f_s, o_s, im, adm0)
         store.write_json(f"storms/{atcf_id.upper()}.json", storm)
+        storm_files[atcf_id] = storm
         last = f_s["issue_time"].max() if not f_s.empty else None
+        active = bool(
+            last is not None and now - last <= pd.Timedelta(hours=ACTIVE_HRS)
+        )
+        if active:
+            lf = latest_forecast(store, f_s, adm0)
+            if lf is not None:
+                fcast_active.append(lf)
         latest_row = (
             _fcast_summary_row(f_s.sort_values("issue_time").iloc[-1])
             if not f_s.empty
@@ -1238,10 +1310,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
                     else None,
                     1,
                 ),
-                "active": bool(
-                    last is not None
-                    and now - last <= pd.Timedelta(hours=ACTIVE_HRS)
-                ),
+                "active": active,
                 "activations": storm["activations"],
                 "latest": latest_row,
             }
@@ -1295,6 +1364,25 @@ def export_site(local_dir: str | None = None, full: bool = False):
         "valid_date"
     )
     im_recent = im[im["date"] > im["date"].max() - pd.Timedelta(days=45)]
+    # storms observed over those IMERG days: daily distance and window
+    im_lo = _date(im_recent["date"].min())
+    im_storms = []
+    for st in storm_files.values():
+        days = (
+            [d for d in st["obsv"]["dist_days"] if d["date"] >= im_lo]
+            if im_lo
+            else []
+        )
+        if days:
+            im_storms.append(
+                {
+                    "atcf_id": st["atcf_id"],
+                    "name": st["name"],
+                    "rain_window_start": st["obsv"]["rain_window_start"],
+                    "rain_window_end": st["obsv"]["rain_window_end"],
+                    "dist_days": days,
+                }
+            )
     index = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
@@ -1338,6 +1426,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
                 }
                 for _, r in gefs_latest.iterrows()
             ],
+            "storms": fcast_active,
         },
         "imerg_recent": [
             {
@@ -1347,6 +1436,7 @@ def export_site(local_dir: str | None = None, full: bool = False):
             }
             for _, r in im_recent.iterrows()
         ],
+        "imerg_recent_storms": im_storms,
         "files": {
             "fcast_monitoring": "fcast_monitoring.csv",
             "obsv_monitoring": "obsv_monitoring.csv",
